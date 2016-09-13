@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service xmlns="http://zstack.org/schema/zstack">
+    <id>loadBalancer</id>
+    <interceptor>LoadBalancerApiInterceptor</interceptor>
+
+    <message>
+        <name>org.zstack.network.service.lb.APICreateLoadBalancerMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APICreateLoadBalancerListenerMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APIAddVmNicToLoadBalancerMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APIDeleteLoadBalancerListenerMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APIRemoveVmNicFromLoadBalancerMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APIDeleteLoadBalancerMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APIRefreshLoadBalancerMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APIQueryLoadBalancerListenerMsg</name>
+        <serviceId>query</serviceId>
+    </message>
+
+    <message>
+        <name>org.zstack.network.service.lb.APIQueryLoadBalancerMsg</name>
+        <serviceId>query</serviceId>
+    </message>
+</service>
