@@ -1,6 +1,6 @@
 # vStack
 
-This is an open source project from [ZStack]{https://github.com/zstackorg}.
+This is an open source project from [ZStack](https://github.com/zstackorg).
 ## secondary exploration
  
 ONCE. Institute of Software Chinese Academy of Sciences.	
