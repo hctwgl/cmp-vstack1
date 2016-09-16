@@ -101,7 +101,9 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     private void handle(APIGetHypervisorTypesMsg msg) {
         APIGetHypervisorTypesReply reply = new APIGetHypervisorTypesReply();
         List<String> res = new ArrayList<String>();
-        res.addAll(HypervisorType.getAllTypeNames());
+//        res.addAll(HypervisorType.getAllTypeNames());
+        res.add("KVM");
+        res.add("Xen");
         reply.setHypervisorTypes(res);
         bus.reply(msg, reply);
     }

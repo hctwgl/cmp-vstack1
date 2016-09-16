@@ -64,7 +64,7 @@ public class APICreateClusterMsg extends APICreateMessage {
      * - KVM
      * - Simulator
      */
-	@APIParam(validValues = {"KVM", "Simulator"})
+	@APIParam(validValues = {"KVM", "Simulator","Xen"})
 	private String hypervisorType;
     /**
      * @desc see field 'type' of :ref:`ClusterInventory` for details
