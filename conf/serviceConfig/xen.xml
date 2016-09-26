@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service xmlns="http://zstack.org/schema/zstack">
+    <id>host</id>
+
+    <message>
+        <name>org.zstack.xen.APIAddXenHostMsg</name>
+        <interceptor>HostApiInterceptor</interceptor>
+        <interceptor>XenApiInterceptor</interceptor>
+    </message>
+
+    <message>
+        <name>org.zstack.xen.APIUpdateXenHostMsg</name>
+    </message>
+
+    <message>
+        <name>org.zstack.xen.APIXenRunShellMsg</name>
+        <serviceId>xen</serviceId>
+    </message>
+
+</service>

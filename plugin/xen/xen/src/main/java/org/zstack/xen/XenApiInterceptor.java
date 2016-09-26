@@ -12,7 +12,7 @@ import org.zstack.header.message.APIMessage;
 
 /**
  */
-public class KVMApiInterceptor implements ApiMessageInterceptor {
+public class XenApiInterceptor implements ApiMessageInterceptor {
     @Autowired
     private ErrorFacade errf;
     @Autowired
@@ -32,7 +32,7 @@ public class KVMApiInterceptor implements ApiMessageInterceptor {
         q.add(KVMHostVO_.managementIp, Op.EQ, msg.getManagementIp());
         if (q.isExists()) {
             throw new ApiMessageInterceptionException(errf.instantiateErrorCode(SysErrors.INVALID_ARGUMENT_ERROR,
-                    String.format("there has been a kvm host having management ip[%s]", msg.getManagementIp())
+                    String.format("there has been a xen host having management ip[%s]", msg.getManagementIp())
             ));
         }
     }
