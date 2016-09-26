@@ -286,14 +286,14 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
     @Override
     @MessageSafe
     public void handleMessage(Message msg) {
-        if (msg instanceof APIKvmRunShellMsg) {
-            handle((APIKvmRunShellMsg) msg);
+        if (msg instanceof APIXenRunShellMsg) {
+            handle((APIXenRunShellMsg) msg);
         } else {
             bus.dealWithUnknownMessage(msg);
         }
     }
 
-    private void handle(final APIKvmRunShellMsg msg) {
+    private void handle(final APIXenRunShellMsg msg) {
         final APIKvmRunShellEvent evt = new APIKvmRunShellEvent(msg.getId());
 
         final List<KvmRunShellMsg> kmsgs = CollectionUtils.transformToList(msg.getHostUuids(), new Function<KvmRunShellMsg, String>() {

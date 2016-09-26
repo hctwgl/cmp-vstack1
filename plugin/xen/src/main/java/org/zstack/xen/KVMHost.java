@@ -2462,14 +2462,14 @@ public class KVMHost extends HostBase implements Host {
 
     @Override
     protected HostVO updateHost(APIUpdateHostMsg msg) {
-        if (!(msg instanceof APIUpdateKVMHostMsg)) {
+        if (!(msg instanceof APIUpdateXenHostMsg)) {
             return super.updateHost(msg);
         }
 
         KVMHostVO vo = (KVMHostVO) super.updateHost(msg);
         vo = vo == null ? getSelf() : vo;
 
-        APIUpdateKVMHostMsg umsg = (APIUpdateKVMHostMsg) msg;
+        APIUpdateXenHostMsg umsg = (APIUpdateXenHostMsg) msg;
         if (umsg.getUsername() != null) {
             vo.setUsername(umsg.getUsername());
         }

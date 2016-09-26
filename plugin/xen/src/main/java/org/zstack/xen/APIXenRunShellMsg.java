@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Created by xing5 on 2016/3/14.
  */
-public class APIKvmRunShellMsg extends APIMessage {
+public class APIXenRunShellMsg extends APIMessage {
     @APIParam(resourceType = HostVO.class, nonempty = true)
     private Set<String> hostUuids;
     @APIParam
