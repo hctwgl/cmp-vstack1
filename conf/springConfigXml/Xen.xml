@@ -12,7 +12,7 @@
     http://zstack.org/schema/zstack/plugin.xsd"
     default-init-method="init" default-destroy-method="destroy">
 
-    <bean id="XenHostReserveExtension" class="org.zstack.xen.KvmHostReserveExtension">
+    <bean id="XenHostReserveExtension" class="org.zstack.xen.XenHostReserveExtension">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.Component" />
             <zstack:extension interface="org.zstack.header.allocator.HostReservedCapacityExtensionPoint" />
@@ -29,64 +29,64 @@
         </zstack:plugin>
     </bean>
 
-    <bean id="KVMHostCapacityExtension" class="org.zstack.xen.KVMHostCapacityExtension">
+    <bean id="XenHostCapacityExtension" class="org.zstack.xen.XenHostCapacityExtension">
         <zstack:plugin>
-            <zstack:extension interface="org.zstack.kvm.KVMHostConnectExtensionPoint" />
+            <zstack:extension interface="org.zstack.xen.XenHostConnectExtensionPoint" />
             <zstack:extension interface="org.zstack.header.host.HostConnectionReestablishExtensionPoint" />
         </zstack:plugin>
     </bean>
 
-    <bean id="KVMConnectExtensionForL2Network" class="org.zstack.xen.KVMConnectExtensionForL2Network">
+    <bean id="XenConnectExtensionForL2Network" class="org.zstack.xen.KVMConnectExtensionForL2Network">
         <zstack:plugin>
-            <zstack:extension interface="org.zstack.kvm.KVMHostConnectExtensionPoint" />
+            <zstack:extension interface="org.zstack.xen.XenHostConnectExtensionPoint" />
             <zstack:extension interface="org.zstack.header.host.HostConnectionReestablishExtensionPoint" />
         </zstack:plugin>
     </bean>
 
-    <bean id="KVMRealizeL2NoVlanNetworkBackend" class="org.zstack.xen.KVMRealizeL2NoVlanNetworkBackend">
+    <bean id="XenRealizeL2NoVlanNetworkBackend" class="org.zstack.xen.KVMRealizeL2NoVlanNetworkBackend">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.network.l2.L2NetworkRealizationExtensionPoint" />
-            <zstack:extension interface="org.zstack.kvm.KVMCompleteNicInformationExtensionPoint" />
+            <zstack:extension interface="org.zstack.xen.XenCompleteNicInformationExtensionPoint" />
         </zstack:plugin>
     </bean>
 
-    <bean id="KVMRealizeL2VlanNetworkBackend" class="org.zstack.xen.KVMRealizeL2VlanNetworkBackend">
+    <bean id="XenRealizeL2VlanNetworkBackend" class="org.zstack.xen.KVMRealizeL2VlanNetworkBackend">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.network.l2.L2NetworkRealizationExtensionPoint" />
-            <zstack:extension interface="org.zstack.kvm.KVMCompleteNicInformationExtensionPoint" />
+            <zstack:extension interface="org.zstack.xen.XenCompleteNicInformationExtensionPoint" />
         </zstack:plugin>
     </bean>
 
-    <bean id="KVMExtensionEmitter" class="org.zstack.xen.KVMExtensionEmitter">
+    <bean id="XenExtensionEmitter" class="org.zstack.xen.KVMExtensionEmitter">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.Component" />
         </zstack:plugin>
     </bean>	
 
-    <bean id="KvmVmSyncPingTask" class="org.zstack.xen.KvmVmSyncPingTask">
+    <bean id="XenVmSyncPingTask" class="org.zstack.xen.KvmVmSyncPingTask">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.Component" />
-            <zstack:extension interface="org.zstack.kvm.KVMPingAgentNoFailureExtensionPoint" />
-            <zstack:extension interface="org.zstack.kvm.KVMHostConnectExtensionPoint" />
+            <zstack:extension interface="org.zstack.xen.KVMPingAgentNoFailureExtensionPoint" />
+            <zstack:extension interface="org.zstack.xen.XenHostConnectExtensionPoint" />
             <zstack:extension interface="org.zstack.header.host.HostConnectionReestablishExtensionPoint" />
             <zstack:extension interface="org.zstack.header.host.HostAfterConnectedExtensionPoint" />
         </zstack:plugin>
     </bean>
 
-    <bean id="KVMSecurityGroupBackend" class="org.zstack.xen.KVMSecurityGroupBackend">
+    <bean id="XenSecurityGroupBackend" class="org.zstack.xen.KVMSecurityGroupBackend">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.network.securitygroup.SecurityGroupHypervisorBackend" />
-            <zstack:extension interface="org.zstack.kvm.KVMHostConnectExtensionPoint" />
+            <zstack:extension interface="org.zstack.xen.XenHostConnectExtensionPoint" />
         </zstack:plugin>
     </bean>	
 
-    <bean id="KVMConsoleHypervisorBackend" class="org.zstack.xen.KVMConsoleHypervisorBackend">
+    <bean id="XenConsoleHypervisorBackend" class="org.zstack.xen.KVMConsoleHypervisorBackend">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.console.ConsoleHypervisorBackend"/>
         </zstack:plugin>
     </bean>	
 
-    <bean id="XenApiInterceptor" class="org.zstack.xen.KVMApiInterceptor">
+    <bean id="XenApiInterceptor" class="org.zstack.xen.XenApiInterceptor">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.apimediator.ApiMessageInterceptor"/>
         </zstack:plugin>

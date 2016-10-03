@@ -28,8 +28,8 @@ public class XenApiInterceptor implements ApiMessageInterceptor {
     }
 
     private void validate(APIAddXenHostMsg msg) {
-        SimpleQuery<KVMHostVO> q = dbf.createQuery(KVMHostVO.class);
-        q.add(KVMHostVO_.managementIp, Op.EQ, msg.getManagementIp());
+        SimpleQuery<XenHostVO> q = dbf.createQuery(XenHostVO.class);
+        q.add(XenHostVO_.managementIp, Op.EQ, msg.getManagementIp());
         if (q.isExists()) {
             throw new ApiMessageInterceptionException(errf.instantiateErrorCode(SysErrors.INVALID_ARGUMENT_ERROR,
                     String.format("there has been a xen host having management ip[%s]", msg.getManagementIp())

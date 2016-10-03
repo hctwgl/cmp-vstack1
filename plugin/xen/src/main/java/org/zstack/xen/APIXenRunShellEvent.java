@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Created by xing5 on 2016/3/14.
  */
-public class APIKvmRunShellEvent extends APIEvent {
+public class APIXenRunShellEvent extends APIEvent {
     public static class ShellResult {
         private int returnCode;
         private String stdout;
@@ -49,10 +49,10 @@ public class APIKvmRunShellEvent extends APIEvent {
         }
     }
 
-    public APIKvmRunShellEvent() {
+    public APIXenRunShellEvent() {
     }
 
-    public APIKvmRunShellEvent(String apiId) {
+    public APIXenRunShellEvent(String apiId) {
         super(apiId);
     }
 

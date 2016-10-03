@@ -12,21 +12,21 @@ import org.zstack.header.core.workflow.NoRollbackFlow;
 import org.zstack.header.errorcode.OperationFailureException;
 import org.zstack.header.host.*;
 import org.zstack.header.message.MessageReply;
-import org.zstack.xen.KVMAgentCommands.HostCapacityCmd;
-import org.zstack.xen.KVMAgentCommands.HostCapacityResponse;
+import org.zstack.xen.XenAgentCommands.HostCapacityCmd;
+import org.zstack.xen.XenAgentCommands.HostCapacityResponse;
 
 import java.util.Map;
 
-public class KVMHostCapacityExtension implements KVMHostConnectExtensionPoint, HostConnectionReestablishExtensionPoint {
+public class XenHostCapacityExtension implements XenHostConnectExtensionPoint, HostConnectionReestablishExtensionPoint {
     @Autowired
     private CloudBus bus;
     @Autowired
     private ErrorFacade errf;
 
     private void reportCapacity(HostInventory host) {
-        KVMHostSyncHttpCallMsg msg = new KVMHostSyncHttpCallMsg();
+        XenHostSyncHttpCallMsg msg = new XenHostSyncHttpCallMsg();
         msg.setHostUuid(host.getUuid());
-        msg.setPath(KVMConstant.KVM_HOST_CAPACITY_PATH);
+        msg.setPath(XenConstant.KVM_HOST_CAPACITY_PATH);
         msg.setNoStatusCheck(true);
         msg.setCommand(new HostCapacityCmd());
         bus.makeTargetServiceIdByResourceUuid(msg, HostConstant.SERVICE_ID, host.getUuid());
@@ -58,7 +58,7 @@ public class KVMHostCapacityExtension implements KVMHostConnectExtensionPoint, H
 
     @Override
     public HypervisorType getHypervisorTypeForReestablishExtensionPoint() {
-        return HypervisorType.valueOf(KVMConstant.KVM_HYPERVISOR_TYPE);
+        return HypervisorType.valueOf(XenConstant.KVM_HYPERVISOR_TYPE);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class KVMHostCapacityExtension implements KVMHostConnectExtensionPoint, H
 
             @Override
             public void run(FlowTrigger trigger, Map data) {
-                new Log(context.getInventory().getUuid()).log(KVMHostLabel.SYNC_HOST_CAPACITY);
+                new Log(context.getInventory().getUuid()).log(XenHostLabel.SYNC_HOST_CAPACITY);
 
                 reportCapacity(context.getInventory());
                 trigger.next();

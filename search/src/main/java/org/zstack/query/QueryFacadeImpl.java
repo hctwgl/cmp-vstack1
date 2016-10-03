@@ -50,7 +50,7 @@ public class QueryFacadeImpl extends AbstractService implements QueryFacade, Glo
 
     @Override
     public <T> List<T> query(APIQueryMessage msg, Class<T> inventoryClass) {
-        validateConditions(msg.getConditions());
+    	validateConditions(msg.getConditions());
 
         QueryBuilderFactory factory = getFactory(queryBuilderType);
         QueryBuilder builder = factory.createQueryBuilder();

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  */
-public class KVMConnectExtensionForL2Network implements KVMHostConnectExtensionPoint, HostConnectionReestablishExtensionPoint {
+public class KVMConnectExtensionForL2Network implements XenHostConnectExtensionPoint, HostConnectionReestablishExtensionPoint {
     @Autowired
     private DatabaseFacade dbf;
     @Autowired
@@ -156,7 +156,7 @@ public class KVMConnectExtensionForL2Network implements KVMHostConnectExtensionP
 
     @Override
     public HypervisorType getHypervisorTypeForReestablishExtensionPoint() {
-        return new HypervisorType(KVMConstant.KVM_HYPERVISOR_TYPE);
+        return new HypervisorType(XenConstant.KVM_HYPERVISOR_TYPE);
     }
 
     @Override
@@ -172,7 +172,7 @@ public class KVMConnectExtensionForL2Network implements KVMHostConnectExtensionP
                     return;
                 }
 
-                new Log(context.getInventory().getUuid()).log(KVMHostLabel.PREPARE_L2_NETWORK);
+                new Log(context.getInventory().getUuid()).log(XenHostLabel.PREPARE_L2_NETWORK);
 
                 prepareNetwork(l2s.iterator(), context.getInventory().getUuid(), new Completion(trigger) {
                     @Override

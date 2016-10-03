@@ -52,6 +52,7 @@
     <import resource="springConfigXml/JobQueueFacade.xml"/>
     <import resource="springConfigXml/gc.xml"/>
     <import resource="springConfigXml/Kvm.xml"/>
+    <import resource="springConfigXml/Xen.xml"/>
     <import resource="springConfigXml/ManagementNodeManager.xml"/>
     <import resource="springConfigXml/NetworkManager.xml"/>
     <import resource="springConfigXml/NetworkService.xml"/>

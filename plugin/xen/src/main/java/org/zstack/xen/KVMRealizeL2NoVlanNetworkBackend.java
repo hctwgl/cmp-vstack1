@@ -17,15 +17,15 @@ import org.zstack.header.network.l2.L2NetworkType;
 import org.zstack.header.vm.VmNicInventory;
 import org.zstack.utils.Utils;
 import org.zstack.utils.logging.CLogger;
-import org.zstack.xen.KVMAgentCommands.CheckBridgeResponse;
-import org.zstack.xen.KVMAgentCommands.CreateBridgeCmd;
-import org.zstack.xen.KVMAgentCommands.CreateBridgeResponse;
-import org.zstack.xen.KVMAgentCommands.NicTO;
+import org.zstack.xen.XenAgentCommands.CheckBridgeResponse;
+import org.zstack.xen.XenAgentCommands.CreateBridgeCmd;
+import org.zstack.xen.XenAgentCommands.CreateBridgeResponse;
+import org.zstack.xen.XenAgentCommands.NicTO;
 
 import static org.zstack.utils.CollectionDSL.e;
 import static org.zstack.utils.CollectionDSL.map;
 
-public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExtensionPoint, KVMCompleteNicInformationExtensionPoint {
+public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExtensionPoint, XenCompleteNicInformationExtensionPoint {
     private static final CLogger logger = Utils.getLogger(KVMRealizeL2NoVlanNetworkBackend.class);
 
     @Autowired
@@ -47,7 +47,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
         KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
-        msg.setPath(KVMConstant.KVM_REALIZE_L2NOVLAN_NETWORK_PATH);
+        msg.setPath(XenConstant.KVM_REALIZE_L2NOVLAN_NETWORK_PATH);
         msg.setNoStatusCheck(noStatusCheck);
         msg.setHostUuid(hostUuid);
         bus.makeTargetServiceIdByResourceUuid(msg, HostConstant.SERVICE_ID, hostUuid);
@@ -89,7 +89,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
     }
 
     public void check(final L2NetworkInventory l2Network, final String hostUuid, boolean noStatusCheck, final Completion completion) {
-        final KVMAgentCommands.CheckBridgeCmd cmd = new KVMAgentCommands.CheckBridgeCmd();
+        final XenAgentCommands.CheckBridgeCmd cmd = new XenAgentCommands.CheckBridgeCmd();
         cmd.setPhysicalInterfaceName(l2Network.getPhysicalInterface());
         cmd.setBridgeName(makeBridgeName(l2Network.getPhysicalInterface()));
 
@@ -98,7 +98,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
         msg.setHostUuid(hostUuid);
-        msg.setPath(KVMConstant.KVM_CHECK_L2NOVLAN_NETWORK_PATH);
+        msg.setPath(XenConstant.KVM_CHECK_L2NOVLAN_NETWORK_PATH);
         bus.makeTargetServiceIdByResourceUuid(msg, HostConstant.SERVICE_ID, hostUuid);
         bus.send(msg, new CloudBusCallBack(completion) {
             @Override
@@ -139,7 +139,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
 
     @Override
     public HypervisorType getSupportedHypervisorType() {
-        return HypervisorType.valueOf(KVMConstant.KVM_HYPERVISOR_TYPE);
+        return HypervisorType.valueOf(XenConstant.KVM_HYPERVISOR_TYPE);
     }
 
     @Override

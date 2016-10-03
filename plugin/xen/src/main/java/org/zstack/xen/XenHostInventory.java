@@ -12,13 +12,13 @@ import java.util.Collection;
 import java.util.List;
 
 @PythonClassInventory
-@Inventory(mappingVOClass = KVMHostVO.class, collectionValueOfMethod = "valueOf1",
-        parent = {@Parent(inventoryClass = HostInventory.class, type = KVMConstant.KVM_HYPERVISOR_TYPE)})
-public class KVMHostInventory extends HostInventory {
+@Inventory(mappingVOClass = XenHostVO.class, collectionValueOfMethod = "valueOf1",
+        parent = {@Parent(inventoryClass = HostInventory.class, type = XenConstant.KVM_HYPERVISOR_TYPE)})
+public class XenHostInventory extends HostInventory {
     /**
      * @ignore
      */
-    private String username;
+    private String username;	
     /**
      * @ignore
      */
@@ -27,20 +27,20 @@ public class KVMHostInventory extends HostInventory {
 
     private Integer sshPort;
 
-    protected KVMHostInventory(KVMHostVO vo) {
+    protected XenHostInventory(XenHostVO vo) {
         super(vo);
         this.setUsername(vo.getUsername());
         this.setPassword(vo.getPassword());
         this.setSshPort(vo.getPort());
     }
 
-    public static KVMHostInventory valueOf(KVMHostVO vo) {
-        return new KVMHostInventory(vo);
+    public static XenHostInventory valueOf(XenHostVO vo) {
+        return new XenHostInventory(vo);
     }
 
-    public static List<KVMHostInventory> valueOf1(Collection<KVMHostVO> vos) {
-        List<KVMHostInventory> invs = new ArrayList<KVMHostInventory>();
-        for (KVMHostVO vo : vos) {
+    public static List<XenHostInventory> valueOf1(Collection<XenHostVO> vos) {
+        List<XenHostInventory> invs = new ArrayList<XenHostInventory>();
+        for (XenHostVO vo : vos) {
             invs.add(valueOf(vo));
         }
         return invs;

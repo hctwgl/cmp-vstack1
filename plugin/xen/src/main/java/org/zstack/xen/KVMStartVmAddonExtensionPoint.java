@@ -8,5 +8,5 @@ import org.zstack.header.vm.VmInstanceType;
 public interface KVMStartVmAddonExtensionPoint {
     VmInstanceType getVmTypeForAddonExtension();
 
-    void addAddon(KVMHostInventory host, VmInstanceSpec spec, KVMAgentCommands.StartVmCmd cmd);
+    void addAddon(XenHostInventory host, VmInstanceSpec spec, XenAgentCommands.StartVmCmd cmd);
 }

@@ -6,7 +6,7 @@ import org.zstack.utils.gson.JSONObjectUtil;
 
 /**
  */
-public class KVMHostSyncHttpCallMsg extends NeedReplyMessage implements HostMessage {
+public class XenHostSyncHttpCallMsg extends NeedReplyMessage implements HostMessage {
     private String path;
     private String command;
     private String hostUuid;

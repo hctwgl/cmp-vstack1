@@ -4,9 +4,9 @@ import org.zstack.header.errorcode.ErrorCode;
 import org.zstack.header.vm.VmInstanceInventory;
 
 public interface KVMStopVmExtensionPoint {
-    void beforeStopVmOnKvm(KVMHostInventory host, VmInstanceInventory vm) throws KVMException;
+    void beforeStopVmOnKvm(XenHostInventory host, VmInstanceInventory vm) throws KVMException;
     
-    void stopVmOnKvmSuccess(KVMHostInventory host, VmInstanceInventory vm);
+    void stopVmOnKvmSuccess(XenHostInventory host, VmInstanceInventory vm);
     
-    void stopVmOnKvmFailed(KVMHostInventory host, VmInstanceInventory vm, ErrorCode err);
+    void stopVmOnKvmFailed(XenHostInventory host, VmInstanceInventory vm, ErrorCode err);
 }

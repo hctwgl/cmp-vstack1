@@ -3,7 +3,7 @@ package org.zstack.xen;
 /**
  */
 public class KVMHostConnectedContext {
-    private KVMHostInventory inventory;
+    private XenHostInventory inventory;
     private boolean newAddedHost;
 
     public boolean isNewAddedHost() {
@@ -14,11 +14,11 @@ public class KVMHostConnectedContext {
         this.newAddedHost = newAddedHost;
     }
 
-    public KVMHostInventory getInventory() {
+    public XenHostInventory getInventory() {
         return inventory;
     }
 
-    public void setInventory(KVMHostInventory inventory) {
+    public void setInventory(XenHostInventory inventory) {
         this.inventory = inventory;
     }
 }

@@ -9,11 +9,11 @@ import org.zstack.utils.SizeUtils;
 
 /**
  */
-public class KvmHostReserveExtension implements HostReservedCapacityExtensionPoint, Component {
+public class XenHostReserveExtension implements HostReservedCapacityExtensionPoint, Component {
     private ReservedHostCapacity reserve = new ReservedHostCapacity();
     @Override
     public String getHypervisorTypeForHostReserveCapacityExtension() {
-        return KVMConstant.KVM_HYPERVISOR_TYPE;
+        return XenConstant.KVM_HYPERVISOR_TYPE;
     }
 
     @Override

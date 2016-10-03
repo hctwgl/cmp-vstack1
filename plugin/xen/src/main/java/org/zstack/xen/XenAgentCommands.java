@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class KVMAgentCommands {
+public class XenAgentCommands {
 	public static enum BootDev {
 		hd(VmBootDevice.HardDisk),
 		cdrom(VmBootDevice.CdRom);

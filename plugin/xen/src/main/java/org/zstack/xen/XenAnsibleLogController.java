@@ -14,10 +14,10 @@ import org.zstack.utils.logging.CLogger;
  * Created by xing5 on 2016/6/15.
  */
 @Controller
-public class AnsibleLogController {
-    private static final CLogger logger = Utils.getLogger(AnsibleLogController.class);
+public class XenAnsibleLogController {
+    private static final CLogger logger = Utils.getLogger(XenAnsibleLogController.class);
 
-    @RequestMapping(value = KVMConstant.KVM_ANSIBLE_LOG_PATH_FROMAT, method = {RequestMethod.PUT, RequestMethod.POST})
+    @RequestMapping(value = XenConstant.KVM_ANSIBLE_LOG_PATH_FROMAT, method = {RequestMethod.PUT, RequestMethod.POST})
     public  @ResponseBody
     String log(@PathVariable String uuid, @RequestBody String body) {
         AnsibleLogCmd cmd = JSONObjectUtil.toObject(body, AnsibleLogCmd.class);

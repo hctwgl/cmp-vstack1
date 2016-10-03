@@ -18,7 +18,7 @@ import org.zstack.header.message.MessageReply;
 import org.zstack.header.vm.VmInstanceInventory;
 import org.zstack.utils.Utils;
 import org.zstack.utils.logging.CLogger;
-import org.zstack.xen.KVMAgentCommands.GetVncPortResponse;
+import org.zstack.xen.XenAgentCommands.GetVncPortResponse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,19 +43,19 @@ public class KVMConsoleHypervisorBackend implements ConsoleHypervisorBackend {
 
     @Override
     public HypervisorType getConsoleBackendHypervisorType() {
-        return HypervisorType.valueOf(KVMConstant.KVM_HYPERVISOR_TYPE);
+        return HypervisorType.valueOf(XenConstant.KVM_HYPERVISOR_TYPE);
     }
 
     @Override
     public void generateConsoleUrl(final VmInstanceInventory vm, final ReturnValueCompletion<URI> complete) {
-        KVMAgentCommands.GetVncPortCmd cmd = new KVMAgentCommands.GetVncPortCmd();
+        XenAgentCommands.GetVncPortCmd cmd = new XenAgentCommands.GetVncPortCmd();
         cmd.setVmUuid(vm.getUuid());
 
         KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
         msg.setHostUuid(vm.getHostUuid());
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
-        msg.setPath(KVMConstant.KVM_GET_VNC_PORT_PATH);
+        msg.setPath(XenConstant.KVM_GET_VNC_PORT_PATH);
         bus.makeTargetServiceIdByResourceUuid(msg, HostConstant.SERVICE_ID, vm.getHostUuid());
         bus.send(msg, new CloudBusCallBack(complete) {
             @Override

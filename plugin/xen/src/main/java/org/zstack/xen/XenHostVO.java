@@ -13,7 +13,7 @@ import javax.persistence.Table;
 @Table
 @PrimaryKeyJoinColumn(name="uuid", referencedColumnName="uuid")
 @EO(EOClazz = HostEO.class, needView = false)
-public class KVMHostVO extends HostVO {
+public class XenHostVO extends HostVO {
     @Column
     private String username;
     
@@ -24,10 +24,10 @@ public class KVMHostVO extends HostVO {
     @Column
     private Integer port;
 
-    public KVMHostVO() {
+    public XenHostVO() {
     }
 
-    public KVMHostVO(HostVO vo) {
+    public XenHostVO(HostVO vo) {
         super(vo);
     }
     

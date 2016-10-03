@@ -4,9 +4,9 @@ import org.zstack.header.errorcode.ErrorCode;
 import org.zstack.header.vm.VmInstanceInventory;
 
 public interface KVMDestroyVmExtensionPoint {
-    void beforeDestroyVmOnKvm(KVMHostInventory host, VmInstanceInventory vm) throws KVMException;
+    void beforeDestroyVmOnKvm(XenHostInventory host, VmInstanceInventory vm) throws KVMException;
     
-    void destroyVmOnKvmSuccess(KVMHostInventory host, VmInstanceInventory vm);
+    void destroyVmOnKvmSuccess(XenHostInventory host, VmInstanceInventory vm);
     
-    void destroyVmOnKvmFailed(KVMHostInventory host, VmInstanceInventory vm, ErrorCode err);
+    void destroyVmOnKvmFailed(XenHostInventory host, VmInstanceInventory vm, ErrorCode err);
 }

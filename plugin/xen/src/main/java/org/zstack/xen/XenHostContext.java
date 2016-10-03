@@ -2,14 +2,14 @@ package org.zstack.xen;
 
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class KVMHostContext {
-    private KVMHostInventory inventory;
+public class XenHostContext {
+    private XenHostInventory inventory;
     private String baseUrl;
 
-    public KVMHostInventory getInventory() {
+    public XenHostInventory getInventory() {
         return inventory;
     }
-    public void setInventory(KVMHostInventory inventory) {
+    public void setInventory(XenHostInventory inventory) {
         this.inventory = inventory;
     }
     public String getBaseUrl() {

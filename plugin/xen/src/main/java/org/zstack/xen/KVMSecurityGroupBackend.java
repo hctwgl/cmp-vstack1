@@ -15,14 +15,14 @@ import org.zstack.header.message.MessageReply;
 import org.zstack.network.securitygroup.*;
 import org.zstack.utils.Utils;
 import org.zstack.utils.logging.CLogger;
-import org.zstack.xen.KVMAgentCommands.ApplySecurityGroupRuleCmd;
-import org.zstack.xen.KVMAgentCommands.ApplySecurityGroupRuleResponse;
-import org.zstack.xen.KVMAgentCommands.CleanupUnusedRulesOnHostResponse;
-import org.zstack.xen.KVMAgentCommands.RefreshAllRulesOnHostCmd;
+import org.zstack.xen.XenAgentCommands.ApplySecurityGroupRuleCmd;
+import org.zstack.xen.XenAgentCommands.ApplySecurityGroupRuleResponse;
+import org.zstack.xen.XenAgentCommands.CleanupUnusedRulesOnHostResponse;
+import org.zstack.xen.XenAgentCommands.RefreshAllRulesOnHostCmd;
 
 import java.util.Map;
 
-public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, KVMHostConnectExtensionPoint {
+public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, XenHostConnectExtensionPoint {
     private static CLogger logger = Utils.getLogger(KVMSecurityGroupBackend.class);
     
     public static final String SECURITY_GROUP_APPLY_RULE_PATH = "/securitygroup/applyrules";
@@ -116,7 +116,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
 
     @Override
     public void cleanUpUnusedRuleOnHost(String hostUuid, final Completion completion) {
-        KVMAgentCommands.CleanupUnusedRulesOnHostCmd cmd = new KVMAgentCommands.CleanupUnusedRulesOnHostCmd();
+        XenAgentCommands.CleanupUnusedRulesOnHostCmd cmd = new XenAgentCommands.CleanupUnusedRulesOnHostCmd();
         KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
         msg.setHostUuid(hostUuid);
         msg.setCommand(cmd);
@@ -145,7 +145,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
 
     @Override
     public HypervisorType getSecurityGroupBackendHypervisorType() {
-        return HypervisorType.valueOf(KVMConstant.KVM_HYPERVISOR_TYPE);
+        return HypervisorType.valueOf(XenConstant.KVM_HYPERVISOR_TYPE);
     }
 
     @Override

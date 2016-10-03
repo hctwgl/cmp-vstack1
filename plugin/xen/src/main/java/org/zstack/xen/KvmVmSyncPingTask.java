@@ -28,16 +28,16 @@ import org.zstack.header.rest.SyncHttpCallHandler;
 import org.zstack.header.vm.*;
 import org.zstack.utils.Utils;
 import org.zstack.utils.logging.CLogger;
-import org.zstack.xen.KVMAgentCommands.ReportVmStateCmd;
-import org.zstack.xen.KVMAgentCommands.VmSyncCmd;
-import org.zstack.xen.KVMAgentCommands.VmSyncResponse;
-import org.zstack.xen.KVMConstant.KvmVmState;
+import org.zstack.xen.XenAgentCommands.ReportVmStateCmd;
+import org.zstack.xen.XenAgentCommands.VmSyncCmd;
+import org.zstack.xen.XenAgentCommands.VmSyncResponse;
+import org.zstack.xen.XenConstant.KvmVmState;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailureExtensionPoint, KVMHostConnectExtensionPoint,
+public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailureExtensionPoint, XenHostConnectExtensionPoint,
         HostConnectionReestablishExtensionPoint, HostAfterConnectedExtensionPoint, Component {
     private static final CLogger logger = Utils.getLogger(KvmVmSyncPingTask.class);
     
@@ -61,7 +61,7 @@ public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailure
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
         msg.setNoStatusCheck(true);
         msg.setHostUuid(host.getUuid());
-        msg.setPath(KVMConstant.KVM_VM_SYNC_PATH);
+        msg.setPath(XenConstant.KVM_VM_SYNC_PATH);
         bus.makeTargetServiceIdByResourceUuid(msg, HostConstant.SERVICE_ID, host.getUuid());
         bus.send(msg, new CloudBusCallBack(completion) {
             @Override
@@ -100,12 +100,12 @@ public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailure
 
     @Override
     public HypervisorType getHypervisorTypeForReestablishExtensionPoint() {
-        return HypervisorType.valueOf(KVMConstant.KVM_HYPERVISOR_TYPE);
+        return HypervisorType.valueOf(XenConstant.KVM_HYPERVISOR_TYPE);
     }
 
     @Override
     public boolean start() {
-        restf.registerSyncHttpCallHandler(KVMConstant.KVM_REPORT_VM_STATE, ReportVmStateCmd.class, new SyncHttpCallHandler<ReportVmStateCmd>() {
+        restf.registerSyncHttpCallHandler(XenConstant.KVM_REPORT_VM_STATE, ReportVmStateCmd.class, new SyncHttpCallHandler<ReportVmStateCmd>() {
             private void reportState(final ReportVmStateCmd cmd) {
                 thdf.chainSubmit(new ChainTask() {
                     @Override
@@ -208,7 +208,7 @@ public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailure
         return new NoRollbackFlow() {
             @Override
             public void run(final FlowTrigger trigger, Map data) {
-                new Log(context.getInventory().getUuid()).log(KVMHostLabel.SYNC_VM_STATE);
+                new Log(context.getInventory().getUuid()).log(XenHostLabel.SYNC_VM_STATE);
 
                 syncVm(context.getInventory(), new Completion(trigger) {
                     String __name__ = "sync-vm-state";
@@ -228,7 +228,7 @@ public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailure
     }
 
     @Override
-    public void kvmPingAgentNoFailure(KVMHostInventory host, NoErrorCompletion completion) {
+    public void kvmPingAgentNoFailure(XenHostInventory host, NoErrorCompletion completion) {
         if (!KVMGlobalConfig.VM_SYNC_ON_HOST_PING.value(Boolean.class)) {
             completion.done();
             return;

@@ -33,7 +33,7 @@ import org.zstack.utils.SizeUtils;
 import org.zstack.utils.Utils;
 import org.zstack.utils.function.Function;
 import org.zstack.utils.logging.CLogger;
-import org.zstack.xen.KVMAgentCommands.ReconnectMeCmd;
+import org.zstack.xen.XenAgentCommands.ReconnectMeCmd;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,8 +47,8 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
     public static final HypervisorType hypervisorType = new HypervisorType("Xen");
     public static final VolumeFormat QCOW2_FORMAT = new VolumeFormat(VolumeConstant.VOLUME_FORMAT_QCOW2, hypervisorType);
     public static final VolumeFormat RAW_FORMAT = new VolumeFormat(VolumeConstant.VOLUME_FORMAT_RAW, hypervisorType);
-    private List<KVMHostConnectExtensionPoint> connectExtensions = new ArrayList<KVMHostConnectExtensionPoint>();
-    private Map<L2NetworkType, KVMCompleteNicInformationExtensionPoint> completeNicInfoExtensions = new HashMap<L2NetworkType, KVMCompleteNicInformationExtensionPoint>();
+    private List<XenHostConnectExtensionPoint> connectExtensions = new ArrayList<XenHostConnectExtensionPoint>();
+    private Map<L2NetworkType, XenCompleteNicInformationExtensionPoint> completeNicInfoExtensions = new HashMap<L2NetworkType, XenCompleteNicInformationExtensionPoint>();
     private int maxDataVolumeNum;
 
     static {
@@ -72,7 +72,7 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
     @Override
     public HostVO createHost(HostVO vo, AddHostMessage msg) {
         APIAddXenHostMsg amsg = (APIAddXenHostMsg) msg;
-        KVMHostVO kvo = new KVMHostVO(vo);
+        XenHostVO kvo = new XenHostVO(vo);
         kvo.setUsername(amsg.getUsername());
         kvo.setPassword(amsg.getPassword());
         kvo.setPort(amsg.getSshPort());
@@ -82,12 +82,12 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
 
     @Override
     public Host getHost(HostVO vo) {
-        KVMHostVO kvo = dbf.findByUuid(vo.getUuid(), KVMHostVO.class);
-        KVMHostContext context = getHostContext(vo.getUuid());
+        XenHostVO kvo = dbf.findByUuid(vo.getUuid(), XenHostVO.class);
+        XenHostContext context = getHostContext(vo.getUuid());
         if (context == null) {
             context = createHostContext(kvo);
         }
-        return new KVMHost(kvo, context);
+        return new XenHost(kvo, context);
     }
 
     private List<String> getHostManagedByUs() {
@@ -97,7 +97,7 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
         List<String> hostUuids = new ArrayList<String>();
         int start = 0;
         for (int i=0; i<times; i++) {
-            SimpleQuery<KVMHostVO> q = dbf.createQuery(KVMHostVO.class);
+            SimpleQuery<XenHostVO> q = dbf.createQuery(XenHostVO.class);
             q.select(HostVO_.uuid);
             // disconnected host will be handled by HostManager
             q.add(HostVO_.status, SimpleQuery.Op.EQ, HostStatus.Connected);
@@ -123,20 +123,20 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
 
     @Override
     public HostInventory getHostInventory(HostVO vo) {
-        KVMHostVO kvo = vo instanceof KVMHostVO ? (KVMHostVO) vo : dbf.findByUuid(vo.getUuid(), KVMHostVO.class);
-        return KVMHostInventory.valueOf(kvo);
+        XenHostVO kvo = vo instanceof XenHostVO ? (XenHostVO) vo : dbf.findByUuid(vo.getUuid(), XenHostVO.class);
+        return XenHostInventory.valueOf(kvo);
     }
 
     @Override
     public HostInventory getHostInventory(String uuid) {
-        KVMHostVO vo = dbf.findByUuid(uuid, KVMHostVO.class);
-        return vo == null ? null : KVMHostInventory.valueOf(vo);
+        XenHostVO vo = dbf.findByUuid(uuid, XenHostVO.class);
+        return vo == null ? null : XenHostInventory.valueOf(vo);
     }
 
     private void populateExtensions() {
-        connectExtensions = pluginRgty.getExtensionList(KVMHostConnectExtensionPoint.class);
-        for (KVMCompleteNicInformationExtensionPoint ext : pluginRgty.getExtensionList(KVMCompleteNicInformationExtensionPoint.class)) {
-        	KVMCompleteNicInformationExtensionPoint old = completeNicInfoExtensions.get(ext.getL2NetworkTypeVmNicOn());
+        connectExtensions = pluginRgty.getExtensionList(XenHostConnectExtensionPoint.class);
+        for (XenCompleteNicInformationExtensionPoint ext : pluginRgty.getExtensionList(XenCompleteNicInformationExtensionPoint.class)) {
+        	XenCompleteNicInformationExtensionPoint old = completeNicInfoExtensions.get(ext.getL2NetworkTypeVmNicOn());
             if (old != null) {
                 throw new CloudRuntimeException(String.format("duplicate KVMCompleteNicInformationExtensionPoint[%s, %s] for type[%s]",
                         old.getClass().getName(), ext.getClass().getName(), ext.getL2NetworkTypeVmNicOn()));
@@ -145,8 +145,8 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
         }
     }
 
-    public KVMCompleteNicInformationExtensionPoint getCompleteNicInfoExtension(L2NetworkType type) {
-    	KVMCompleteNicInformationExtensionPoint extp = completeNicInfoExtensions.get(type);
+    public XenCompleteNicInformationExtensionPoint getCompleteNicInfoExtension(L2NetworkType type) {
+    	XenCompleteNicInformationExtensionPoint extp = completeNicInfoExtensions.get(type);
     	if (extp == null) {
     		throw new IllegalArgumentException(String.format("unble to fine KVMCompleteNicInformationExtensionPoint supporting L2NetworkType[%s]", type));
     	}
@@ -159,7 +159,7 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
             return;
         }
 
-        asf.deployModule(KVMConstant.ANSIBLE_MODULE_PATH, KVMConstant.ANSIBLE_PLAYBOOK_NAME);
+        asf.deployModule(XenConstant.ANSIBLE_MODULE_PATH, XenConstant.ANSIBLE_PLAYBOOK_NAME);
     }
 
     @Override
@@ -184,7 +184,7 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
             }
         });
 
-        restf.registerSyncHttpCallHandler(KVMConstant.KVM_RECONNECT_ME, ReconnectMeCmd.class, new SyncHttpCallHandler<ReconnectMeCmd>() {
+        restf.registerSyncHttpCallHandler(XenConstant.KVM_RECONNECT_ME, ReconnectMeCmd.class, new SyncHttpCallHandler<ReconnectMeCmd>() {
             @Override
             public String handleSyncHttpCall(ReconnectMeCmd cmd) {
                 //TODO
@@ -205,11 +205,11 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
         return true;
     }
 
-    public List<KVMHostConnectExtensionPoint> getConnectExtensions() {
+    public List<XenHostConnectExtensionPoint> getConnectExtensions() {
         return connectExtensions;
     }
 
-    KVMHostContext createHostContext(KVMHostVO vo) {
+    XenHostContext createHostContext(XenHostVO vo) {
         UriComponentsBuilder ub = UriComponentsBuilder.newInstance();
         ub.scheme(KVMGlobalProperty.AGENT_URL_SCHEME);
         ub.host(vo.getManagementIp());
@@ -219,20 +219,20 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
         }
         String baseUrl = ub.build().toUriString();
 
-        KVMHostContext context = new KVMHostContext();
-        context.setInventory(KVMHostInventory.valueOf(vo));
+        XenHostContext context = new XenHostContext();
+        context.setInventory(XenHostInventory.valueOf(vo));
         context.setBaseUrl(baseUrl);
         return context;
     }
 
-    public KVMHostContext getHostContext(String hostUuid) {
-        KVMHostVO kvo = dbf.findByUuid(hostUuid, KVMHostVO.class);
+    public XenHostContext getHostContext(String hostUuid) {
+        XenHostVO kvo = dbf.findByUuid(hostUuid, XenHostVO.class);
         return createHostContext(kvo);
     }
 
     @Override
     public String getHypervisorTypeForMaxDataVolumeNumberExtension() {
-        return KVMConstant.KVM_HYPERVISOR_TYPE;
+        return XenConstant.KVM_HYPERVISOR_TYPE;
     }
 
     @Override
@@ -247,7 +247,7 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
             return;
         }
 
-        if (!asf.isModuleChanged(KVMConstant.ANSIBLE_PLAYBOOK_NAME)) {
+        if (!asf.isModuleChanged(XenConstant.ANSIBLE_PLAYBOOK_NAME)) {
             return;
         }
 
@@ -294,7 +294,7 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
     }
 
     private void handle(final APIXenRunShellMsg msg) {
-        final APIKvmRunShellEvent evt = new APIKvmRunShellEvent(msg.getId());
+        final APIXenRunShellEvent evt = new APIXenRunShellEvent(msg.getId());
 
         final List<KvmRunShellMsg> kmsgs = CollectionUtils.transformToList(msg.getHostUuids(), new Function<KvmRunShellMsg, String>() {
             @Override
@@ -313,7 +313,7 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
                 for (MessageReply r : replies) {
                     String hostUuid = kmsgs.get(replies.indexOf(r)).getHostUuid();
 
-                    APIKvmRunShellEvent.ShellResult result = new APIKvmRunShellEvent.ShellResult();
+                    APIXenRunShellEvent.ShellResult result = new APIXenRunShellEvent.ShellResult();
                     if (!r.isSuccess()) {
                         result.setErrorCode(r.getError());
                     } else {
@@ -333,6 +333,6 @@ public class XenHostFactory extends AbstractService implements HypervisorFactory
 
     @Override
     public String getId() {
-        return bus.makeLocalServiceId(KVMConstant.SERVICE_ID);
+        return bus.makeLocalServiceId(XenConstant.SERVICE_ID);
     }
 }

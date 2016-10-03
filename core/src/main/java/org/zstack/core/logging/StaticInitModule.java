@@ -53,7 +53,7 @@ public class StaticInitModule {
                 } catch (IllegalArgumentException e) {
                     throw new CloudRuntimeException(String.format("invalid locale[%s] in the label[%s]", l, msg), e);
                 }
-
+                logger.debug(String.format("!!!!!!!!!!!lab locale is %s", locale.toString()));
                 Map<String, String> labels = localeMsgs.get(locale.toString());
                 if (labels == null) {
                     labels = new LinkedHashMap<String, String>();

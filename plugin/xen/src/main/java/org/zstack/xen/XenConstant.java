@@ -4,11 +4,11 @@ import org.zstack.header.configuration.PythonClass;
 import org.zstack.header.vm.VmInstanceState;
 
 @PythonClass
-public interface KVMConstant {
-    public static final String SERVICE_ID = "kvm";
+public interface XenConstant {
+    public static final String SERVICE_ID = "xen";
 
     @PythonClass
-    public static final String KVM_HYPERVISOR_TYPE = "KVM";
+    public static final String KVM_HYPERVISOR_TYPE = "Xen";
 
     public static final String KVM_CONNECT_PATH = "/host/connect";
     public static final String KVM_PING_PATH = "/host/ping";
@@ -50,11 +50,11 @@ public interface KVMConstant {
     public static final String MIN_LIBVIRT_LIVE_BLOCK_COMMIT_VERSION = "1.2.7";
     public static final String MIN_LIBVIRT_VIRTIO_SCSI_VERSION = "1.0.4";
 
-    public static final String KVM_REPORT_VM_STATE = "/kvm/reportvmstate";
-    public static final String KVM_RECONNECT_ME = "/kvm/reconnectme";
-    public static final String KVM_ANSIBLE_LOG_PATH_FROMAT = "/kvm/ansiblelog/{uuid}";
+    public static final String KVM_REPORT_VM_STATE = "/xen/reportvmstate";
+    public static final String KVM_RECONNECT_ME = "/xen/reconnectme";
+    public static final String KVM_ANSIBLE_LOG_PATH_FROMAT = "/xen/ansiblelog/{uuid}";
 
-    public static final String KVM_AGENT_OWNER = "kvm";
+    public static final String KVM_AGENT_OWNER = "xen";
 
     public static enum KvmVmState {
     	NoState,
