@@ -714,7 +714,7 @@ public abstract class HostBase extends AbstractHost {
                 try {
                     extpEmitter.connectionReestablished(HypervisorType.valueOf(self.getHypervisorType()), getSelfInventory());
                 } catch (HostException e) {
-                    logger.warn(String.format("unable to reestablish connection to kvm host[uuid:%s, ip:%s], %s",
+                    logger.warn(String.format("unable to reestablish connection to kvm/Xen host[uuid:%s, ip:%s], %s",
                             self.getUuid(), self.getManagementIp(), e.getMessage()), e);
                     return false;
                 }

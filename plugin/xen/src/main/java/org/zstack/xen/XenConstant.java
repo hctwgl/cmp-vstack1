@@ -42,8 +42,8 @@ public interface XenConstant {
     public static final String KVM_HARDEN_CONSOLE_PATH = "/vm/console/harden";
     public static final String KVM_DELETE_CONSOLE_FIREWALL_PATH = "/vm/console/deletefirewall";
     public static final String ISO_TO = "kvm.isoto";
-    public static final String ANSIBLE_PLAYBOOK_NAME = "kvm.py";
-    public static final String ANSIBLE_MODULE_PATH = "ansible/kvm";
+    public static final String ANSIBLE_PLAYBOOK_NAME = "xen.py";
+    public static final String ANSIBLE_MODULE_PATH = "ansible/xen";
 
     public static final String MIN_LIBVIRT_LIVESNAPSHOT_VERSION = "1.0.0";
     public static final String MIN_QEMU_LIVESNAPSHOT_VERSION = "1.3.0";
