@@ -2379,45 +2379,7 @@ public class XenHost extends HostBase implements Host {
                         @Override
                         public void run(final FlowTrigger trigger, Map data) {
                             new Log(self.getUuid()).log(XenHostLabel.COLLECT_HOST_FACTS);
-
-                            HostFactCmd cmd = new HostFactCmd();
                             trigger.next();
-//                            restf.asyncJsonPost(hostFactPath, cmd, new JsonAsyncRESTCallback<HostFactResponse>() {
-//                                @Override
-//                                public void fail(ErrorCode err) {
-//                                    trigger.fail(err);
-//                                }
-//
-//                                @Override
-//                                public void success(HostFactResponse ret) {
-//                                    if (!ret.isSuccess()) {
-//                                        trigger.fail(errf.stringToOperationError(ret.getError()));
-//                                        return;
-//                                    }
-//
-//                                    if (ret.getHvmCpuFlag() == null) {
-//                                        trigger.fail(errf.stringToOperationError(
-//                                                "cannot find either 'vmx' or 'svm' in /proc/cpuinfo, please make sure you have enabled virtualization in your BIOS setting"
-//                                        ));
-//                                        return;
-//                                    }
-//
-//                                    KVMSystemTags.QEMU_IMG_VERSION.recreateTag(self.getUuid(), map(e(KVMSystemTags.QEMU_IMG_VERSION_TOKEN, ret.getQemuImgVersion())));
-//                                    KVMSystemTags.LIBVIRT_VERSION.recreateTag(self.getUuid(), map(e(KVMSystemTags.LIBVIRT_VERSION_TOKEN, ret.getLibvirtVersion())));
-//                                    KVMSystemTags.HVM_CPU_FLAG.recreateTag(self.getUuid(), map(e(KVMSystemTags.HVM_CPU_FLAG_TOKEN, ret.getHvmCpuFlag())));
-//
-//                                    if (ret.getLibvirtVersion().compareTo(XenConstant.MIN_LIBVIRT_VIRTIO_SCSI_VERSION) >= 0) {
-//                                        KVMSystemTags.VIRTIO_SCSI.reCreateInherentTag(self.getUuid());
-//                                    }
-//
-//                                    trigger.next();
-//                                }
-//
-//                                @Override
-//                                public Class<HostFactResponse> getReturnClass() {
-//                                    return HostFactResponse.class;
-//                                }
-//                            });
                         }
                     });
 
