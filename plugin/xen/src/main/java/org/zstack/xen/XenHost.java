@@ -2160,7 +2160,7 @@ public class XenHost extends HostBase implements Host {
         FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
         chain.setName(String.format("continue-connecting-kvm-host-%s-%s", self.getManagementIp(), self.getUuid()));
         for (XenHostConnectExtensionPoint extp : factory.getConnectExtensions()) {
-            KVMHostConnectedContext ctx = new KVMHostConnectedContext();
+            XenHostConnectedContext ctx = new XenHostConnectedContext();
             ctx.setInventory((XenHostInventory) getSelfInventory());
             ctx.setNewAddedHost(newAdded);
 

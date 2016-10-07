@@ -160,7 +160,7 @@ public class KVMConnectExtensionForL2Network implements XenHostConnectExtensionP
     }
 
     @Override
-    public Flow createKvmHostConnectingFlow(final KVMHostConnectedContext context) {
+    public Flow createKvmHostConnectingFlow(final XenHostConnectedContext context) {
         return new NoRollbackFlow() {
             String __name__ = "prepare-l2-network";
 

@@ -68,6 +68,15 @@
         </zstack:plugin>
     </bean>
 
+    <bean id="LocalStorageXenFactory" class="org.zstack.storage.primary.local.LocalStorageXenFactory">
+        <zstack:plugin>
+            <zstack:extension interface="org.zstack.storage.primary.local.LocalStorageHypervisorFactory" />
+            <zstack:extension interface="org.zstack.xen.XenHostConnectExtensionPoint" />
+            <zstack:extension interface="org.zstack.header.host.FailToAddHostExtensionPoint" />
+        </zstack:plugin>
+    </bean>
+
+
     <bean id="LocalStorageApiInterceptor" class="org.zstack.storage.primary.local.LocalStorageApiInterceptor">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.apimediator.ApiMessageInterceptor" />

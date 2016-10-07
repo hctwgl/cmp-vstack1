@@ -2,7 +2,7 @@ package org.zstack.xen;
 
 /**
  */
-public class KVMHostConnectedContext {
+public class XenHostConnectedContext {
     private XenHostInventory inventory;
     private boolean newAddedHost;
 

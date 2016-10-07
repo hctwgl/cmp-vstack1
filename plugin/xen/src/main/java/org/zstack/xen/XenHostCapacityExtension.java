@@ -62,7 +62,7 @@ public class XenHostCapacityExtension implements XenHostConnectExtensionPoint, H
     }
 
     @Override
-    public Flow createKvmHostConnectingFlow(final KVMHostConnectedContext context) {
+    public Flow createKvmHostConnectingFlow(final XenHostConnectedContext context) {
         return new NoRollbackFlow() {
             String __name__ = "sync-host-capacity";
 

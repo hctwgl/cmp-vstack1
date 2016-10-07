@@ -204,7 +204,7 @@ public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailure
     }
 
     @Override
-    public Flow createKvmHostConnectingFlow(final KVMHostConnectedContext context) {
+    public Flow createKvmHostConnectingFlow(final XenHostConnectedContext context) {
         return new NoRollbackFlow() {
             @Override
             public void run(final FlowTrigger trigger, Map data) {

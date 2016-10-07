@@ -149,7 +149,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
     }
 
     @Override
-    public Flow createKvmHostConnectingFlow(final KVMHostConnectedContext context) {
+    public Flow createKvmHostConnectingFlow(final XenHostConnectedContext context) {
         return new NoRollbackFlow() {
             String __name__ = "refresh-security-group-on-host";
 
