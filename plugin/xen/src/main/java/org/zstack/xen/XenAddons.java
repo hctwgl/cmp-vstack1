@@ -2,7 +2,7 @@ package org.zstack.xen;
 
 /**
  */
-public interface KVMAddons {
+public interface XenAddons {
     public static class Channel {
         public static final String NAME = "channel";
 

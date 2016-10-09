@@ -88,7 +88,8 @@ public abstract class VmTracer {
 
         private void handleAnonymousVm(final String vmUuid, final VmInstanceState actualState, VmInstanceState expected) {
             final VmInstanceVO vm = dbf.findByUuid(vmUuid, VmInstanceVO.class);
-            if (vm == null) {
+            if (vm == null&& !vmUuid.equals("Domain-0")) {
+       
                 new Event().log(VmLabels.STRANGER_VM, hostUuid, vmUuid);
                 /*
                 logger.debug(String.format("[Vm Tracer] detects stranger vm[identity:%s, state:%s]", vmUuid, actualState));

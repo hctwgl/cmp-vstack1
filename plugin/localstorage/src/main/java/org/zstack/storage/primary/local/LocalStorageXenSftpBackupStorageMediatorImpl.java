@@ -17,12 +17,12 @@ import org.zstack.header.storage.backup.BackupStorageInventory;
 import org.zstack.header.storage.primary.PrimaryStorageInventory;
 import org.zstack.header.vm.APICreateVmInstanceMsg;
 import org.zstack.kvm.KVMConstant;
-import org.zstack.kvm.KVMHostAsyncHttpCallMsg;
-import org.zstack.kvm.KVMHostAsyncHttpCallReply;
+import org.zstack.xen.XenConstant;
 import org.zstack.storage.backup.sftp.GetSftpBackupStorageDownloadCredentialMsg;
 import org.zstack.storage.backup.sftp.GetSftpBackupStorageDownloadCredentialReply;
 import org.zstack.storage.backup.sftp.SftpBackupStorageConstant;
-import org.zstack.xen.XenConstant;
+import org.zstack.xen.XenHostAsyncHttpCallMsg;
+import org.zstack.xen.XenHostAsyncHttpCallReply;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ import static org.zstack.utils.CollectionDSL.list;
  * Created by frank on 7/1/2015.
  */
 @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
-public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorageBackupStorageMediator {
+public class LocalStorageXenSftpBackupStorageMediatorImpl implements LocalStorageBackupStorageMediator {
     @Autowired
     private CloudBus bus;
     @Autowired
@@ -45,7 +45,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
     public static final String DOWNLOAD_BIT_PATH = "/localstorage/sftp/download";
 
     @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class, APILocalStorageMigrateVolumeMsg.class})
-    public static class SftpDownloadBitsCmd extends LocalStorageKvmBackend.AgentCommand {
+    public static class SftpDownloadBitsCmd extends LocalStorageXenBackend.AgentCommand {
         private String sshKey;
         private String username;
         private String hostname;
@@ -97,7 +97,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
         }
     }
 
-    public static class SftpDownloadBitsRsp extends LocalStorageKvmBackend.AgentResponse {
+    public static class SftpDownloadBitsRsp extends LocalStorageXenBackend.AgentResponse {
 
     }
 
@@ -105,7 +105,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
             APICreateRootVolumeTemplateFromVolumeSnapshotMsg.class,
             APICreateRootVolumeTemplateFromRootVolumeMsg.class
     })
-    public static class SftpUploadBitsCmd extends LocalStorageKvmBackend.AgentCommand {
+    public static class SftpUploadBitsCmd extends LocalStorageXenBackend.AgentCommand {
         private String primaryStorageInstallPath;
         private String backupStorageInstallPath;
         private String hostname;
@@ -157,7 +157,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
         }
     }
 
-    public static class SftpUploadBitsRsp extends LocalStorageKvmBackend.AgentResponse {
+    public static class SftpUploadBitsRsp extends LocalStorageXenBackend.AgentResponse {
 
     }
 
@@ -182,7 +182,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
                 cmd.setBackupStorageInstallPath(backupStorageInstallPath);
                 cmd.setPrimaryStorageInstallPath(primaryStorageInstallPath);
 
-                KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+                XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
                 msg.setHostUuid(hostUuid);
                 msg.setPath(DOWNLOAD_BIT_PATH);
                 msg.setCommand(cmd);
@@ -196,7 +196,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
                             return;
                         }
 
-                        KVMHostAsyncHttpCallReply kr = reply.castReply();
+                        XenHostAsyncHttpCallReply kr = reply.castReply();
                         SftpDownloadBitsRsp rsp = kr.toResponse(SftpDownloadBitsRsp.class);
                         if (!rsp.isSuccess()) {
                             completion.fail(errf.stringToOperationError(
@@ -235,7 +235,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
                 cmd.setSshPort(r.getSshPort());
                 cmd.setUsername(r.getUsername());
 
-                KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+                XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
                 msg.setCommand(cmd);
                 msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
                 msg.setPath(UPLOAD_BIT_PATH);
@@ -249,7 +249,7 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
                             return;
                         }
 
-                        KVMHostAsyncHttpCallReply kr = reply.castReply();
+                        XenHostAsyncHttpCallReply kr = reply.castReply();
                         SftpUploadBitsRsp rsp = kr.toResponse(SftpUploadBitsRsp.class);
                         if (!rsp.isSuccess()) {
                             completion.fail(errf.stringToOperationError(
@@ -278,6 +278,6 @@ public class LocalStorageKvmSftpBackupStorageMediatorImpl implements LocalStorag
 
     @Override
     public List<String> getSupportedHypervisorTypes() {
-    	return list(KVMConstant.KVM_HYPERVISOR_TYPE);
+    	return list(XenConstant.KVM_HYPERVISOR_TYPE);
     }
 }

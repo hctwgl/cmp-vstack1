@@ -40,7 +40,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
         ApplySecurityGroupRuleCmd cmd = new ApplySecurityGroupRuleCmd();
         cmd.setRuleTOs(hto.getRules());
 
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setHostUuid(hto.getHostUuid());
         msg.setPath(SECURITY_GROUP_APPLY_RULE_PATH);
         msg.setCommand(cmd);
@@ -54,7 +54,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply hreply = reply.castReply();
+                XenHostAsyncHttpCallReply hreply = reply.castReply();
                 ApplySecurityGroupRuleResponse rsp = hreply.toResponse(ApplySecurityGroupRuleResponse.class);
                 if (!rsp.isSuccess()) {
                     String err = String.format("failed to apply rules of security group rules to kvm host[uuid:%s], because %s", hto.getHostUuid(), rsp.getError());
@@ -74,7 +74,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
         RefreshAllRulesOnHostCmd cmd = new RefreshAllRulesOnHostCmd();
         cmd.setRuleTOs(hto.getRules());
 
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setHostUuid(hto.getHostUuid());
         msg.setPath(SECURITY_GROUP_REFRESH_RULE_ON_HOST_PATH);
         msg.setCommand(cmd);
@@ -89,7 +89,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply hreply = reply.castReply();
+                XenHostAsyncHttpCallReply hreply = reply.castReply();
                 ApplySecurityGroupRuleResponse rsp = hreply.toResponse(ApplySecurityGroupRuleResponse.class);
                 if (!rsp.isSuccess()) {
                     String err = String.format("failed to apply rules of security group rules to kvm host[uuid:%s], because %s", hto.getHostUuid(), rsp.getError());
@@ -117,7 +117,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
     @Override
     public void cleanUpUnusedRuleOnHost(String hostUuid, final Completion completion) {
         XenAgentCommands.CleanupUnusedRulesOnHostCmd cmd = new XenAgentCommands.CleanupUnusedRulesOnHostCmd();
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setHostUuid(hostUuid);
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
@@ -131,7 +131,7 @@ public class KVMSecurityGroupBackend implements SecurityGroupHypervisorBackend, 
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply hreply = reply.castReply();
+                XenHostAsyncHttpCallReply hreply = reply.castReply();
                 CleanupUnusedRulesOnHostResponse  rsp = hreply.toResponse(CleanupUnusedRulesOnHostResponse.class);
                 if (!rsp.isSuccess()) {
                     completion.fail(errf.stringToOperationError(rsp.getError()));

@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 
 /**
  */
-public class KVMHostAsyncHttpCallReply extends MessageReply {
+public class XenHostAsyncHttpCallReply extends MessageReply {
     @NoJsonSchema
     private LinkedHashMap response;
 

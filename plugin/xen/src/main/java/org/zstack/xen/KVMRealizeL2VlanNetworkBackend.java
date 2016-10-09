@@ -47,7 +47,7 @@ public class KVMRealizeL2VlanNetworkBackend implements L2NetworkRealizationExten
         cmd.setBridgeName(makeBridgeName(l2vlan.getPhysicalInterface(), l2vlan.getVlan()));
         cmd.setVlan(l2vlan.getVlan());
 
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setHostUuid(hostUuid);
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
@@ -62,7 +62,7 @@ public class KVMRealizeL2VlanNetworkBackend implements L2NetworkRealizationExten
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply hreply = reply.castReply();
+                XenHostAsyncHttpCallReply hreply = reply.castReply();
                 CreateVlanBridgeResponse rsp = hreply.toResponse(CreateVlanBridgeResponse.class);
                 if (!rsp.isSuccess()) {
                     String err = String.format(
@@ -98,7 +98,7 @@ public class KVMRealizeL2VlanNetworkBackend implements L2NetworkRealizationExten
         cmd.setBridgeName(makeBridgeName(l2vlan.getPhysicalInterface(), l2vlan.getVlan()));
         cmd.setVlan(l2vlan.getVlan());
 
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setHostUuid(hostUuid);
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
@@ -113,7 +113,7 @@ public class KVMRealizeL2VlanNetworkBackend implements L2NetworkRealizationExten
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply hreply = reply.castReply();
+                XenHostAsyncHttpCallReply hreply = reply.castReply();
                 CheckVlanBridgeResponse rsp = hreply.toResponse(CheckVlanBridgeResponse.class);
                 if (!rsp.isSuccess()) {
                     ErrorCode err = errf.stringToOperationError(

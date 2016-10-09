@@ -55,7 +55,7 @@ public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailure
     private ApiTimeoutManager timeoutMgr;
 
     private void syncVm(final HostInventory host, final Completion completion) {
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         VmSyncCmd cmd = new VmSyncCmd();
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
@@ -71,7 +71,7 @@ public class KvmVmSyncPingTask extends VmTracer implements KVMPingAgentNoFailure
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply r = reply.castReply();
+                XenHostAsyncHttpCallReply r = reply.castReply();
                 VmSyncResponse ret = r.toResponse(VmSyncResponse.class);
                 if (ret.isSuccess()) {
                     Map<String, VmInstanceState> states = new HashMap<String, VmInstanceState>(ret.getStates().size());

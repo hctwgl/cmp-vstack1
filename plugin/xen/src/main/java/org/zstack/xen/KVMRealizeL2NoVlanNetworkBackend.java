@@ -44,7 +44,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
         cmd.setPhysicalInterfaceName(l2Network.getPhysicalInterface());
         cmd.setBridgeName(makeBridgeName(l2Network.getPhysicalInterface()));
 
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
         msg.setPath(XenConstant.KVM_REALIZE_L2NOVLAN_NETWORK_PATH);
@@ -59,7 +59,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply hreply = reply.castReply();
+                XenHostAsyncHttpCallReply hreply = reply.castReply();
                 CreateBridgeResponse rsp = hreply.toResponse(CreateBridgeResponse.class);
                 if (!rsp.isSuccess()) {
                     String err = String.format(
@@ -93,7 +93,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
         cmd.setPhysicalInterfaceName(l2Network.getPhysicalInterface());
         cmd.setBridgeName(makeBridgeName(l2Network.getPhysicalInterface()));
 
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setNoStatusCheck(noStatusCheck);
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
@@ -108,7 +108,7 @@ public class KVMRealizeL2NoVlanNetworkBackend implements L2NetworkRealizationExt
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply hreply = reply.castReply();
+                XenHostAsyncHttpCallReply hreply = reply.castReply();
                 CheckBridgeResponse rsp = hreply.toResponse(CheckBridgeResponse.class);
                 if (!rsp.isSuccess()) {
                     ErrorCode err = errf.stringToOperationError(

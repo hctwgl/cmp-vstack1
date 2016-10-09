@@ -25,7 +25,47 @@ public class LocalStorageCapacityUpdater {
     private DatabaseFacade dbf;
 
     @Transactional
-    public void updatePhysicalCapacityByKvmAgentResponse(String psUuid, String hostUuid, AgentResponse rsp) {
+    public  void updatePhysicalCapacityByKvmAgentResponse(String psUuid, String hostUuid, AgentResponse rsp) {
+        LocalStorageHostRefVO ref = dbf.getEntityManager().find(LocalStorageHostRefVO.class, hostUuid, LockModeType.PESSIMISTIC_WRITE);
+        if (ref == null) {
+            return;
+        }
+
+        if (ref.getAvailablePhysicalCapacity() == rsp.getAvailableCapacity() && ref.getTotalPhysicalCapacity() == rsp.getTotalCapacity()) {
+            return;
+        }
+
+        long originalPhysicalTotal = ref.getTotalPhysicalCapacity();
+        long originalPhysicalAvailable = ref.getAvailablePhysicalCapacity();
+
+        ref.setTotalPhysicalCapacity(rsp.getTotalCapacity());
+        ref.setAvailablePhysicalCapacity(rsp.getAvailableCapacity());
+        dbf.getEntityManager().merge(ref);
+
+        if (logger.isTraceEnabled()) {
+            logger.trace(String.format("[Local Storage Capacity] changed the physical capacity of the host[uuid:%s] of " +
+                    "the local primary storage[uuid:%s] as:\n" +
+                    "physical total: %s --> %s\n" +
+                    "physical available: %s --> %s\n",
+                    hostUuid, psUuid, originalPhysicalTotal, ref.getTotalPhysicalCapacity(),
+                    originalPhysicalAvailable, ref.getAvailablePhysicalCapacity()));
+        }
+
+        final long totalChange = rsp.getTotalCapacity() - ref.getTotalPhysicalCapacity();
+        final long availChange = rsp.getAvailableCapacity() - ref.getAvailablePhysicalCapacity();
+
+        new PrimaryStorageCapacityUpdater(psUuid).run(new PrimaryStorageCapacityUpdaterRunnable() {
+            @Override
+            public PrimaryStorageCapacityVO call(PrimaryStorageCapacityVO cap) {
+                cap.setTotalPhysicalCapacity(cap.getTotalPhysicalCapacity() + totalChange);
+                cap.setAvailablePhysicalCapacity(cap.getAvailablePhysicalCapacity() + availChange);
+                return cap;
+            }
+        });
+    }
+    
+    @Transactional
+    public  void updatePhysicalCapacityByXenAgentResponse(String psUuid, String hostUuid, LocalStorageXenBackend.AgentResponse rsp) {
         LocalStorageHostRefVO ref = dbf.getEntityManager().find(LocalStorageHostRefVO.class, hostUuid, LockModeType.PESSIMISTIC_WRITE);
         if (ref == null) {
             return;

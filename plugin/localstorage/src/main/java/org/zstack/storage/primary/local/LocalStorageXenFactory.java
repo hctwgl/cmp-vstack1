@@ -17,8 +17,6 @@ import org.zstack.header.message.MessageReply;
 import org.zstack.header.storage.primary.PrimaryStorageConstant;
 import org.zstack.header.storage.primary.PrimaryStorageVO;
 import org.zstack.header.storage.primary.RecalculatePrimaryStorageCapacityMsg;
-import org.zstack.kvm.KVMHostConnectExtensionPoint;
-import org.zstack.kvm.KVMHostConnectedContext;
 import org.zstack.utils.Utils;
 import org.zstack.utils.logging.CLogger;
 import org.zstack.xen.XenConstant;
@@ -50,7 +48,7 @@ public class LocalStorageXenFactory implements LocalStorageHypervisorFactory, Xe
 
     @Override
     public LocalStorageHypervisorBackend getHypervisorBackend(PrimaryStorageVO vo) {
-        return new LocalStorageKvmBackend(vo);
+        return new LocalStorageXenBackend(vo);
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +85,7 @@ public class LocalStorageXenFactory implements LocalStorageHypervisorFactory, Xe
                     public void run(MessageReply reply) {
                         if (!reply.isSuccess()) {
                             trigger.fail(errf.stringToOperationError(
-                                    String.format("KVM host[uuid: %s] fails to add into local primary storage[uuid: %s], %s",
+                                    String.format("Xen host[uuid: %s] fails to add into local primary storage[uuid: %s], %s",
                                             context.getInventory().getUuid(), priUuid, reply.getError())
                             ));
                         } else {

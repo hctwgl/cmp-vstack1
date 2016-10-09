@@ -51,7 +51,7 @@ public class KVMConsoleHypervisorBackend implements ConsoleHypervisorBackend {
         XenAgentCommands.GetVncPortCmd cmd = new XenAgentCommands.GetVncPortCmd();
         cmd.setVmUuid(vm.getUuid());
 
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setHostUuid(vm.getHostUuid());
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutMgr.getTimeout(cmd.getClass(), "5m"));
@@ -65,7 +65,7 @@ public class KVMConsoleHypervisorBackend implements ConsoleHypervisorBackend {
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply kreply = reply.castReply();
+                XenHostAsyncHttpCallReply kreply = reply.castReply();
                 GetVncPortResponse rsp = kreply.toResponse(GetVncPortResponse.class);
                 if (!rsp.isSuccess()) {
                     complete.fail(errf.stringToOperationError(rsp.getError()));

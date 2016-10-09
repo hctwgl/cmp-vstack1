@@ -18,6 +18,11 @@
         </dependency>
         <dependency>
             <groupId>org.zstack</groupId>
+            <artifactId>xen</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.zstack</groupId>
             <artifactId>sftpBackupStorage</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -267,6 +267,7 @@ public class LocalStorageFactory implements PrimaryStorageFactory, Component,
     public boolean start() {
         for (LocalStorageBackupStorageMediator m : pluginRgty.getExtensionList(LocalStorageBackupStorageMediator.class)) {
             for (String hvType : m.getSupportedHypervisorTypes()) {
+            	
                 String key = makeMediatorKey(hvType, m.getSupportedBackupStorageType().toString());
                 LocalStorageBackupStorageMediator old = backupStorageMediatorMap.get(key);
                 if (old != null) {

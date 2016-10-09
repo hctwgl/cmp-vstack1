@@ -69,8 +69,8 @@ public class KvmCommandSender {
     }
 
     public void send(final Object cmd, final String path, final KvmCommandFailureChecker checker , final long defaulTimeout, final SteppingSendCallback<KvmResponseWrapper> completion) {
-        List<KVMHostAsyncHttpCallMsg> msgs = hostUuids.stream().map(huuid -> {
-            KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        List<XenHostAsyncHttpCallMsg> msgs = hostUuids.stream().map(huuid -> {
+            XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
             msg.setCommand(cmd);
             msg.setCommandTimeout(timeoutManager.getTimeout(cmd.getClass(), defaulTimeout));
             msg.setHostUuid(huuid);
@@ -83,7 +83,7 @@ public class KvmCommandSender {
         bus.send(msgs, msgs.size(), new CloudBusSteppingCallback(completion) {
             @Override
             public void run(NeedReplyMessage msg, MessageReply reply) {
-                KVMHostAsyncHttpCallMsg kmsg = (KVMHostAsyncHttpCallMsg) msg;
+                XenHostAsyncHttpCallMsg kmsg = (XenHostAsyncHttpCallMsg) msg;
                 completion.hostUuid = kmsg.getHostUuid();
 
                 if (!reply.isSuccess()) {
@@ -91,7 +91,7 @@ public class KvmCommandSender {
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply ar = reply.castReply();
+                XenHostAsyncHttpCallReply ar = reply.castReply();
                 KvmResponseWrapper w = new KvmResponseWrapper(ar.getResponse());
 
                 ErrorCode err = checker.getError(w);
@@ -119,7 +119,7 @@ public class KvmCommandSender {
         }
 
         String huuid = hostUuids.get(0);
-        KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();
+        XenHostAsyncHttpCallMsg msg = new XenHostAsyncHttpCallMsg();
         msg.setCommand(cmd);
         msg.setCommandTimeout(timeoutManager.getTimeout(cmd.getClass(), defaulTimeout));
         msg.setHostUuid(huuid);
@@ -134,7 +134,7 @@ public class KvmCommandSender {
                     return;
                 }
 
-                KVMHostAsyncHttpCallReply ar = reply.castReply();
+                XenHostAsyncHttpCallReply ar = reply.castReply();
                 KvmResponseWrapper w = new KvmResponseWrapper(ar.getResponse());
 
                 ErrorCode err = checker.getError(w);

@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  */
-public class KVMHostAsyncHttpCallMsg extends NeedReplyMessage implements HostMessage {
+public class XenHostAsyncHttpCallMsg extends NeedReplyMessage implements HostMessage {
     private String path;
     private String command;
     private String hostUuid;

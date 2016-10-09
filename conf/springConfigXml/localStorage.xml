@@ -54,6 +54,14 @@
         </zstack:plugin>
     </bean>
 
+    <bean id="LocalStorageXenSftpBackupStorageMediatorImpl" class="org.zstack.storage.primary.local.LocalStorageXenSftpBackupStorageMediatorImpl">
+        <zstack:plugin>
+            <zstack:extension interface="org.zstack.storage.primary.local.LocalStorageBackupStorageMediator" />
+        </zstack:plugin>
+    </bean>
+
+
+
     <bean id="LocalStorageImageCleaner" class="org.zstack.storage.primary.local.LocalStorageImageCleaner">
         <zstack:plugin>
             <zstack:extension interface="org.zstack.header.managementnode.ManagementNodeReadyExtensionPoint" />

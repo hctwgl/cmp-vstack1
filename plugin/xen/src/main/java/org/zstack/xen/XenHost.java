@@ -227,8 +227,8 @@ public class XenHost extends HostBase implements Host {
             handle((TakeSnapshotOnHypervisorMsg) msg);
         } else if (msg instanceof MergeVolumeSnapshotOnKvmMsg) {
             handle((MergeVolumeSnapshotOnKvmMsg) msg);
-        } else if (msg instanceof KVMHostAsyncHttpCallMsg) {
-            handle((KVMHostAsyncHttpCallMsg) msg);
+        } else if (msg instanceof XenHostAsyncHttpCallMsg) {
+            handle((XenHostAsyncHttpCallMsg) msg);
         } else if (msg instanceof XenHostSyncHttpCallMsg) {
             handle((XenHostSyncHttpCallMsg) msg);
         } else if (msg instanceof DetachNicFromVmOnHypervisorMsg) {
@@ -682,7 +682,7 @@ public class XenHost extends HostBase implements Host {
         completion.done();
     }
 
-    private void handle(final KVMHostAsyncHttpCallMsg msg) {
+    private void handle(final XenHostAsyncHttpCallMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getSyncSignature() {
@@ -701,7 +701,7 @@ public class XenHost extends HostBase implements Host {
 
             @Override
             public String getName() {
-                return String.format("execute-async-http-call-on-kvm-host-%s", self.getUuid());
+                return String.format("execute-async-http-call-on-xen-host-%s", self.getUuid());
             }
 
             @Override
@@ -723,7 +723,7 @@ public class XenHost extends HostBase implements Host {
         return ub.build().toUriString();
     }
 
-    private void executeAsyncHttpCall(final KVMHostAsyncHttpCallMsg msg, final NoErrorCompletion completion) {
+    private void executeAsyncHttpCall(final XenHostAsyncHttpCallMsg msg, final NoErrorCompletion completion) {
         if (!msg.isNoStatusCheck()) {
             checkStatus();
         }
@@ -733,9 +733,9 @@ public class XenHost extends HostBase implements Host {
         restf.asyncJsonPost(url, msg.getCommand(), new JsonAsyncRESTCallback<LinkedHashMap>(msg, completion) {
             @Override
             public void fail(ErrorCode err) {
-                KVMHostAsyncHttpCallReply reply = new KVMHostAsyncHttpCallReply();
+                XenHostAsyncHttpCallReply reply = new XenHostAsyncHttpCallReply();
                 if (err.isError(SysErrors.HTTP_ERROR, SysErrors.IO_ERROR)) {
-                    reply.setError(errf.instantiateErrorCode(HostErrors.OPERATION_FAILURE_GC_ELIGIBLE, "cannot do the operation on the KVM host",err));
+                    reply.setError(errf.instantiateErrorCode(HostErrors.OPERATION_FAILURE_GC_ELIGIBLE, "cannot do the operation on the Xen host",err));
                 } else {
                     reply.setError(reply.getError());
                 }
@@ -746,7 +746,7 @@ public class XenHost extends HostBase implements Host {
 
             @Override
             public void success(LinkedHashMap ret) {
-                KVMHostAsyncHttpCallReply reply = new KVMHostAsyncHttpCallReply();
+                XenHostAsyncHttpCallReply reply = new XenHostAsyncHttpCallReply();
                 reply.setResponse(ret);
                 bus.reply(msg, reply);
                 completion.done();
@@ -1740,11 +1740,12 @@ public class XenHost extends HostBase implements Host {
         String platform = spec.getVmInventory().getPlatform() == null ? spec.getImageSpec().getInventory().getPlatform() :
                 spec.getVmInventory().getPlatform();
 
-        if (ImagePlatform.Windows.toString().equals(platform)) {
-            virtio = VmSystemTags.WINDOWS_VOLUME_ON_VIRTIO.hasTag(spec.getVmInventory().getUuid());
-        } else {
-            virtio = ImagePlatform.valueOf(platform).isParaVirtualization();
-        }
+//        if (ImagePlatform.Windows.toString().equals(platform)) {
+//            virtio = VmSystemTags.WINDOWS_VOLUME_ON_VIRTIO.hasTag(spec.getVmInventory().getUuid());
+//        } else {
+//            virtio = ImagePlatform.valueOf(platform).isParaVirtualization();
+//        }
+        virtio = false;
 
         int cpuNum = spec.getVmInventory().getCpuNum();
         cmd.setCpuNum(cpuNum);
