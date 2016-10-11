@@ -112,8 +112,7 @@ public class ApiMediatorImpl extends AbstractService implements ApiMediator, Glo
                     handle((APIGetVersionMsg) msg);
                 } else {
                     dispatchMessage((APIMessage) msg);
-                }
-            }
+                }          }
 
             @Override
             public Object call() throws Exception {

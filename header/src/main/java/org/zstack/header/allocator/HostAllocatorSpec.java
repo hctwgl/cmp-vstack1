@@ -31,6 +31,7 @@ public class HostAllocatorSpec {
     private String requiredBackupStorageUuid;
     private Map<String, List<String>> backupStoragePrimaryStorageMetrics;
     private boolean dryRun;
+    
 
     public boolean isDryRun() {
         return dryRun;

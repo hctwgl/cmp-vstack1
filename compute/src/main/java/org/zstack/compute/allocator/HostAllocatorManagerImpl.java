@@ -281,7 +281,11 @@ public class HostAllocatorManagerImpl extends AbstractService implements HostAll
     }
 
 	private void handle(final AllocateHostMsg msg) {
+		
+		HostVO vo = dbf.findByUuid(msg.getVmInstance().getHostUuid(), HostVO.class);
+		String hyperType = vo.getHypervisorType();
         HostAllocatorSpec spec = HostAllocatorSpec.fromAllocationMsg(msg);
+        spec.setHypervisorType(hyperType);
         spec.setBackupStoragePrimaryStorageMetrics(backupStoragePrimaryStorageMetrics);
 
         String allocatorStrategyType = null;
