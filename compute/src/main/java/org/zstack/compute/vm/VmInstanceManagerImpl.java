@@ -198,6 +198,8 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     private void handleApiMessage(APIMessage msg) {
         if (msg instanceof APICreateVmInstanceMsg) {
             handle((APICreateVmInstanceMsg) msg);
+        }else if (msg instanceof APICreatePublicVmInstanceMsg) {
+            handle((APICreatePublicVmInstanceMsg) msg);
         } else if (msg instanceof APIListVmInstanceMsg) {
             handle((APIListVmInstanceMsg) msg);
         } else if (msg instanceof APISearchVmInstanceMsg) {
@@ -525,6 +527,61 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         });
     }
 
+    
+    
+    
+    private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg, ReturnValueCompletion<CreateVmInstanceReply> completion) {
+        VmPubInstanceVO vo = new VmPubInstanceVO();
+            vo.setUuid(Platform.getUuid());
+        if (msg.getConsolePassword() != null) {
+            VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
+        }
+        vo.setName(msg.getName());
+        vo.setState("created");
+        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmInstanceVO.class);
+        String vmType = msg.getType() == null ? VmInstanceConstant.USER_VM_TYPE : msg.getType();
+        VmInstanceType type = VmInstanceType.valueOf(vmType);
+        VmInstanceFactory factory = getVmInstanceFactory(type);
+        
+        //存入数据库/发起请求。将处理移到ECS Agent
+        
+        vo = dbf.persistAndRefresh(vo);
+        
+//           vo = factory.createVmInstance(vo, msg);
+        if (cmsg != null) {
+            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmInstanceVO.class.getSimpleName());
+        }
+
+        
+
+//        StartNewCreatedVmInstanceMsg smsg = new StartNewCreatedVmInstanceMsg();
+//        smsg.setVmInstanceInventory(VmInstanceInventory.valueOf(vo));
+//        bus.makeTargetServiceIdByResourceUuid(smsg, VmInstanceConstant.SERVICE_ID, vo.getUuid());
+//        bus.send(smsg, new CloudBusCallBack() {
+//            @Override
+//            public void run(MessageReply reply) {
+//                try {
+//                    CreateVmInstanceReply cr = new CreateVmInstanceReply();
+//                    if (reply.isSuccess()) {
+//                        StartNewCreatedVmInstanceReply r = (StartNewCreatedVmInstanceReply) reply;
+//                        cr.setInventory(r.getVmInventory());
+//                        completion.success(cr);
+//                    } else {
+//                        completion.fail(reply.getError());
+//                    }
+//                } catch (Exception e) {
+//                    bus.logExceptionWithMessageDump(msg, e);
+//                    bus.replyErrorByMessageType(msg, e);
+//                }
+//            }
+//        });
+    }
+
+    
+    
+    
+    
+    
     private void handle(final CreateVmInstanceMsg msg) {
         doCreateVmInstance(msg, null, new ReturnValueCompletion<CreateVmInstanceReply>() {
             @Override
@@ -566,6 +623,53 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         cmsg.setDefaultL3NetworkUuid(msg.getDefaultL3NetworkUuid());
         cmsg.setConsolePassword(msg.getConsolePassword());
         return cmsg;
+    }
+    
+    
+    private CreateVmInstanceMsg fromAPICreatePublicVmInstanceMsg(APICreatePublicVmInstanceMsg msg) {
+        CreateVmInstanceMsg cmsg = new CreateVmInstanceMsg();
+
+        InstanceOfferingVO iovo = dbf.findByUuid(msg.getInstanceOfferingUuid(), InstanceOfferingVO.class);
+        cmsg.setInstanceOfferingUuid(iovo.getUuid());
+        cmsg.setCpuNum(iovo.getCpuNum());
+        cmsg.setCpuSpeed(iovo.getCpuSpeed());
+        cmsg.setMemorySize(iovo.getMemorySize());
+        cmsg.setAllocatorStrategy(iovo.getAllocatorStrategy());
+
+        cmsg.setAccountUuid(msg.getSession().getAccountUuid());
+        cmsg.setName(msg.getName());
+        cmsg.setImageUuid(msg.getImageUuid());
+        cmsg.setL3NetworkUuids(msg.getL3NetworkUuids());
+        cmsg.setType(msg.getType());
+        cmsg.setRootDiskOfferingUuid(msg.getRootDiskOfferingUuid());
+        cmsg.setDataDiskOfferingUuids(msg.getDataDiskOfferingUuids());
+        cmsg.setZoneUuid(msg.getZoneUuid());
+        cmsg.setClusterUuid(msg.getClusterUuid());
+        cmsg.setHostUuid(msg.getHostUuid());
+        cmsg.setDescription(msg.getDescription());
+        cmsg.setResourceUuid(msg.getResourceUuid());
+        cmsg.setDefaultL3NetworkUuid(msg.getDefaultL3NetworkUuid());
+        cmsg.setConsolePassword(msg.getConsolePassword());
+        return cmsg;
+    }
+    
+    
+    private void handle(final APICreatePublicVmInstanceMsg msg) {
+    	doCreatePublicVmInstance(fromAPICreatePublicVmInstanceMsg(msg), msg, new ReturnValueCompletion<CreateVmInstanceReply>() {
+            APICreateVmInstanceEvent evt = new APICreateVmInstanceEvent(msg.getId());
+
+            @Override
+            public void success(CreateVmInstanceReply returnValue) {
+                evt.setInventory(returnValue.getInventory());
+                bus.publish(evt);
+            }
+
+            @Override
+            public void fail(ErrorCode errorCode) {
+                evt.setErrorCode(errorCode);
+                bus.publish(evt);
+            }
+        });
     }
 
     private void handle(final APICreateVmInstanceMsg msg) {

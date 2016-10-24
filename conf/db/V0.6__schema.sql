@@ -168,15 +168,12 @@ CREATE TABLE  `zstack`.`ClusterEO` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE  `zstack`.`ECSEO` (
+CREATE TABLE  `zstack`.`ECSInstanceEO` (
     `uuid` varchar(32) NOT NULL UNIQUE COMMENT 'cluster uuid',
-    `zoneUuid` varchar(32) NOT NULL COMMENT 'zone uuid',
     `name` varchar(255) NOT NULL COMMENT 'cluster name',
-    `userName` varchar(255) NOT NULL COMMENT 'ECS User Name',
-    `password` varchar(255) NOT NULL COMMENT 'ECS Password',
-    `managementNodeId` varchar(128) DEFAULT NULL COMMENT 'management node id',
-    `state` varchar(32) NOT NULL COMMENT 'cluster state',
-    `description` varchar(2048) DEFAULT NULL COMMENT 'cluster description',
+    `accesskeyID` varchar(255) NOT NULL COMMENT 'ECS Accesskey ID',
+    `accesskeyKey` varchar(255) NOT NULL COMMENT 'ECS Accesskey Key',
+    `state` varchar(32) NOT NULL COMMENT 'ECS state',
     `lastOpDate` timestamp ON UPDATE CURRENT_TIMESTAMP COMMENT 'last operation date',
     `createDate` timestamp,
     `deleted` varchar(255) DEFAULT NULL,
@@ -1378,9 +1375,9 @@ CREATE VIEW `zstack`.`IpRangeVO` AS SELECT uuid, l3NetworkUuid, name, descriptio
 
 CREATE VIEW `zstack`.`L2NetworkVO` AS SELECT uuid, name, description, type, zoneUuid, physicalInterface, createDate, lastOpDate FROM `zstack`.`L2NetworkEO` WHERE deleted IS NULL;
 
-#CREATE VIEW `zstack`.`ClusterVO` AS SELECT uuid, zoneUuid, name, type, description, state, hypervisorType, createDate, lastOpDate, managementNodeId FROM `zstack`.`ClusterEO` WHERE deleted IS NULL;
+CREATE VIEW `zstack`.`ClusterVO` AS SELECT uuid, zoneUuid, name, type, description, state, hypervisorType, createDate, lastOpDate, managementNodeId FROM `zstack`.`ClusterEO` WHERE deleted IS NULL;
 
-CREATE VIEW `zstack`.`ClusterVO` AS SELECT uuid, zoneUuid, name, type, description, state, hypervisorType, createDate, lastOpDate, managementNodeId FROM `zstack`.`Cl0usterEO` WHERE deleted IS NULL UNION ALL SELECT uuid, zoneUuid, name,'ECS', description, state,'ECS', createDate, lastOpDate, managementNodeId FROM `zstack`.`ECSEO` WHERE deleted IS NULL;
+#CREATE VIEW `zstack`.`ClusterVO` AS SELECT uuid, zoneUuid, name, type, description, state, hypervisorType, createDate, lastOpDate, managementNodeId FROM `zstack`.`Cl0usterEO` WHERE deleted IS NULL UNION ALL SELECT uuid, zoneUuid, name,'ECS', description, state,'ECS', createDate, lastOpDate, managementNodeId FROM `zstack`.`ECSEO` WHERE deleted IS NULL;
 
 CREATE VIEW `zstack`.`ZoneVO` AS SELECT uuid, name, type, description, state, createDate, lastOpDate FROM `zstack`.`ZoneEO` WHERE deleted IS NULL;
 
