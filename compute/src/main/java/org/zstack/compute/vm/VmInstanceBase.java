@@ -221,6 +221,9 @@ public class VmInstanceBase extends AbstractVmInstance {
     protected FlowChain getCreateVmWorkFlowChain(VmInstanceInventory inv) {
         return vmMgr.getCreateVmWorkFlowChain(inv);
     }
+    protected FlowChain getCreatePubVmWorkFlowChain( ) {
+        return vmMgr.getCreatePubVmWorkFlowChain();
+    }
 
     protected FlowChain getStopVmWorkFlowChain(VmInstanceInventory inv) {
         return vmMgr.getStopVmWorkFlowChain(inv);
@@ -311,6 +314,8 @@ public class VmInstanceBase extends AbstractVmInstance {
     protected void handleLocalMessage(Message msg) {
         if (msg instanceof StartNewCreatedVmInstanceMsg) {
             handle((StartNewCreatedVmInstanceMsg) msg);
+        }else if (msg instanceof StartNewCreatedPubVmInstanceMsg) {
+            handle((StartNewCreatedPubVmInstanceMsg) msg);
         } else if (msg instanceof StartVmInstanceMsg) {
             handle((StartVmInstanceMsg) msg);
         } else if (msg instanceof StopVmInstanceMsg) {
@@ -2006,6 +2011,87 @@ public class VmInstanceBase extends AbstractVmInstance {
 
         });
     }
+    
+    protected void startPubVmFromNewCreate(final StartNewCreatedPubVmInstanceMsg msg, final SyncTaskChain taskChain) {
+        boolean callNext = true;
+        try {
+            refreshVO();
+            ErrorCode allowed = validateOperationByState(msg, self.getState(), SysErrors.OPERATION_ERROR);
+            if (allowed != null) {
+                bus.replyErrorByMessageType(msg, allowed);
+                return;
+            }
+            
+            changeVmStateInDb(VmInstanceStateEvent.starting);
+            FlowChain chain = getCreatePubVmWorkFlowChain();
+            setFlowMarshaller(chain);
+
+            chain.setName(String.format("create-pub-vm-%s", self.getUuid()));
+//            chain.getData().put(VmInstanceConstant.Params.VmInstanceSpec.toString(), spec);
+            chain.done(new FlowDoneHandler(msg, taskChain) {
+                @Override
+                public void handle(final Map data) {
+                    VmInstanceSpec spec = (VmInstanceSpec) data.get(VmInstanceConstant.Params.VmInstanceSpec.toString());
+                    self.setLastHostUuid(spec.getDestHost().getUuid());
+                    self.setHostUuid(spec.getDestHost().getUuid());
+                    self.setClusterUuid(spec.getDestHost().getClusterUuid());
+                    self.setZoneUuid(spec.getDestHost().getZoneUuid());
+                    self.setHypervisorType(spec.getDestHost().getHypervisorType());
+                    self.setRootVolumeUuid(spec.getDestRootVolume().getUuid());
+                    changeVmStateInDb(VmInstanceStateEvent.running);
+                    self = dbf.reload(self);
+                    logger.debug(String.format("vm[uuid:%s] is running ..", self.getUuid()));
+                    VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
+                    extEmitter.afterStartNewCreatedVm(inv);
+                    StartNewCreatedVmInstanceReply reply = new StartNewCreatedVmInstanceReply();
+                    reply.setVmInventory(inv);
+                    bus.reply(msg, reply);
+                    taskChain.next();
+                }
+            }).error(new FlowErrorHandler(msg, taskChain) {
+                @Override
+                public void handle(final ErrorCode errCode, Map data) {
+                    extEmitter.failedToStartNewCreatedVm(VmInstanceInventory.valueOf(self), errCode);
+                    dbf.remove(self);
+                    // clean up EO, otherwise API-retry may cause conflict if
+                    // the resource uuid is set
+                    dbf.eoCleanup(VmInstanceVO.class);
+                    StartNewCreatedVmInstanceReply reply = new StartNewCreatedVmInstanceReply();
+                    reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
+                    bus.reply(msg, reply);
+                    taskChain.next();
+                }
+            }).start();
+
+            callNext = false;
+        } finally {
+            if (callNext) {
+                taskChain.next();
+            }
+        }
+    }
+
+     
+    protected void handle(final StartNewCreatedPubVmInstanceMsg msg) {
+        thdf.chainSubmit(new ChainTask(msg) {
+            @Override
+            public String getName() {
+                return String.format("create-pub-vm-%s", self.getUuid());
+            }
+
+            @Override
+            public String getSyncSignature() {
+                return syncThreadName;
+            }
+
+            @Override
+            public void run(SyncTaskChain chain) {
+                startPubVmFromNewCreate(msg, chain);
+            }
+
+        });
+    }
+    
 
     protected void handleApiMessage(APIMessage msg) {
         if (msg instanceof APIStopVmInstanceMsg) {

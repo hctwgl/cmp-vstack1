@@ -256,7 +256,7 @@ public class VmInstanceInventory implements Serializable, Cloneable {
      * - Stopping
      * - Rebooting
      * - Destroying
-     * - Migrating
+     * - Migrating 
      * - Unknown
      */
     private String state;

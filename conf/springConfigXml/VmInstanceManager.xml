@@ -25,6 +25,13 @@
                 <value>org.zstack.compute.vm.VmInstantiateResourcePostFlow</value>
             </list>
         </property>
+       <property name="createPubVmWorkFlowElements">
+            <list>
+                <value>org.zstack.compute.vm.VmDeployProxytFlow</value>
+                <value>org.zstack.compute.vm.VmCreatePubECSFlow</value>
+            </list>
+        </property>
+
         <property name="stopVmWorkFlowElements">
             <list>
                 <value>org.zstack.compute.vm.VmStopOnHypervisorFlow</value>
