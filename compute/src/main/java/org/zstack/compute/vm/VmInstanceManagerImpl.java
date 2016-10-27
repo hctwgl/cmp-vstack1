@@ -170,6 +170,20 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     }
 
     void passThrough(VmInstanceMessage msg) {
+    	if(msg.getVmInstanceUuid()==null){
+    		return ;
+    	}
+    	if(msg instanceof StartNewCreatedPubVmInstanceMsg) {
+    		VmPubInstanceVO eo = new VmPubInstanceVO();
+    		eo.setAccesskeyID(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyID());
+    		eo.setAccesskeyKey(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyKey());
+    		eo.setUuid(((StartNewCreatedPubVmInstanceMsg) msg).getUuid());
+    		eo.setName(((StartNewCreatedPubVmInstanceMsg) msg).getName());
+    		eo.setCreateDate(((StartNewCreatedPubVmInstanceMsg) msg).getCreateData());
+    		
+    		VmInstance vm = new VmInstanceBase(eo); 
+            vm.handleMessage((Message) msg);
+    	}
         VmInstanceVO vo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceVO.class);
         if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
             VmInstanceEO eo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceEO.class);
@@ -530,11 +544,9 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     }
 
     
-    
-    
-    private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg, ReturnValueCompletion<CreateVmInstanceReply> completion) {
+    private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg, ReturnValueCompletion<CreatePubVmInstanceReply> completion) {
     	VmPubInstanceEO vo = new VmPubInstanceEO();
-            vo.setUuid(Platform.getUuid());
+        vo.setUuid(Platform.getUuid());
         if (msg.getConsolePassword() != null) {
             VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
         }
@@ -542,29 +554,26 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         vo.setState("created");
         vo.setAccesskeyID(msg.getAccesskeyID());
         vo.setAccesskeyKey(msg.getAccesskeyKey());
-        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmInstanceVO.class);
+//        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmPubInstanceEO.class);
         
         //存入数据库/发起请求。将处理移到ECS Agent
-        
-        vo = dbf.persistAndRefresh(vo);
-        
-        
-        
+//        VmPubInstanceFactory factory  = new ECSVmFactory();
+//       vo = factory.createVmInstance(vo, msg);
         if (cmsg != null) {
-            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmInstanceVO.class.getSimpleName());
+            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmPubInstanceVO.class.getSimpleName());
         }
- 
          
         StartNewCreatedPubVmInstanceMsg smsg = new StartNewCreatedPubVmInstanceMsg();
         smsg.setAccesskeyID(msg.getAccesskeyID());
         smsg.setAccesskeyKey(msg.getAccesskeyKey());
         smsg.setName(msg.getName());
+        smsg.setUuid(vo.getUuid());
         bus.makeTargetServiceIdByResourceUuid(smsg, VmInstanceConstant.SERVICE_ID, vo.getUuid());
         bus.send(smsg, new CloudBusCallBack() {
             @Override
             public void run(MessageReply reply) {
                 try {
-                    CreateVmInstanceReply cr = new CreateVmInstanceReply();
+                    CreatePubVmInstanceReply cr = new CreatePubVmInstanceReply();
                     if (reply.isSuccess()) {
                         StartNewCreatedVmInstanceReply r = (StartNewCreatedVmInstanceReply) reply;
                         cr.setInventory(r.getVmInventory());
@@ -580,10 +589,6 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         });
     }
 
-    
-    
-    
-    
     
     private void handle(final CreateVmInstanceMsg msg) {
         doCreateVmInstance(msg, null, new ReturnValueCompletion<CreateVmInstanceReply>() {
@@ -628,7 +633,6 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         return cmsg;
     }
     
-    
     private CreateECSInstanceMsg fromAPICreatePublicVmInstanceMsg(APICreatePublicVmInstanceMsg msg) {
     	
     	CreateECSInstanceMsg cmsg = new CreateECSInstanceMsg();
@@ -643,11 +647,11 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     
     
     private void handle(final APICreatePublicVmInstanceMsg msg) {
-    	doCreatePublicVmInstance(fromAPICreatePublicVmInstanceMsg(msg), msg, new ReturnValueCompletion<CreateVmInstanceReply>() {
+    	doCreatePublicVmInstance(fromAPICreatePublicVmInstanceMsg(msg), msg, new ReturnValueCompletion<CreatePubVmInstanceReply>() {
             APICreateVmInstanceEvent evt = new APICreateVmInstanceEvent(msg.getId());
 
             @Override
-            public void success(CreateVmInstanceReply returnValue) {
+            public void success(CreatePubVmInstanceReply returnValue) {
                 evt.setInventory(returnValue.getInventory());
                 bus.publish(evt);
             }
@@ -897,6 +901,11 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         }
         return factory;
     }
+    
+    public VmPubInstanceFactory getVmPubInstanceFactory(VmPubInstanceType type) {
+        VmPubInstanceFactory factory = new ECSVmFactory();
+        return factory;
+    }
 
     @Transactional
     protected void putVmToUnknownState(final String hostUuid) {
@@ -975,6 +984,10 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
 
     public void setCreateVmWorkFlowElements(List<String> createVmWorkFlowElements) {
         this.createVmWorkFlowElements = createVmWorkFlowElements;
+    }
+
+    public void setcreatePubVmWorkFlowElements(List<String> createPubVmWorkFlowElements) {
+        this.createPubVmWorkFlowElements = createPubVmWorkFlowElements;
     }
 
     public void setStopVmWorkFlowElements(List<String> stopVmWorkFlowElements) {

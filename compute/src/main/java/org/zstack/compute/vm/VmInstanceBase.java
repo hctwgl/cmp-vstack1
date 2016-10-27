@@ -105,6 +105,10 @@ public class VmInstanceBase extends AbstractVmInstance {
 
     protected VmInstanceVO self;
     protected VmInstanceVO originalCopy;
+    
+    protected VmPubInstanceVO pubself;
+    protected VmPubInstanceVO puboriginalCopy;
+    
     protected String syncThreadName;
 
     private void checkState(final String hostUuid, final NoErrorCompletion completion) {
@@ -191,12 +195,19 @@ public class VmInstanceBase extends AbstractVmInstance {
 
     protected VmInstanceInventory getSelfInventory() {
         return VmInstanceInventory.valueOf(self);
+        
     }
 
     public VmInstanceBase(VmInstanceVO vo) {
         this.self = vo;
         this.syncThreadName = "Vm-" + vo.getUuid();
         this.originalCopy = ObjectUtils.newAndCopy(vo, vo.getClass());
+    }
+    
+    public VmInstanceBase(VmPubInstanceVO vo) {
+        this.pubself = vo;
+        this.syncThreadName = "Vm-" + vo.getUuid();
+        this.puboriginalCopy = ObjectUtils.newAndCopy(vo, vo.getClass());
     }
 
     protected VmInstanceVO refreshVO() {
@@ -2015,7 +2026,6 @@ public class VmInstanceBase extends AbstractVmInstance {
     protected void startPubVmFromNewCreate(final StartNewCreatedPubVmInstanceMsg msg, final SyncTaskChain taskChain) {
         boolean callNext = true;
         try {
-            refreshVO();
             ErrorCode allowed = validateOperationByState(msg, self.getState(), SysErrors.OPERATION_ERROR);
             if (allowed != null) {
                 bus.replyErrorByMessageType(msg, allowed);
