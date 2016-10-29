@@ -183,22 +183,24 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     		
     		VmInstance vm = new VmInstanceBase(eo); 
             vm.handleMessage((Message) msg);
+    	}else  {
+    		 VmInstanceVO vo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceVO.class);
+    	        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
+    	            VmInstanceEO eo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceEO.class);
+    	            vo = ObjectUtils.newAndCopy(eo, VmInstanceVO.class);
+    	        }
+
+    	        if (vo == null) {
+    	            String err = String.format("Cannot find VmInstance[uuid:%s], it may have been deleted", msg.getVmInstanceUuid());
+    	            bus.replyErrorByMessageType((Message) msg, err);
+    	            return;
+    	        }
+
+    	        VmInstanceFactory factory = getVmInstanceFactory(VmInstanceType.valueOf(vo.getType()));
+    	        VmInstance vm = factory.getVmInstance(vo);
+    	        vm.handleMessage((Message) msg);
     	}
-        VmInstanceVO vo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceVO.class);
-        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
-            VmInstanceEO eo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceEO.class);
-            vo = ObjectUtils.newAndCopy(eo, VmInstanceVO.class);
-        }
-
-        if (vo == null) {
-            String err = String.format("Cannot find VmInstance[uuid:%s], it may have been deleted", msg.getVmInstanceUuid());
-            bus.replyErrorByMessageType((Message) msg, err);
-            return;
-        }
-
-        VmInstanceFactory factory = getVmInstanceFactory(VmInstanceType.valueOf(vo.getType()));
-        VmInstance vm = factory.getVmInstance(vo);
-        vm.handleMessage((Message) msg);
+       
     }
 
     private void handleLocalMessage(Message msg) {

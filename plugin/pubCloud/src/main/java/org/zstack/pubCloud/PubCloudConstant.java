@@ -6,7 +6,7 @@ import org.zstack.header.vm.VmInstanceState;
 @PythonClass
 public interface PubCloudConstant {
     public static final String SERVICE_ID = "PubCloud";
-    public static final String KVM_HYPERVISOR_TYPE = "ecs";
+    public static final String KVM_HYPERVISOR_TYPE = "local";
 
     @PythonClass
 
@@ -42,8 +42,8 @@ public interface PubCloudConstant {
     public static final String KVM_HARDEN_CONSOLE_PATH = "/vm/console/harden";
     public static final String KVM_DELETE_CONSOLE_FIREWALL_PATH = "/vm/console/deletefirewall";
     public static final String ISO_TO = "kvm.isoto";
-    public static final String ANSIBLE_PLAYBOOK_NAME = "pubCloud.py";
-    public static final String ANSIBLE_MODULE_PATH = "ansible/pubCloud";
+    public static final String ANSIBLE_PLAYBOOK_NAME = "aliyun.py";
+    public static final String ANSIBLE_MODULE_PATH = "ansible/aliyun";
 
     public static final String MIN_LIBVIRT_LIVESNAPSHOT_VERSION = "1.0.0";
     public static final String MIN_QEMU_LIVESNAPSHOT_VERSION = "1.3.0";

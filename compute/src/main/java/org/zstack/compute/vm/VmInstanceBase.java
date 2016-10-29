@@ -3,6 +3,9 @@ package org.zstack.compute.vm;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.zstack.compute.host.HostLogLabel;
+import org.zstack.compute.host.HostSystemTags;
+import org.zstack.core.Platform;
 import org.zstack.core.cascade.CascadeConstant;
 import org.zstack.core.cascade.CascadeFacade;
 import org.zstack.core.cloudbus.*;
@@ -12,6 +15,7 @@ import org.zstack.core.db.SimpleQuery;
 import org.zstack.core.db.SimpleQuery.Op;
 import org.zstack.core.defer.Defer;
 import org.zstack.core.defer.Deferred;
+import org.zstack.core.logging.Log;
 import org.zstack.core.scheduler.SchedulerFacade;
 import org.zstack.core.thread.ChainTask;
 import org.zstack.core.thread.SyncTaskChain;
@@ -69,6 +73,7 @@ import org.zstack.utils.logging.CLogger;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -2024,62 +2029,62 @@ public class VmInstanceBase extends AbstractVmInstance {
     }
     
     protected void startPubVmFromNewCreate(final StartNewCreatedPubVmInstanceMsg msg, final SyncTaskChain taskChain) {
-        boolean callNext = true;
-        try {
-            ErrorCode allowed = validateOperationByState(msg, self.getState(), SysErrors.OPERATION_ERROR);
-            if (allowed != null) {
-                bus.replyErrorByMessageType(msg, allowed);
-                return;
-            }
-            
-            changeVmStateInDb(VmInstanceStateEvent.starting);
-            FlowChain chain = getCreatePubVmWorkFlowChain();
-            setFlowMarshaller(chain);
+ 
+    	        FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
+    	        chain.setName(String.format("add-host-%s", msg.getUuid()));
+    	        chain.then(new NoRollbackFlow() {
+    	            String __name__ = "send-connect-host-message";
 
-            chain.setName(String.format("create-pub-vm-%s", self.getUuid()));
-//            chain.getData().put(VmInstanceConstant.Params.VmInstanceSpec.toString(), spec);
-            chain.done(new FlowDoneHandler(msg, taskChain) {
-                @Override
-                public void handle(final Map data) {
-                    VmInstanceSpec spec = (VmInstanceSpec) data.get(VmInstanceConstant.Params.VmInstanceSpec.toString());
-                    self.setLastHostUuid(spec.getDestHost().getUuid());
-                    self.setHostUuid(spec.getDestHost().getUuid());
-                    self.setClusterUuid(spec.getDestHost().getClusterUuid());
-                    self.setZoneUuid(spec.getDestHost().getZoneUuid());
-                    self.setHypervisorType(spec.getDestHost().getHypervisorType());
-                    self.setRootVolumeUuid(spec.getDestRootVolume().getUuid());
-                    changeVmStateInDb(VmInstanceStateEvent.running);
-                    self = dbf.reload(self);
-                    logger.debug(String.format("vm[uuid:%s] is running ..", self.getUuid()));
-                    VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
-                    extEmitter.afterStartNewCreatedVm(inv);
-                    StartNewCreatedVmInstanceReply reply = new StartNewCreatedVmInstanceReply();
-                    reply.setVmInventory(inv);
-                    bus.reply(msg, reply);
-                    taskChain.next();
-                }
-            }).error(new FlowErrorHandler(msg, taskChain) {
-                @Override
-                public void handle(final ErrorCode errCode, Map data) {
-                    extEmitter.failedToStartNewCreatedVm(VmInstanceInventory.valueOf(self), errCode);
-                    dbf.remove(self);
-                    // clean up EO, otherwise API-retry may cause conflict if
-                    // the resource uuid is set
-                    dbf.eoCleanup(VmInstanceVO.class);
-                    StartNewCreatedVmInstanceReply reply = new StartNewCreatedVmInstanceReply();
-                    reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
-                    bus.reply(msg, reply);
-                    taskChain.next();
-                }
-            }).start();
+    	            @Override
+    	            public void run(final FlowTrigger trigger, Map data) {
+    	                new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
+    	                
+    	                AddLocalHostMsg addlocalMsg = new AddLocalHostMsg();
+    	                addlocalMsg.setAccountUuid(msg.getUuid());
+    	                addlocalMsg.setManagementIp("127.0.0.1");
+    	                bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
+    	                bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
+    	                    @Override
+    	                    public void run(MessageReply reply) {
+    	                        if (reply.isSuccess()) {
+    	                            trigger.next();
+    	                        } else {
+    	                            trigger.fail(reply.getError());
+    	                        }
+    	                    }
+    	                });
+    	            }
+    	        }).done(new FlowDoneHandler(msg) {
+    	            @Override
+    	            public void handle(Map data) {
+//    	                HostInventory inv = factory.getHostInventory(vo.getUuid());
+//    	                inv.setStatus(HostStatus.Connected.toString());
+//    	                completion.success(inv);
+//
+//    	                new Log(inv.getUuid()).log(HostLogLabel.ADD_HOST_SUCCESS);
+//    	                logger.debug(String.format("successfully added host[name:%s, hypervisor:%s, uuid:%s]", vo.getName(), vo.getHypervisorType(), vo.getUuid()));
+    	            }
+    	        }).error(new FlowErrorHandler(msg) {
+    	            @Override
+    	            public void handle(ErrorCode errCode, Map data) {
+    	                // delete host totally through the database, so other tables
+    	                // refer to the host table will clean up themselves
+//    	                dbf.remove(vo);
+//    	                dbf.eoCleanup(HostVO.class);
+//
+//    	                CollectionUtils.safeForEach(pluginRgty.getExtensionList(FailToAddHostExtensionPoint.class), new ForEachFunction<FailToAddHostExtensionPoint>() {
+//    	                    @Override
+//    	                    public void run(FailToAddHostExtensionPoint ext) {
+//    	                        ext.failedToAddHost(inv, msg);
+//    	                    }
+//    	                });
+//
+//    	                completion.fail(errf.instantiateErrorCode(HostErrors.UNABLE_TO_ADD_HOST, errCode));
+    	            }
+    	        }).start();
 
-            callNext = false;
-        } finally {
-            if (callNext) {
-                taskChain.next();
-            }
-        }
-    }
+    	    }
+
 
      
     protected void handle(final StartNewCreatedPubVmInstanceMsg msg) {

@@ -1588,9 +1588,215 @@ public class ECSHost extends HostBase implements Host {
 		
 	}
 
-	@Override
-	protected void connectHook(ConnectHostInfo info, Completion complete) {
-		// TODO Auto-generated method stub
-		
-	}
+	  public void connectHook(final ConnectHostInfo info, final Completion complete) {
+	        if (CoreGlobalProperty.UNIT_TEST_ON) {
+	            if (info.isNewAdded()) {
+	                createHostVersionSystemTags("zstack", "kvmSimulator", "0.1");
+	                KVMSystemTags.LIBVIRT_VERSION.createInherentTag(self.getUuid(), map(e(KVMSystemTags.LIBVIRT_VERSION_TOKEN, "1.2.9")));
+	                KVMSystemTags.QEMU_IMG_VERSION.createInherentTag(self.getUuid(), map(e(KVMSystemTags.QEMU_IMG_VERSION_TOKEN, "2.0.0")));
+	            }
+
+	            continueConnect(info.isNewAdded(), complete);
+	        } else {
+	            FlowChain chain = FlowChainBuilder.newShareFlowChain();
+	            chain.setName(String.format("run-ansible-for-ECS-%s", self.getUuid()));
+	            chain.then(new ShareFlow() {
+	                @Override
+	                public void setup() {
+	                    if (info.isNewAdded()) {
+	                        flow(new NoRollbackFlow() {
+	                            String __name__ = "ping-DNS-check-list";
+	                            @Override
+	                            public void run(FlowTrigger trigger, Map data) {
+	                                String checkList = PubCloudGlobalConfig.HOST_DNS_CHECK_LIST.value();
+	                                checkList = checkList.replaceAll(",", " ");
+	                                SshResult ret = new Ssh().setHostname(getSelf().getManagementIp())
+	                                        .setUsername(getSelf().getUsername()).setPassword(getSelf().getPassword()).setPort(getSelf().getPort())
+	                                        .script("scripts/check-public-dns-name.sh", map(e("dnsCheckList", checkList))).runAndClose();
+	                                if (ret.isSshFailure()) {
+	                                    trigger.fail(errf.stringToOperationError(
+	                                            String.format("unable to connect to KVM[ip:%s, username:%s, sshPort: %d, ] to do DNS check, please check if username/password is wrong; %s", self.getManagementIp(), getSelf().getUsername(), getSelf().getPort(), ret.getExitErrorMessage())
+	                                    ));
+	                                } else if (ret.getReturnCode() != 0) {
+	                                    trigger.fail(errf.stringToOperationError(
+	                                            String.format("failed to ping all DNS/IP in %s; please check /etc/resolv.conf to make sure your host is able to reach public internet, or change host.DNSCheckList if you have some special network setup",
+	                                                    PubCloudGlobalConfig.HOST_DNS_CHECK_LIST.value())
+	                                    ));
+	                                } else {
+	                                    trigger.next();
+	                                }
+	                            }
+	                        });
+	                    }
+
+	                    flow(new NoRollbackFlow() {
+	                        String __name__ = "check-if-host-can-reach-management-node";
+
+	                        @Override
+	                        public void run(FlowTrigger trigger, Map data) {
+	                            new Log(self.getUuid()).log(LocalHostLabel.ADD_HOST_CHECK_PING_MGMT_NODE);
+
+	                            SshResult ret = new Ssh().setHostname(getSelf().getManagementIp())
+	                                    .setUsername(getSelf().getUsername()).setPassword(getSelf().getPassword()).setPort(getSelf().getPort())
+	                                    .command(String.format("curl --connect-timeout 10 %s", restf.getCallbackUrl())).runAndClose();
+
+	                            if (ret.isSshFailure()) {
+	                                throw new OperationFailureException(errf.stringToOperationError(
+	                                        String.format("unable to connect to KVM[ip:%s, username:%s, sshPort:%d] to check the management node connectivity," +
+	                                                "please check if username/password is wrong; %s", self.getManagementIp(), getSelf().getUsername(), getSelf().getPort(), ret.getExitErrorMessage())
+	                                ));
+	                            } else if (ret.getReturnCode() != 0) {
+	                                throw new OperationFailureException(errf.stringToOperationError(
+	                                        String.format("the KVM host[ip:%s] cannot access the management node's callback url. It seems" +
+	                                                " that the KVM host cannot reach the management IP[%s]. %s %s", self.getManagementIp(), Platform.getManagementServerIp(),
+	                                                ret.getStderr(), ret.getExitErrorMessage())
+	                                ));
+	                            }
+
+	                            trigger.next();
+	                        }
+	                    });
+
+	                    flow(new NoRollbackFlow() {
+	                        String __name__ = "apply-ansible-playbook";
+
+	                        @Override
+	                        public void run(final FlowTrigger trigger, Map data) {
+	                            new Log(self.getUuid()).log(LocalHostLabel.CALL_ANSIBLE);
+
+	                            String srcPath = PathUtil.findFileOnClassPath(String.format("ansible/aliyun/%s", agentPackageName), true).getAbsolutePath();
+	                            String destPath = String.format("/var/lib/zstack/aliyun/package/%s", agentPackageName);
+	                            SshFileMd5Checker checker = new SshFileMd5Checker();
+	                            checker.setUsername(getSelf().getUsername());
+	                            checker.setPassword(getSelf().getPassword());
+	                            checker.setSshPort(getSelf().getPort());
+	                            checker.setTargetIp(getSelf().getManagementIp());
+	                            checker.addSrcDestPair(SshFileMd5Checker.ZSTACKLIB_SRC_PATH, String.format("/var/lib/zstack/kvm/package/%s", AnsibleGlobalProperty.ZSTACKLIB_PACKAGE_NAME));
+	                            checker.addSrcDestPair(srcPath, destPath);
+
+	                            AnsibleRunner runner = new AnsibleRunner();
+	                            runner.installChecker(checker);
+	                            runner.setAgentPort(PubCloudGlobalProperty.AGENT_PORT);
+	                            runner.setTargetIp(getSelf().getManagementIp());
+	                            runner.setPlayBookName(PubCloudConstant.ANSIBLE_PLAYBOOK_NAME);
+	                            runner.setUsername(getSelf().getUsername());
+	                            runner.setPassword(getSelf().getPassword());
+	                            runner.setSshPort(getSelf().getPort());
+	                            if (info.isNewAdded()) {
+	                                runner.putArgument("init", "true");
+	                                runner.setFullDeploy(true);
+	                            }
+	                            runner.putArgument("pkg_aliyunagent", agentPackageName);
+	                            runner.putArgument("hostname", String.format("%s.zstack.org",self.getManagementIp().replaceAll("\\.", "-")));
+
+	                            UriComponentsBuilder ub = UriComponentsBuilder.fromHttpUrl(restf.getBaseUrl());
+	                            ub.path(new StringBind(PubCloudConstant.KVM_ANSIBLE_LOG_PATH_FROMAT).bind("uuid", self.getUuid()).toString());
+	                            String postUrl = ub.build().toString();
+
+	                            runner.putArgument("post_url", postUrl);
+	                            runner.run(new Completion(trigger) {
+	                                @Override
+	                                public void success() {
+	                                    trigger.next();
+	                                }
+
+	                                @Override
+	                                public void fail(ErrorCode errorCode) {
+	                                    trigger.fail(errorCode);
+	                                }
+	                            });
+	                        }
+	                    });
+
+	                    flow(new NoRollbackFlow() {
+	                        String __name__ = "echo-host";
+
+	                        @Override
+	                        public void run(final FlowTrigger trigger, Map data) {
+	                            new Log(self.getUuid()).log(LocalHostLabel.ECHO_AGENT);
+
+	                            restf.echo(echoPath, new Completion(trigger) {
+	                                @Override
+	                                public void success() {
+	                                    trigger.next();
+	                                }
+
+	                                @Override
+	                                public void fail(ErrorCode errorCode) {
+	                                    trigger.fail(errorCode);
+	                                }
+	                            });
+	                        }
+	                    });
+
+	                    if (info.isNewAdded()) {
+	                        flow(new NoRollbackFlow() {
+	                            String __name__ = "ansbile-get-kvm-host-facts";
+
+	                            @Override
+	                            public void run(FlowTrigger trigger, Map data) {
+	                                String privKeyFile = PathUtil.findFileOnClassPath(AnsibleConstant.RSA_PRIVATE_KEY).getAbsolutePath();
+	                                ShellResult ret = ShellUtils.runAndReturn(String.format("ansible -i %s --private-key %s -m setup -a filter=ansible_distribution* %s -e 'ansible_ssh_port=%d ansible_ssh_user=%s'",
+	                                        AnsibleConstant.INVENTORY_FILE, privKeyFile, self.getManagementIp(), getSelf().getPort(), getSelf().getUsername()), AnsibleConstant.ROOT_DIR);
+	                                if (!ret.isReturnCode(0)) {
+	                                    trigger.fail(errf.stringToOperationError(
+	                                            String.format("unable to get ecs host[uuid:%s, ip:%s] facts by ansible\n%s", self.getUuid(), self.getManagementIp(), ret.getExecutionLog())
+	                                    ));
+
+	                                    return;
+	                                }
+
+	                                String[] pairs = ret.getStdout().split(">>");
+	                                if (pairs.length != 2) {
+	                                    trigger.fail(errf.stringToOperationError(String.format("unrecognized ansible facts mediaType, %s", ret.getStdout())));
+	                                    return;
+	                                }
+
+	                                LinkedHashMap output = JSONObjectUtil.toObject(pairs[1], LinkedHashMap.class);
+	                                LinkedHashMap facts = (LinkedHashMap) output.get("ansible_facts");
+	                                if (facts == null) {
+	                                    trigger.fail(errf.stringToOperationError(String.format("unrecognized ansible facts mediaType, cannot find field 'ansible_facts', %s", ret.getStdout())));
+	                                    return;
+	                                }
+
+	                                String distro = (String) facts.get("ansible_distribution");
+	                                String release = (String) facts.get("ansible_distribution_release");
+	                                String version = (String) facts.get("ansible_distribution_version");
+	                                createHostVersionSystemTags(distro, release, version);
+	                                trigger.next();
+	                            }
+	                        });
+	                    }
+
+	                    flow(new NoRollbackFlow() {
+	                        String __name__ = "prepare-host-env";
+
+	                        @Override
+	                        public void run(FlowTrigger trigger, Map data) {
+	                            new Log(self.getUuid()).log(LocalHostLabel.PREPARE_FIREWALL);
+
+	                            String script = "which iptables > /dev/null && iptables -C FORWARD -j REJECT --reject-with icmp-host-prohibited > /dev/null 2>&1 && iptables -D FORWARD -j REJECT --reject-with icmp-host-prohibited > /dev/null 2>&1 || true";
+	                            runShell(script);
+	                            trigger.next();
+	                        }
+	                    });
+
+	                    error(new FlowErrorHandler(complete) {
+	                        @Override
+	                        public void handle(ErrorCode errCode, Map data) {
+	                            complete.fail(errCode);
+	                        }
+	                    });
+
+	                    done(new FlowDoneHandler(complete) {
+	                        @Override
+	                        public void handle(Map data) {
+	                            continueConnect(info.isNewAdded(), complete);
+	                        }
+	                    });
+	                }
+	            }).start();
+	        }
+	    }
+
 }
