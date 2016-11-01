@@ -16,7 +16,7 @@ import org.zstack.header.host.HostVO_;
 import org.zstack.header.host.HypervisorType;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.vm.VmInstanceInventory;
-import org.zstack.pubCloud.KVMAgentCommands.GetVncPortResponse;
+import org.zstack.pubCloud.ECSAgentCommands.GetVncPortResponse;
 import org.zstack.utils.Utils;
 import org.zstack.utils.logging.CLogger;
 
@@ -48,7 +48,7 @@ public class KVMConsoleHypervisorBackend implements ConsoleHypervisorBackend {
 
     @Override
     public void generateConsoleUrl(final VmInstanceInventory vm, final ReturnValueCompletion<URI> complete) {
-        KVMAgentCommands.GetVncPortCmd cmd = new KVMAgentCommands.GetVncPortCmd();
+        ECSAgentCommands.GetVncPortCmd cmd = new ECSAgentCommands.GetVncPortCmd();
         cmd.setVmUuid(vm.getUuid());
 
         KVMHostAsyncHttpCallMsg msg = new KVMHostAsyncHttpCallMsg();

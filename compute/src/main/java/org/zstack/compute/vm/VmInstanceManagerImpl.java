@@ -564,12 +564,14 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         if (cmsg != null) {
             tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmPubInstanceVO.class.getSimpleName());
         }
-         
+        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmPubInstanceEO.class);
+        
         StartNewCreatedPubVmInstanceMsg smsg = new StartNewCreatedPubVmInstanceMsg();
         smsg.setAccesskeyID(msg.getAccesskeyID());
         smsg.setAccesskeyKey(msg.getAccesskeyKey());
         smsg.setName(msg.getName());
         smsg.setUuid(vo.getUuid());
+        smsg.setId(msg.getId());
         bus.makeTargetServiceIdByResourceUuid(smsg, VmInstanceConstant.SERVICE_ID, vo.getUuid());
         bus.send(smsg, new CloudBusCallBack() {
             @Override

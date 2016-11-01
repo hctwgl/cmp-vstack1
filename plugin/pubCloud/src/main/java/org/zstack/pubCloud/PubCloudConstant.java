@@ -6,7 +6,7 @@ import org.zstack.header.vm.VmInstanceState;
 @PythonClass
 public interface PubCloudConstant {
     public static final String SERVICE_ID = "PubCloud";
-    public static final String KVM_HYPERVISOR_TYPE = "local";
+    public static final String KVM_HYPERVISOR_TYPE = "ECS";
 
     @PythonClass
 
@@ -22,10 +22,10 @@ public interface PubCloudConstant {
     public static final String KVM_CHECK_L2VLAN_NETWORK_PATH = "/network/l2vlan/checkbridge";
     public static final String KVM_ATTACH_ISO_PATH = "/vm/iso/attach";
     public static final String KVM_DETACH_ISO_PATH = "/vm/iso/detach";
-    public static final String KVM_START_VM_PATH = "/vm/start";
-    public static final String KVM_STOP_VM_PATH = "/vm/stop";
-    public static final String KVM_REBOOT_VM_PATH = "/vm/reboot";
-    public static final String KVM_DESTROY_VM_PATH = "/vm/destroy";
+    public static final String KVM_START_VM_PATH = "/aliyun/vm/start";
+    public static final String KVM_STOP_VM_PATH = "/aliyun/vm/stop";
+    public static final String KVM_REBOOT_VM_PATH = "/aliyun/vm/reboot";
+    public static final String KVM_DESTROY_VM_PATH = "/aliyun/vm/destroy";
     public static final String KVM_MIGRATE_VM_PATH = "/vm/migrate";
     public static final String KVM_GET_VNC_PORT_PATH = "/vm/getvncport";
     public static final String KVM_VM_CHANGE_CPUMEMORY = "/vm/changecpumem";
@@ -50,8 +50,8 @@ public interface PubCloudConstant {
     public static final String MIN_LIBVIRT_LIVE_BLOCK_COMMIT_VERSION = "1.2.7";
     public static final String MIN_LIBVIRT_VIRTIO_SCSI_VERSION = "1.0.4";
 
-    public static final String KVM_REPORT_VM_STATE = "/kvm/reportvmstate";
-    public static final String KVM_RECONNECT_ME = "/kvm/reconnectme";
+    public static final String KVM_REPORT_VM_STATE = "/aliyun/reportvmstate";
+    public static final String KVM_RECONNECT_ME = "/aliyun/reconnectme";
     public static final String KVM_ANSIBLE_LOG_PATH_FROMAT = "/pubCloud/ansiblelog/{uuid}";
 
     public static final String KVM_AGENT_OWNER = "pubCloud";

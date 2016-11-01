@@ -2,7 +2,7 @@ package org.zstack.pubCloud;
 
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class KVMHostContext {
+public class ECSHostContext {
     private KVMHostInventory inventory;
     private String baseUrl;
 

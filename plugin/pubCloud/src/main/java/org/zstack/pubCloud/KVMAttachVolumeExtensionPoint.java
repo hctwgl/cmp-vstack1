@@ -3,7 +3,7 @@ package org.zstack.pubCloud;
 import org.zstack.header.errorcode.ErrorCode;
 import org.zstack.header.vm.VmInstanceInventory;
 import org.zstack.header.volume.VolumeInventory;
-import org.zstack.pubCloud.KVMAgentCommands.AttachDataVolumeCmd;
+import org.zstack.pubCloud.ECSAgentCommands.AttachDataVolumeCmd;
 
 /**
  * Created by frank on 4/24/2015.

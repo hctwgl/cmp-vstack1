@@ -12,8 +12,8 @@ import org.zstack.header.core.workflow.NoRollbackFlow;
 import org.zstack.header.errorcode.OperationFailureException;
 import org.zstack.header.host.*;
 import org.zstack.header.message.MessageReply;
-import org.zstack.pubCloud.KVMAgentCommands.HostCapacityCmd;
-import org.zstack.pubCloud.KVMAgentCommands.HostCapacityResponse;
+import org.zstack.pubCloud.ECSAgentCommands.HostCapacityCmd;
+import org.zstack.pubCloud.ECSAgentCommands.HostCapacityResponse;
 
 import java.util.Map;
 

@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class KVMAgentCommands {
+public class ECSAgentCommands {
 	public static enum BootDev {
 		hd(VmBootDevice.HardDisk),
 		cdrom(VmBootDevice.CdRom);
@@ -581,197 +581,163 @@ public class KVMAgentCommands {
 
     @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
     public static class StartVmCmd extends AgentCommand {
-    	private String vmInstanceUuid;
-    	private long vmInternalId;
-    	private String vmName;
-    	private long memory;
-    	private int cpuNum;
-    	private long cpuSpeed;
-        private int socketNum;
-        private int cpuOnSocket;
-        private String consolePassword;
-    	private List<String> bootDev;
-    	private VolumeTO rootVolume;
-        private IsoTO bootIso;
-    	private List<VolumeTO> dataVolumes;
-    	private List<NicTO> nics;
-    	private long timeout;
-        private Map<String, Object> addons;
-        private boolean useVirtio;
-        private String consoleMode;
-        private boolean instanceOfferingOnlineChange;
-        private String nestedVirtualization;
-        private String hostManagementIp;
-        private String clock;
-
-        public String getClock() {
-            return clock;
-        }
-
-        public void setClock(String clock) {
-            this.clock = clock;
-        }
-
-        public int getSocketNum() {
-            return socketNum;
-        }
-
-        public void setSocketNum(int socketNum) {
-            this.socketNum = socketNum;
-        }
-
-        public int getCpuOnSocket() {
-            return cpuOnSocket;
-        }
-
-        public void setCpuOnSocket(int cpuOnSocket) {
-            this.cpuOnSocket = cpuOnSocket;
-        }
-
-        public String getVmName() {
-            return vmName;
-        }
-
-        public void setVmName(String vmName) {
-            this.vmName = vmName;
-        }
-
-        public long getMemory() {
-            return memory;
-        }
-
-        public void setMemory(long memory) {
-            this.memory = memory;
-        }
-
-        public int getCpuNum() {
-            return cpuNum;
-        }
-
-        public void setCpuNum(int cpuNum) {
-            this.cpuNum = cpuNum;
-        }
-
-        public long getCpuSpeed() {
-            return cpuSpeed;
-        }
-
-        public void setCpuSpeed(long cpuSpeed) {
-            this.cpuSpeed = cpuSpeed;
-        }
-
-        public List<String> getBootDev() {
-            return bootDev;
-        }
-
-        public void setBootDev(List<String> bootDev) {
-            this.bootDev = bootDev;
-        }
-
-        public String getConsolePassword(){
-            return consolePassword;
-        }
-
-        public void setConsolePassword(String consolePassword){
-            this.consolePassword = consolePassword;
-        }
-
-        public boolean getInstanceOfferingOnlineChange(){
-            return instanceOfferingOnlineChange;
-        }
-
-        public void setInstanceOfferingOnlineChange(boolean instanceOfferingOnlineChange){
-            this.instanceOfferingOnlineChange = instanceOfferingOnlineChange;
-        }
-
-        public IsoTO getBootIso() {
-            return bootIso;
-        }
-
-        public void setBootIso(IsoTO bootIso) {
-            this.bootIso = bootIso;
-        }
-
-        public boolean isUseVirtio() {
-            return useVirtio;
-        }
-
-        public void setUseVirtio(boolean useVirtio) {
-            this.useVirtio = useVirtio;
-        }
-
-        public String getConsoleMode() {
-            return consoleMode;
-        }
-
-        public void setConsoleMode(String consoleMode) {
-            this.consoleMode = consoleMode;
-        }
-
-        public String getNestedVirtualization() {
-            return nestedVirtualization;
-        }
-
-        public void setNestedVirtualization(String nestedVirtualization) {
-            this.nestedVirtualization = nestedVirtualization;
-        }
-
+    	
+     
+     
+		private String hostManagementIp;
+        
+        private String name;
+        private String vmInstanceUuid;
+        private String access_key_id;
+        private String access_key_secret;
+        private String region;
+        private String image;
+        private String size;
+        private String auth;
+        private String ex_security_group_id;
+        private String ex_description;
+        private String ex_internet_charge_type;
+        private int ex_internet_max_bandwidth_out;
+        private int ex_internet_max_bandwidth_in;
+        
+        private String ex_hostname;
+        private String ex_io_optimized;
+        private String ex_system_disk;
+        private String ex_data_disks;
+        private String ex_vswitch_id;
+        private String ex_private_ip_address;
+        private String ex_client_token;
+        
         public String getHostManagementIp() {
-            return hostManagementIp;
-        }
-
-        public void setHostManagementIp(String hostManagementIp) {
-            this.hostManagementIp = hostManagementIp;
-        }
-
-        public VolumeTO getRootVolume() {
-            return rootVolume;
-        }
-        public void setRootVolume(VolumeTO rootVolume) {
-            this.rootVolume = rootVolume;
-        }
-        public List<VolumeTO> getDataVolumes() {
-            return dataVolumes;
-        }
-        public void setDataVolumes(List<VolumeTO> dataVolumes) {
-            this.dataVolumes = dataVolumes;
-        }
-
-        public List<NicTO> getNics() {
-			return nics;
-		}
-		public void setNics(List<NicTO> nics) {
-			this.nics = nics;
-		}
-		public long getTimeout() {
-			return timeout;
-		}
-		public void setTimeout(long timeout) {
-			this.timeout = timeout;
-		}
-        public String getVmInstanceUuid() {
-            return vmInstanceUuid;
-        }
-        public void setVmInstanceUuid(String vmInstanceUuid) {
-            this.vmInstanceUuid = vmInstanceUuid;
-        }
-        public long getVmInternalId() {
-            return vmInternalId;
-        }
-        public void setVmInternalId(long vmInternalId) {
-            this.vmInternalId = vmInternalId;
-        }
-
-        public Map<String, Object> getAddons() {
-            if (addons == null) {
-                addons = new HashMap<String, Object>();
-            }
-            return addons;
-        }
-
-        public void setAddons(Map<String, Object> addons) {
-            this.addons = addons;
-        }
+     			return hostManagementIp;
+     		}
+     		public void setHostManagementIp(String hostManagementIp) {
+     			this.hostManagementIp = hostManagementIp;
+     		}
+     		public String getName() {
+     			return name;
+     		}
+     		public void setName(String name) {
+     			this.name = name;
+     		}
+     		public String getVmInstanceUuid() {
+     			return vmInstanceUuid;
+     		}
+     		public void setVmInstanceUuid(String vmInstanceUuid) {
+     			this.vmInstanceUuid = vmInstanceUuid;
+     		}
+     		public String getAccess_key_id() {
+     			return access_key_id;
+     		}
+     		public void setAccess_key_id(String access_key_id) {
+     			this.access_key_id = access_key_id;
+     		}
+     		public String getAccess_key_secret() {
+     			return access_key_secret;
+     		}
+     		public void setAccess_key_secret(String access_key_secret) {
+     			this.access_key_secret = access_key_secret;
+     		}
+     		public String getRegion() {
+     			return region ;
+     		}
+     		public void setRegion(String region) {
+     			this.region = region;
+     		}
+     		public String getImage() {
+     			return image;
+     		}
+     		public void setImage(String image) {
+     			this.image = image;
+     		}
+     		public String getSize() {
+     			return size;
+     		}
+     		public void setSize(String size) {
+     			this.size = size;
+     		}
+     		public String getAuth() {
+     			return auth;
+     		}
+     		public void setAuth(String auth) {
+     			this.auth = auth;
+     		}
+     		public String getEx_security_group_id() {
+     			return ex_security_group_id ;
+     		}
+     		public void setEx_security_group_id(String ex_security_group_id) {
+     			this.ex_security_group_id = ex_security_group_id;
+     		}
+     		public String getEx_description() {
+     			return ex_description;
+     		}
+     		public void setEx_description(String ex_description) {
+     			this.ex_description = ex_description;
+     		}
+     		public String getEx_internet_charge_type() {
+     			return ex_internet_charge_type;
+     		}
+     		public void setEx_internet_charge_type(String ex_internet_charge_type) {
+     			this.ex_internet_charge_type = ex_internet_charge_type;
+     		}
+     		public int getEx_internet_max_bandwidth_out() {
+     			return ex_internet_max_bandwidth_out;
+     		}
+     		public void setEx_internet_max_bandwidth_out(int ex_internet_max_bandwidth_out) {
+     			this.ex_internet_max_bandwidth_out = ex_internet_max_bandwidth_out;
+     		}
+     		public int getEx_internet_max_bandwidth_in() {
+     			return ex_internet_max_bandwidth_in;
+     		}
+     		public void setEx_internet_max_bandwidth_in(int ex_internet_max_bandwidth_in) {
+     			this.ex_internet_max_bandwidth_in = ex_internet_max_bandwidth_in;
+     		}
+     		public String getEx_hostname() {
+     			return ex_hostname;
+     		}
+     		public void setEx_hostname(String ex_hostname) {
+     			this.ex_hostname = ex_hostname;
+     		}
+     		public String getEx_io_optimized() {
+     			return ex_io_optimized;
+     		}
+     		public void setEx_io_optimized(String ex_io_optimized) {
+     			this.ex_io_optimized = ex_io_optimized;
+     		}
+     		public String getEx_system_disk() {
+     			return ex_system_disk;
+     		}
+     		public void setEx_system_disk(String ex_system_disk) {
+     			this.ex_system_disk = ex_system_disk;
+     		}
+     		public String getEx_data_disks() {
+     			return ex_data_disks;
+     		}
+     		public void setEx_data_disks(String ex_data_disks) {
+     			this.ex_data_disks = ex_data_disks;
+     		}
+     		public String getEx_vswitch_id() {
+     			return ex_vswitch_id;
+     		}
+     		public void setEx_vswitch_id(String ex_vswitch_id) {
+     			this.ex_vswitch_id = ex_vswitch_id;
+     		}
+     		public String getEx_private_ip_address() {
+     			return ex_private_ip_address;
+     		}
+     		public void setEx_private_ip_address(String ex_private_ip_address) {
+     			this.ex_private_ip_address = ex_private_ip_address;
+     		}
+     		public String getEx_client_token() {
+     			return ex_client_token;
+     		}
+     		public void setEx_client_token(String ex_client_token) {
+     			this.ex_client_token = ex_client_token;
+     		}
+        
+        
+               
+         
     }
     public static class StartVmResponse extends AgentResponse {
     }

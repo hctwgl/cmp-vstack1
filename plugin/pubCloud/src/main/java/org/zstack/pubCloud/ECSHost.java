@@ -43,7 +43,7 @@ import org.zstack.header.rest.RESTFacade;
 import org.zstack.header.storage.snapshot.VolumeSnapshotInventory;
 import org.zstack.header.vm.*;
 import org.zstack.header.volume.VolumeInventory;
-import org.zstack.pubCloud.KVMAgentCommands.*;
+import org.zstack.pubCloud.ECSAgentCommands.*;
 import org.zstack.utils.*;
 import org.zstack.utils.gson.JSONObjectUtil;
 import org.zstack.utils.logging.CLogger;
@@ -67,8 +67,9 @@ public class ECSHost extends HostBase implements Host {
     @Autowired
     private ErrorFacade errf;
 
-    private KVMHostContext context;
-
+    private ECSHostContext context;
+    @Autowired
+    private LocalHostFactory factory;
     // ///////////////////// REST URL //////////////////////////
     private String baseUrl;
     private String connectPath;
@@ -96,11 +97,11 @@ public class ECSHost extends HostBase implements Host {
 
     private String agentPackageName = PubCloudGlobalProperty.AGENT_PACKAGE_NAME;
 
-    ECSHost(KVMHostVO self, KVMHostContext context) {
-        super(self);
+    public ECSHost( HostVO ecsvo,  ECSHostContext context2) {
+        super(ecsvo);
 
-        this.context = context;
-        baseUrl = context.getBaseUrl();
+        this.context = context2;
+        baseUrl = context2.getBaseUrl();
 
         UriComponentsBuilder ub = UriComponentsBuilder.fromHttpUrl(baseUrl);
         ub.path(PubCloudConstant.KVM_CONNECT_PATH);
@@ -191,6 +192,9 @@ public class ECSHost extends HostBase implements Host {
         ub.path(PubCloudConstant.KVM_DELETE_CONSOLE_FIREWALL_PATH);
         deleteConsoleFirewall = ub.build().toString();
     }
+    
+    
+    
 
     @Override
     protected void handleApiMessage(APIMessage msg) {
@@ -201,10 +205,8 @@ public class ECSHost extends HostBase implements Host {
     protected void handleLocalMessage(Message msg) {
         if (msg instanceof CheckNetworkPhysicalInterfaceMsg) {
             handle((CheckNetworkPhysicalInterfaceMsg) msg);
-        } else if (msg instanceof StartVmOnHypervisorMsg) {
-            handle((StartVmOnHypervisorMsg) msg);
-        } else if (msg instanceof CreateVmOnHypervisorMsg) {
-            handle((CreateVmOnHypervisorMsg) msg);
+        } else if (msg instanceof CreateVmOnLocalMsg) {
+            handle((CreateVmOnLocalMsg) msg);
         } else if (msg instanceof StopVmOnHypervisorMsg) {
             handle((StopVmOnHypervisorMsg) msg);
         } else if (msg instanceof RebootVmOnHypervisorMsg) {
@@ -213,21 +215,7 @@ public class ECSHost extends HostBase implements Host {
             handle((DestroyVmOnHypervisorMsg) msg);
         }    else if (msg instanceof MigrateVmOnHypervisorMsg) {
             handle((MigrateVmOnHypervisorMsg) msg);
-        } else if (msg instanceof TakeSnapshotOnHypervisorMsg) {
-            handle((TakeSnapshotOnHypervisorMsg) msg);
-        } else if (msg instanceof MergeVolumeSnapshotOnKvmMsg) {
-            handle((MergeVolumeSnapshotOnKvmMsg) msg);
-        } else if (msg instanceof KVMHostAsyncHttpCallMsg) {
-            handle((KVMHostAsyncHttpCallMsg) msg);
-        } else if (msg instanceof KVMHostSyncHttpCallMsg) {
-            handle((KVMHostSyncHttpCallMsg) msg);
-        }     else if (msg instanceof GetVmConsoleAddressFromHostMsg) {
-            handle((GetVmConsoleAddressFromHostMsg) msg);
-        }  else if (msg instanceof VmDirectlyDestroyOnHypervisorMsg) {
-            handle((VmDirectlyDestroyOnHypervisorMsg) msg);
-        } else if (msg instanceof OnlineChangeVmCpuMemoryMsg){
-            handle((OnlineChangeVmCpuMemoryMsg) msg);
-        }
+        } 
         else {
             super.handleLocalMessage(msg);
         }
@@ -291,9 +279,9 @@ public class ECSHost extends HostBase implements Host {
     private SshResult runShell(String script) {
         Ssh ssh = new Ssh();
         ssh.setHostname(self.getManagementIp());
-        ssh.setPort(getSelf().getPort());
-        ssh.setUsername(getSelf().getUsername());
-        ssh.setPassword(getSelf().getPassword());
+        ssh.setPort(22);
+        ssh.setUsername("root");
+        ssh.setPassword("onceas");
         ssh.shell(script);
         return ssh.runAndClose();
     }
@@ -1176,7 +1164,9 @@ public class ECSHost extends HostBase implements Host {
 //        });
     }
 
-    private void handle(final CreateVmOnHypervisorMsg msg) {
+    private void handle(final CreateVmOnLocalMsg msg) {
+    	
+    	
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getSyncSignature() {
@@ -1185,7 +1175,7 @@ public class ECSHost extends HostBase implements Host {
 
             @Override
             public void run(final SyncTaskChain chain) {
-                startVm(msg.getVmSpec(), msg, new NoErrorCompletion(chain) {
+                startVm(msg, msg, new NoErrorCompletion(chain) {
                     @Override
                     public void done() {
                         chain.next();
@@ -1220,174 +1210,81 @@ public class ECSHost extends HostBase implements Host {
         return vol.getInstallPath().startsWith("iscsi") ? VolumeTO.ISCSI : VolumeTO.FILE;
     }
 
-    private void startVm(final VmInstanceSpec spec, final NeedReplyMessage msg, final NoErrorCompletion completion) {
-//        checkStateAndStatus();
-//        final StartVmCmd cmd = new StartVmCmd();
-//
-//        boolean virtio;
-//        String consoleMode;
-//        String nestedVirtualization;
-//        String platform = spec.getVmInventory().getPlatform() == null ? spec.getImageSpec().getInventory().getPlatform() :
-//                spec.getVmInventory().getPlatform();
-//
-//        if (ImagePlatform.Windows.toString().equals(platform)) {
-//            virtio = VmSystemTags.WINDOWS_VOLUME_ON_VIRTIO.hasTag(spec.getVmInventory().getUuid());
-//        } else {
-//            virtio = ImagePlatform.valueOf(platform).isParaVirtualization();
-//        }
-//
-//        int cpuNum = spec.getVmInventory().getCpuNum();
-//        cmd.setCpuNum(cpuNum);
-//
-//        int socket;
-//        int cpuOnSocket;
-//        //TODO: this is a HACK!!!
-//        if (ImagePlatform.Windows.toString().equals(platform) || ImagePlatform.WindowsVirtio.toString().equals(platform)) {
-//            if (cpuNum == 1) {
-//                socket = 1;
-//                cpuOnSocket = 1;
-//            } else if (cpuNum % 2 == 0) {
-//                socket = 2;
-//                cpuOnSocket = cpuNum / 2;
-//            } else {
-//                socket = cpuNum;
-//                cpuOnSocket = 1;
-//            }
-//        } else {
-//            socket = 1;
-//            cpuOnSocket = cpuNum;
-//        }
-//
-//        cmd.setSocketNum(socket);
-//        cmd.setCpuOnSocket(cpuOnSocket);
-//        cmd.setVmName(spec.getVmInventory().getName());
-//        cmd.setVmInstanceUuid(spec.getVmInventory().getUuid());
-//        cmd.setCpuSpeed(spec.getVmInventory().getCpuSpeed());
-//        cmd.setMemory(spec.getVmInventory().getMemorySize());
-//        cmd.setUseVirtio(virtio);
-//        cmd.setClock(ImagePlatform.isType(platform, ImagePlatform.Windows, ImagePlatform.WindowsVirtio) ? "localtime" : "utc");
-//        VolumeTO rootVolume = new VolumeTO();
-//        consoleMode = PubCloudGlobalConfig.VM_CONSOLE_MODE.value(String.class);
-//        nestedVirtualization = PubCloudGlobalConfig.NESTED_VIRTUALIZATION.value(String.class);
-//        rootVolume.setInstallPath(spec.getDestRootVolume().getInstallPath());
-//        rootVolume.setDeviceId(spec.getDestRootVolume().getDeviceId());
-//        rootVolume.setDeviceType(getVolumeTOType(spec.getDestRootVolume()));
-//        rootVolume.setVolumeUuid(spec.getDestRootVolume().getUuid());
-//        rootVolume.setUseVirtio(virtio);
-//        rootVolume.setCacheMode(PubCloudGlobalConfig.LIBVIRT_CACHE_MODE.value());
-//        cmd.setConsoleMode(consoleMode);
-//        cmd.setNestedVirtualization(nestedVirtualization);
-//        cmd.setRootVolume(rootVolume);
-//
-//        List<VolumeTO> dataVolumes = new ArrayList<VolumeTO>(spec.getDestDataVolumes().size());
-//        for (VolumeInventory data : spec.getDestDataVolumes()) {
-//            VolumeTO v = new VolumeTO();
-//            v.setInstallPath(data.getInstallPath());
-//            v.setDeviceId(data.getDeviceId());
-//            v.setDeviceType(getVolumeTOType(data));
-//            v.setVolumeUuid(data.getUuid());
-//            v.setUseVirtio(virtio);
-//            v.setCacheMode(PubCloudGlobalConfig.LIBVIRT_CACHE_MODE.value());
-//            dataVolumes.add(v);
-//        }
-//        cmd.setDataVolumes(dataVolumes);
-//        cmd.setVmInternalId(spec.getVmInventory().getInternalId());
-//
-//        List<NicTO> nics = new ArrayList<NicTO>(spec.getDestNics().size());
-//        for (VmNicInventory nic : spec.getDestNics()) {
-//            nics.add(completeNicInfo(nic));
-//        }
-//        cmd.setNics(nics);
-//
-//        if (spec.getDestIso() != null) {
-//            IsoTO bootIso = new IsoTO();
-//            bootIso.setPath(spec.getDestIso().getInstallPath());
-//            bootIso.setImageUuid(spec.getDestIso().getImageUuid());
-//            cmd.setBootIso(bootIso);
-//        }
-//
-//        cmd.setBootDev(toKvmBootDev(spec.getBootOrders()));
-//        cmd.setHostManagementIp(self.getManagementIp());
-//        cmd.setConsolePassword(spec.getConsolePassword());
-//        cmd.setInstanceOfferingOnlineChange(spec.getInstanceOfferingOnliechange());
-//
-//        KVMHostInventory khinv = KVMHostInventory.valueOf(getSelf());
-//        try {
-//            extEmitter.beforeStartVmOnKvm(khinv, spec, cmd);
-//        } catch (KVMException e) {
-//            String err = String.format("failed to start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", spec.getVmInventory().getUuid(), spec.getVmInventory().getName(),
-//                    self.getUuid(), self.getManagementIp(), e.getMessage());
-//            logger.warn(err, e);
-//            throw new OperationFailureException(errf.stringToOperationError(err));
-//        }
-//
-//        extEmitter.addOn(khinv, spec, cmd);
-//
-//        restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmResponse>(msg, completion) {
-//            @Override
-//            public void fail(ErrorCode err) {
-//                StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
-//                reply.setError(err);
-//                reply.setSuccess(false);
-//                extEmitter.startVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), spec, err);
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public void success(StartVmResponse ret) {
-//                StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
-//                if (ret.isSuccess()) {
-//                    String info = String.format("successfully start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s]", spec.getVmInventory().getUuid(), spec.getVmInventory().getName(),
-//                            self.getUuid(), self.getManagementIp());
-//                    logger.debug(info);
-//                    extEmitter.startVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), spec);
-//                } else {
-//                    String err = String.format("failed to start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", spec.getVmInventory().getUuid(), spec.getVmInventory().getName(),
-//                            self.getUuid(), self.getManagementIp(), ret.getError());
-//                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_START_VM_ON_HYPERVISOR, err));
-//                    logger.warn(err);
-//                    extEmitter.startVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), spec, reply.getError());
-//                }
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public Class<StartVmResponse> getReturnClass() {
-//                return StartVmResponse.class;
-//            }
-//        });
-    }
-
-    private void handle(final StartVmOnHypervisorMsg msg) {
-        thdf.chainSubmit(new ChainTask(msg) {
+    private void startVm(final CreateVmOnLocalMsg spec, final NeedReplyMessage msg, final NoErrorCompletion completion) {
+        final StartVmCmd cmd = new StartVmCmd();
+         cmd.setAccess_key_id(spec.getAccesskeyID());
+         cmd.setAccess_key_secret(spec.getAccesskeyKEY());
+         cmd.setName(spec.getName());
+         cmd.setRegion("cn-beijing");
+         cmd.setImage("ecs.image.ubuntu1404.64");
+         cmd.setAuth("P@$$w0rd");
+         cmd.setEx_security_group_id("sg-2ze56hvvjveewzm12jar");
+         cmd.setEx_internet_max_bandwidth_out(1);
+         cmd.setEx_internet_charge_type("PayByTraffic");
+         cmd.setSize("ecs.t1.small");
+         
+        restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmResponse>(msg, completion) {
             @Override
-            public String getSyncSignature() {
-                return id;
+            public void fail(ErrorCode err) {
+                StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
+                reply.setError(err);
+                reply.setSuccess(false);
+                bus.reply(msg, reply);
+                completion.done();
             }
 
             @Override
-            public void run(final SyncTaskChain chain) {
-                startVm(msg.getVmSpec(), msg, new NoErrorCompletion(chain) {
-                    @Override
-                    public void done() {
-                        chain.next();
-                    }
-                });
+            public void success(StartVmResponse ret) {
+                StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
+                if (ret.isSuccess()) {
+                    String info = String.format("successfully start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s]", spec.getUuid(), spec.getName(),
+                            self.getUuid(), self.getManagementIp());
+                    logger.debug(info);
+                } else {
+                    String err = String.format("failed to start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", spec.getUuid(), spec.getName(),
+                            self.getUuid(), self.getManagementIp(), ret.getError());
+                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_START_VM_ON_HYPERVISOR, err));
+                    logger.warn(err);
+                }
+                bus.reply(msg, reply);
+                completion.done();
             }
 
             @Override
-            public String getName() {
-                return String.format("start-vm-on-kvm-%s", self.getUuid());
-            }
-
-            @Override
-            protected int getSyncLevel() {
-                return getHostSyncLevel();
+            public Class<StartVmResponse> getReturnClass() {
+                return StartVmResponse.class;
             }
         });
     }
+
+//    private void handle(final StartVmOnHypervisorMsg msg) {
+//        thdf.chainSubmit(new ChainTask(msg) {
+//            @Override
+//            public String getSyncSignature() {
+//                return id;
+//            }
+//
+//            @Override
+//            public void run(final SyncTaskChain chain) {
+//                startVm(msg.getVmSpec(), msg, new NoErrorCompletion(chain) {
+//                    @Override
+//                    public void done() {
+//                        chain.next();
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public String getName() {
+//                return String.format("start-vm-on-kvm-%s", self.getUuid());
+//            }
+//
+//            @Override
+//            protected int getSyncLevel() {
+//                return getHostSyncLevel();
+//            }
+//        });
+//    }
 
     private void handle(final CheckNetworkPhysicalInterfaceMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
@@ -1508,8 +1405,8 @@ public class ECSHost extends HostBase implements Host {
         return errCode;
     }
 
-    private KVMHostVO getSelf() {
-        return (KVMHostVO) self;
+    private HostVO getSelf() {
+        return (HostVO) self;
     }
 
     private void continueConnect(final boolean newAdded, final Completion completion) {
@@ -1565,19 +1462,19 @@ public class ECSHost extends HostBase implements Host {
             return super.updateHost(msg);
         }
 
-        KVMHostVO vo = (KVMHostVO) super.updateHost(msg);
+        HostVO vo = (HostVO) super.updateHost(msg);
         vo = vo == null ? getSelf() : vo;
-
-        APIUpdateKVMHostMsg umsg = (APIUpdateKVMHostMsg) msg;
-        if (umsg.getUsername() != null) {
-            vo.setUsername(umsg.getUsername());
-        }
-        if (umsg.getPassword() != null) {
-            vo.setPassword(umsg.getPassword());
-        }
-        if (umsg.getSshPort() != null && umsg.getSshPort() > 0 && umsg.getSshPort() <= 65535 ) {
-            vo.setPort(umsg.getSshPort());
-        }
+//
+//        APIUpdateKVMHostMsg umsg = (APIUpdateKVMHostMsg) msg;
+//        if (umsg.getUsername() != null) {
+//            vo.setUsername(umsg.getUsername());
+//        }
+//        if (umsg.getPassword() != null) {
+//            vo.setPassword(umsg.getPassword());
+//        }
+//        if (umsg.getSshPort() != null && umsg.getSshPort() > 0 && umsg.getSshPort() <= 65535 ) {
+//            vo.setPort(umsg.getSshPort());
+//        }
 
         return vo;
     }
@@ -1610,12 +1507,12 @@ public class ECSHost extends HostBase implements Host {
 	                            public void run(FlowTrigger trigger, Map data) {
 	                                String checkList = PubCloudGlobalConfig.HOST_DNS_CHECK_LIST.value();
 	                                checkList = checkList.replaceAll(",", " ");
-	                                SshResult ret = new Ssh().setHostname(getSelf().getManagementIp())
-	                                        .setUsername(getSelf().getUsername()).setPassword(getSelf().getPassword()).setPort(getSelf().getPort())
+	                                SshResult ret = new Ssh().setHostname("127.0.0.1")
+	                                        .setUsername("root").setPassword("onceas").setPort(22)
 	                                        .script("scripts/check-public-dns-name.sh", map(e("dnsCheckList", checkList))).runAndClose();
 	                                if (ret.isSshFailure()) {
 	                                    trigger.fail(errf.stringToOperationError(
-	                                            String.format("unable to connect to KVM[ip:%s, username:%s, sshPort: %d, ] to do DNS check, please check if username/password is wrong; %s", self.getManagementIp(), getSelf().getUsername(), getSelf().getPort(), ret.getExitErrorMessage())
+	                                            String.format("unable to connect to KVM[ip:%s, username:%s, sshPort: %d, ] to do DNS check, please check if username/password is wrong; %s", self.getManagementIp(), "root", 22, ret.getExitErrorMessage())
 	                                    ));
 	                                } else if (ret.getReturnCode() != 0) {
 	                                    trigger.fail(errf.stringToOperationError(
@@ -1636,20 +1533,20 @@ public class ECSHost extends HostBase implements Host {
 	                        public void run(FlowTrigger trigger, Map data) {
 	                            new Log(self.getUuid()).log(LocalHostLabel.ADD_HOST_CHECK_PING_MGMT_NODE);
 
-	                            SshResult ret = new Ssh().setHostname(getSelf().getManagementIp())
-	                                    .setUsername(getSelf().getUsername()).setPassword(getSelf().getPassword()).setPort(getSelf().getPort())
+	                            SshResult ret2 = new Ssh().setHostname("127.0.0.1")
+	                                    .setUsername("root").setPassword("onceas").setPort(22)
 	                                    .command(String.format("curl --connect-timeout 10 %s", restf.getCallbackUrl())).runAndClose();
 
-	                            if (ret.isSshFailure()) {
+	                            if (ret2.isSshFailure()) {
 	                                throw new OperationFailureException(errf.stringToOperationError(
 	                                        String.format("unable to connect to KVM[ip:%s, username:%s, sshPort:%d] to check the management node connectivity," +
-	                                                "please check if username/password is wrong; %s", self.getManagementIp(), getSelf().getUsername(), getSelf().getPort(), ret.getExitErrorMessage())
+	                                                "please check if username/password is wrong; %s", self.getManagementIp(), "root", 22, ret2.getExitErrorMessage())
 	                                ));
-	                            } else if (ret.getReturnCode() != 0) {
+	                            } else if (ret2.getReturnCode() != 0) {
 	                                throw new OperationFailureException(errf.stringToOperationError(
 	                                        String.format("the KVM host[ip:%s] cannot access the management node's callback url. It seems" +
 	                                                " that the KVM host cannot reach the management IP[%s]. %s %s", self.getManagementIp(), Platform.getManagementServerIp(),
-	                                                ret.getStderr(), ret.getExitErrorMessage())
+	                                                ret2.getStderr(), ret2.getExitErrorMessage())
 	                                ));
 	                            }
 
@@ -1667,27 +1564,27 @@ public class ECSHost extends HostBase implements Host {
 	                            String srcPath = PathUtil.findFileOnClassPath(String.format("ansible/aliyun/%s", agentPackageName), true).getAbsolutePath();
 	                            String destPath = String.format("/var/lib/zstack/aliyun/package/%s", agentPackageName);
 	                            SshFileMd5Checker checker = new SshFileMd5Checker();
-	                            checker.setUsername(getSelf().getUsername());
-	                            checker.setPassword(getSelf().getPassword());
-	                            checker.setSshPort(getSelf().getPort());
-	                            checker.setTargetIp(getSelf().getManagementIp());
+	                            checker.setUsername("root");
+	                            checker.setPassword("onceas");
+	                            checker.setSshPort(22);
+	                            checker.setTargetIp("127.0.0.1");
 	                            checker.addSrcDestPair(SshFileMd5Checker.ZSTACKLIB_SRC_PATH, String.format("/var/lib/zstack/kvm/package/%s", AnsibleGlobalProperty.ZSTACKLIB_PACKAGE_NAME));
 	                            checker.addSrcDestPair(srcPath, destPath);
 
 	                            AnsibleRunner runner = new AnsibleRunner();
 	                            runner.installChecker(checker);
 	                            runner.setAgentPort(PubCloudGlobalProperty.AGENT_PORT);
-	                            runner.setTargetIp(getSelf().getManagementIp());
+	                            runner.setTargetIp("127.0.0.1");
 	                            runner.setPlayBookName(PubCloudConstant.ANSIBLE_PLAYBOOK_NAME);
-	                            runner.setUsername(getSelf().getUsername());
-	                            runner.setPassword(getSelf().getPassword());
-	                            runner.setSshPort(getSelf().getPort());
+	                            runner.setUsername("root");
+	                            runner.setPassword("onceas");
+	                            runner.setSshPort(22);
 	                            if (info.isNewAdded()) {
 	                                runner.putArgument("init", "true");
 	                                runner.setFullDeploy(true);
 	                            }
 	                            runner.putArgument("pkg_aliyunagent", agentPackageName);
-	                            runner.putArgument("hostname", String.format("%s.zstack.org",self.getManagementIp().replaceAll("\\.", "-")));
+	                            runner.putArgument("hostname", String.format("%s.zstack.org","127.0.0.1".replaceAll("\\.", "-")));
 
 	                            UriComponentsBuilder ub = UriComponentsBuilder.fromHttpUrl(restf.getBaseUrl());
 	                            ub.path(new StringBind(PubCloudConstant.KVM_ANSIBLE_LOG_PATH_FROMAT).bind("uuid", self.getUuid()).toString());
@@ -1737,7 +1634,7 @@ public class ECSHost extends HostBase implements Host {
 	                            public void run(FlowTrigger trigger, Map data) {
 	                                String privKeyFile = PathUtil.findFileOnClassPath(AnsibleConstant.RSA_PRIVATE_KEY).getAbsolutePath();
 	                                ShellResult ret = ShellUtils.runAndReturn(String.format("ansible -i %s --private-key %s -m setup -a filter=ansible_distribution* %s -e 'ansible_ssh_port=%d ansible_ssh_user=%s'",
-	                                        AnsibleConstant.INVENTORY_FILE, privKeyFile, self.getManagementIp(), getSelf().getPort(), getSelf().getUsername()), AnsibleConstant.ROOT_DIR);
+	                                        AnsibleConstant.INVENTORY_FILE, privKeyFile, "127.0.0.1",22, "root"), AnsibleConstant.ROOT_DIR);
 	                                if (!ret.isReturnCode(0)) {
 	                                    trigger.fail(errf.stringToOperationError(
 	                                            String.format("unable to get ecs host[uuid:%s, ip:%s] facts by ansible\n%s", self.getUuid(), self.getManagementIp(), ret.getExecutionLog())

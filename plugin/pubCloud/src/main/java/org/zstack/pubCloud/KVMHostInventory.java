@@ -3,6 +3,7 @@ package org.zstack.pubCloud;
 import org.zstack.header.configuration.PythonClassInventory;
 import org.zstack.header.host.HostConstant;
 import org.zstack.header.host.HostInventory;
+import org.zstack.header.host.HostVO;
 import org.zstack.header.rest.APINoSee;
 import org.zstack.header.search.Inventory;
 import org.zstack.header.search.Parent;
@@ -26,20 +27,20 @@ public class KVMHostInventory extends HostInventory {
 
     private Integer sshPort;
 
-    protected KVMHostInventory(KVMHostVO vo) {
+    protected KVMHostInventory(HostVO vo) {
         super(vo);
-        this.setUsername(vo.getUsername());
-        this.setPassword(vo.getPassword());
-        this.setSshPort(vo.getPort());
+//        this.setUsername(vo.getUsername());
+//        this.setPassword(vo.getPassword());
+//        this.setSshPort(vo.getPort());
     }
 
-    public static KVMHostInventory valueOf(KVMHostVO vo) {
+    public static KVMHostInventory valueOf(HostVO vo) {
         return new KVMHostInventory(vo);
     }
 
-    public static List<KVMHostInventory> valueOf1(Collection<KVMHostVO> vos) {
+    public static List<KVMHostInventory> valueOf1(Collection<HostVO> vos) {
         List<KVMHostInventory> invs = new ArrayList<KVMHostInventory>();
-        for (KVMHostVO vo : vos) {
+        for (HostVO vo : vos) {
             invs.add(valueOf(vo));
         }
         return invs;

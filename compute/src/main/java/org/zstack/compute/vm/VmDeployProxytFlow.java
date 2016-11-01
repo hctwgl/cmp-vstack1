@@ -32,8 +32,6 @@ import org.zstack.header.vm.VmInstanceConstant;
 import org.zstack.header.vm.VmInstanceConstant.VmOperation;
 import org.zstack.header.vm.VmInstanceSpec;
 import org.zstack.header.vm.VmInstanceVO;
-import org.zstack.pubCloud.PubCloudConstant;
-import org.zstack.pubCloud.PubCloudGlobalProperty;
 import org.zstack.utils.CollectionUtils;
 import org.zstack.utils.StringBind;
 import org.zstack.utils.function.Function;
@@ -58,8 +56,8 @@ public class VmDeployProxytFlow implements Flow {
     
     @Override
     public void run(final FlowTrigger trigger, Map data) {
-        String srcPath = PathUtil.findFileOnClassPath(String.format("ansible/aliyun/%s", PubCloudGlobalProperty.AGENT_PACKAGE_NAME), true).getAbsolutePath();
-        String destPath = String.format("/var/lib/zstack/aliyun/package/%s",  PubCloudGlobalProperty.AGENT_PACKAGE_NAME);
+        String srcPath = PathUtil.findFileOnClassPath(String.format("ansible/aliyun/%s","aliyunagent-1.6.tar.gz"), true).getAbsolutePath();
+        String destPath = String.format("/var/lib/zstack/aliyun/package/%s", "aliyunagent-1.6.tar.gz");
         SshFileMd5Checker checker = new SshFileMd5Checker();
         checker.setUsername("root");
         checker.setPassword("onceas");
@@ -72,12 +70,12 @@ public class VmDeployProxytFlow implements Flow {
         runner.installChecker(checker);
         runner.setAgentPort(7072);
         runner.setTargetIp("133.133.133.127");
-        runner.setPlayBookName(PubCloudConstant.KVM_AGENT_OWNER);
+        runner.setPlayBookName("aliyun");
         runner.setUsername("root");
         runner.setPassword("onceas");
         runner.setSshPort(22);
        
-        runner.putArgument("pkg_pubCloud", PubCloudGlobalProperty.AGENT_PACKAGE_NAME);
+        runner.putArgument("pkg_pubCloud", "aliyunagent-1.6.tar.gz");
         String ManagementIP = "133.133.133.127";
         runner.putArgument("hostname", String.format("%s.zstack.org",ManagementIP.replaceAll("\\.", "-")));
 //

@@ -7,7 +7,7 @@ import org.zstack.core.GlobalPropertyDefinition;
  */
 @GlobalPropertyDefinition
 public class PubCloudGlobalProperty {
-    @GlobalProperty(name="pubCloudAgent.agentPackageName", defaultValue = "pubCloud-1.6.tar.gz")
+    @GlobalProperty(name="pubCloudAgent.agentPackageName", defaultValue = "aliyunagent-1.6.tar.gz")
     public static String AGENT_PACKAGE_NAME;
     @GlobalProperty(name="pubCloudAgent.agentUrlRootPath", defaultValue = "")
     public static String AGENT_URL_ROOT_PATH;

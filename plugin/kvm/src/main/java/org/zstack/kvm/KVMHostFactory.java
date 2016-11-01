@@ -29,11 +29,14 @@ import org.zstack.header.volume.MaxDataVolumeNumberExtensionPoint;
 import org.zstack.header.volume.VolumeConstant;
 import org.zstack.header.volume.VolumeFormat;
 import org.zstack.kvm.KVMAgentCommands.ReconnectMeCmd;
+import org.zstack.pubCloud.ECSHost;
+import org.zstack.pubCloud.ECSHostContext;
 import org.zstack.utils.CollectionUtils;
 import org.zstack.utils.SizeUtils;
 import org.zstack.utils.Utils;
 import org.zstack.utils.function.Function;
 import org.zstack.utils.logging.CLogger;
+import org.zstack.xen.XenHostContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,10 +86,23 @@ public class KVMHostFactory extends AbstractService implements HypervisorFactory
     @Override
     public Host getHost(HostVO vo) {
         KVMHostVO kvo = dbf.findByUuid(vo.getUuid(), KVMHostVO.class);
+        if (kvo==null){
+        	KVMHostVO ecsvo = new KVMHostVO();
+        	ecsvo.setUuid(vo.getUuid());
+        	ecsvo.setManagementIp("127.0.0.1");
+        	ecsvo.setUsername("root");
+        	ecsvo.setPassword("onceas");
+        	ecsvo.setPort(22);
+        	KVMHostContext context2 =createHostContext(ecsvo);
+        	ECSHostContext context3 = new ECSHostContext();
+        	context3.setBaseUrl(context2.getBaseUrl());
+        	 return new ECSHost(ecsvo, context3);
+        }
         KVMHostContext context = getHostContext(vo.getUuid());
         if (context == null) {
             context = createHostContext(kvo);
         }
+      
         return new KVMHost(kvo, context);
     }
 
@@ -220,6 +236,10 @@ public class KVMHostFactory extends AbstractService implements HypervisorFactory
         String baseUrl = ub.build().toUriString();
 
         KVMHostContext context = new KVMHostContext();
+        if(vo.getClusterUuid()==null) {
+        	 context.setBaseUrl(baseUrl);
+             return context;
+        }
         context.setInventory(KVMHostInventory.valueOf(vo));
         context.setBaseUrl(baseUrl);
         return context;

@@ -33,6 +33,7 @@ import org.zstack.header.message.APIMessage;
 import org.zstack.header.message.Message;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.message.NeedReplyMessage;
+import org.zstack.header.vm.CreateVmOnLocalMsg;
 import org.zstack.search.GetQuery;
 import org.zstack.search.SearchQuery;
 import org.zstack.tag.TagManager;
@@ -133,7 +134,23 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     }
 
     private void passThrough(HostMessage msg) {
-    		 HostVO vo = dbf.findByUuid(msg.getHostUuid(), HostVO.class);
+    	if((msg instanceof ConnectHostPubVmMsg)) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		tmpvo.setUuid(msg.getHostUuid());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+    	}
+    	if((msg instanceof CreateVmOnLocalMsg)) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getUuid());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+    	}
+    	
+    	
+    		HostVO vo = dbf.findByUuid(msg.getHostUuid(), HostVO.class);
 	        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
 	            HostEO eo = dbf.findByUuid(msg.getHostUuid(), HostEO.class);
 	            vo = ObjectUtils.newAndCopy(eo, HostVO.class);
@@ -371,29 +388,19 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
         hvo.setManagementIp(msg.getManagementIp());
         hvo.setStatus(HostStatus.Connecting);
         hvo.setState(HostState.Enabled);
-//        LocalHostFactory factory = new LocalHostFactory();
-        
-        final HypervisorFactory factory = getHypervisorFactory(HypervisorType.valueOf("local"));
-                          
-        final HostVO vo = factory.createHost(hvo, msg);
         final AddLocalHostMsg amsg =AddLocalHostMsg.valueOf(msg);
 
-
-//        if (msg instanceof AddLocalHostMsg) {
-//            tagMgr.createTagsFromAPICreateMessage((AddLocalHostMsg)msg, vo.getUuid(), HostVO.class.getSimpleName());
-//        }
-
         FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
-        final HostInventory inv = HostInventory.valueOf(vo);
-        chain.setName(String.format("add-host-%s", vo.getUuid()));
+//        final HostInventory inv = HostInventory.valueOf(vo);
+        chain.setName(String.format("add-host-%s", hvo.getUuid()));
         chain.then(new NoRollbackFlow() {
             String __name__ = "send-connect-host-message";
 
             @Override
             public void run(final FlowTrigger trigger, Map data) {
-                new Log(inv.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
+                new Log(hvo.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
 
-                ConnectHostPubVmMsg connectMsg = new ConnectHostPubVmMsg(vo.getUuid());
+                ConnectHostPubVmMsg connectMsg = new ConnectHostPubVmMsg(hvo.getUuid());
                 connectMsg.setNewAdd(true);
                 connectMsg.setStartPingTaskOnFailure(false);
                 bus.makeTargetServiceIdByResourceUuid(connectMsg, HostConstant.SERVICE_ID, hvo.getUuid());
@@ -408,73 +415,6 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
                     }
                 });
             }
-        }).then(new NoRollbackFlow() {
-            String __name__ = "check-host-os-version";
-
-            @Override
-            public void run(FlowTrigger trigger, Map data) {
-                new Log(inv.getUuid()).log(HostLogLabel.ADD_HOST_CHECK_OS_VERSION_IN_CLUSTER);
-
-                String distro = HostSystemTags.OS_DISTRIBUTION.getTokenByResourceUuid(vo.getUuid(), HostSystemTags.OS_DISTRIBUTION_TOKEN);
-                String release = HostSystemTags.OS_RELEASE.getTokenByResourceUuid(vo.getUuid(), HostSystemTags.OS_RELEASE_TOKEN);
-                String version = HostSystemTags.OS_VERSION.getTokenByResourceUuid(vo.getUuid(), HostSystemTags.OS_VERSION_TOKEN);
-
-                if (distro == null && release == null && version == null) {
-                    trigger.fail(errf.stringToOperationError(String.format("after connecting, host[name:%s, ip:%s] returns a null os version", vo.getName(), vo.getManagementIp())));
-                    return;
-                }
-
-                SimpleQuery<HostVO> q = dbf.createQuery(HostVO.class);
-                q.select(HostVO_.uuid);
-                q.add(HostVO_.clusterUuid, Op.EQ, vo.getClusterUuid());
-                q.add(HostVO_.uuid, Op.NOT_EQ, vo.getUuid());
-                q.add(HostVO_.status, Op.NOT_EQ, HostStatus.Connecting);
-                q.setLimit(1);
-                List<String> huuids = q.listValue();
-                if (huuids.isEmpty()) {
-                    // this the first host in cluster
-                    trigger.next();
-                    return;
-                }
-
-                String otherHostUuid = huuids.get(0);
-                String cdistro = HostSystemTags.OS_DISTRIBUTION.getTokenByResourceUuid(otherHostUuid, HostSystemTags.OS_DISTRIBUTION_TOKEN);
-                String crelease = HostSystemTags.OS_RELEASE.getTokenByResourceUuid(otherHostUuid, HostSystemTags.OS_RELEASE_TOKEN);
-                String cversion = HostSystemTags.OS_VERSION.getTokenByResourceUuid(otherHostUuid, HostSystemTags.OS_VERSION_TOKEN);
-                if (cdistro == null && crelease == null && cversion == null) {
-                    // this the first host in cluster
-                    trigger.next();
-                    return;
-                }
-
-                String mineVersion = String.format("%s;%s;%s", distro, release, version);
-                String currentVersion = String.format("%s;%s;%s", cdistro, crelease, cversion);
-
-                if (!mineVersion.equals(currentVersion)) {
-                    trigger.fail(errf.stringToOperationError(String.format("cluster[uuid:%s] already has host with os version[%s], but new added host[name:%s ip:%s] has host os version[%s]",
-                            vo.getClusterUuid(), currentVersion, vo.getName(), vo.getManagementIp(), mineVersion)));
-                    return;
-                }
-
-                trigger.next();
-            }
-        }).then(new NoRollbackFlow() {
-            String __name__ = "call-after-add-host-extension";
-
-            @Override
-            public void run(final FlowTrigger trigger, Map data) {
-                extEmitter.afterAddHost(inv, new Completion(trigger) {
-                    @Override
-                    public void success() {
-                        trigger.next();
-                    }
-
-                    @Override
-                    public void fail(ErrorCode errorCode) {
-                        trigger.fail(errorCode);
-                    }
-                });
-            }
         }).done(new FlowDoneHandler(amsg) {
             @Override
             public void handle(Map data) {
@@ -483,14 +423,13 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
                 inv.setStatus(HostStatus.Connected.toString());
                 completion.success(inv);
                 new Log(inv.getUuid()).log(HostLogLabel.ADD_HOST_SUCCESS);
-                logger.debug(String.format("successfully added host[name:%s, hypervisor:%s, uuid:%s]", vo.getName(), vo.getHypervisorType(), vo.getUuid()));
+                logger.debug(String.format("successfully added local host" ));
             }
         }).error(new FlowErrorHandler(amsg) {
             @Override
             public void handle(ErrorCode errCode, Map data) {
                 // delete host totally through the database, so other tables
                 // refer to the host table will clean up themselves
-              
 
                 CollectionUtils.safeForEach(pluginRgty.getExtensionList(FailToAddHostExtensionPoint.class), new ForEachFunction<FailToAddHostExtensionPoint>() {
                     @Override
@@ -726,10 +665,9 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 
     public HypervisorFactory getHypervisorFactory(HypervisorType type) {
         HypervisorFactory factory = hypervisorFactories.get(type.toString());
-        if (factory == null) {
+        if (factory == null ) {
             throw new CloudRuntimeException("No factory for hypervisor: " + type + " found, check your HypervisorManager.xml");
         }
-
         return factory;
     }
 
