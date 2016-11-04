@@ -111,8 +111,8 @@ public class VmInstanceBase extends AbstractVmInstance {
     protected VmInstanceVO self;
     protected VmInstanceVO originalCopy;
     
-    protected VmPubInstanceVO pubself;
-    protected VmPubInstanceVO puboriginalCopy;
+    protected VmECSInstanceVO pubself;
+    protected VmECSInstanceVO puboriginalCopy;
     
     protected String syncThreadName;
 
@@ -209,7 +209,7 @@ public class VmInstanceBase extends AbstractVmInstance {
         this.originalCopy = ObjectUtils.newAndCopy(vo, vo.getClass());
     }
     
-    public VmInstanceBase(VmPubInstanceVO vo) {
+    public VmInstanceBase(VmECSInstanceVO vo) {
         this.pubself = vo;
         this.syncThreadName = "Vm-" + vo.getUuid();
         this.puboriginalCopy = ObjectUtils.newAndCopy(vo, vo.getClass());

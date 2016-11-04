@@ -14,9 +14,9 @@ import java.util.Set;
 @Inheritance(strategy=InheritanceType.JOINED)
 @EO(EOClazz = VmPubInstanceEO.class)
 @AutoDeleteTag
-public class VmPubInstanceVO  extends VmPubInstanceAO{
+public class VmECSInstanceVO  extends VmPubInstanceAO{
      
-	public VmPubInstanceVO() {
+	public VmECSInstanceVO() {
     }
 
      

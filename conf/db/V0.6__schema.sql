@@ -168,7 +168,7 @@ CREATE TABLE  `zstack`.`ClusterEO` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE  `zstack`.`VmPubInstanceEO` (
+CREATE TABLE  `zstack`.`VmECSInstanceEO` (
     `uuid` varchar(32) NOT NULL UNIQUE COMMENT 'cluster uuid',
     `name` varchar(255) NOT NULL COMMENT 'cluster name',
     `accesskeyID` varchar(255) NOT NULL COMMENT 'ECS Accesskey ID',

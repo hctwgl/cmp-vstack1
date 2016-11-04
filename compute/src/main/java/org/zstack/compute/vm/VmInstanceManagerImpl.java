@@ -174,7 +174,7 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     		return ;
     	}
     	if(msg instanceof StartNewCreatedPubVmInstanceMsg) {
-    		VmPubInstanceVO eo = new VmPubInstanceVO();
+    		VmECSInstanceVO eo = new VmECSInstanceVO();
     		eo.setAccesskeyID(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyID());
     		eo.setAccesskeyKey(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyKey());
     		eo.setUuid(((StartNewCreatedPubVmInstanceMsg) msg).getUuid());
@@ -562,9 +562,15 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         
         //存入数据库/发起请求。将处理移到ECS Agent
 //        VmPubInstanceFactory factory  = new ECSVmFactory();
-//       vo = factory.createVmInstance(vo, msg);
+        String vmType = msg.getType() == null ? VmInstanceConstant.USER_VM_TYPE : msg.getType();
+        VmInstanceType type = VmInstanceType.valueOf(vmType);
+        VmInstanceFactory factory = getVmInstanceFactory(type);
+        vo = factory.createVmInstance(vo, msg);
+        
+        
+        
         if (cmsg != null) {
-            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmPubInstanceVO.class.getSimpleName());
+            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmECSInstanceVO.class.getSimpleName());
         }
         acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmPubInstanceEO.class);
         
