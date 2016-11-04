@@ -782,7 +782,7 @@ public abstract class HostBase extends AbstractHost {
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getName() {
-                return "host-connect-to-hypervisor-" + self.getUuid();
+                return "host-connect-to-Local For ECS-" + self.getUuid();
             }
 
             @Override
@@ -840,7 +840,9 @@ public abstract class HostBase extends AbstractHost {
 
     
     private void connectLocalHost(final ConnectHostPubVmMsg msg, final NoErrorCompletion completion) {
-       
+    	
+        
+
         final ConnectHostReply reply = new ConnectHostReply();
 
         final FlowChain flowChain = FlowChainBuilder.newShareFlowChain();
@@ -867,35 +869,35 @@ public abstract class HostBase extends AbstractHost {
                     }
                 });
 
-                flow(new NoRollbackFlow() {
-                    String __name__ = "check-license";
-
-                    @Override
-                    public void run(FlowTrigger trigger, Map data) {
-                        for (PostHostConnectExtensionPoint p : pluginRgty.getExtensionList(PostHostConnectExtensionPoint.class)) {
-                            p.postHostConnect(getSelfInventory());
-                        }
-                        trigger.next();
-                    }
-                });
-
-                flow(new NoRollbackFlow() {
-                    String __name__ = "recalculate-host-capacity";
-
-                    @Override
-                    public void run(FlowTrigger trigger, Map data) {
-                        RecalculateHostCapacityMsg msg = new RecalculateHostCapacityMsg();
-                        msg.setHostUuid(self.getUuid());
-                        bus.makeLocalServiceId(msg, HostAllocatorConstant.SERVICE_ID);
-                        bus.send(msg);
-                        trigger.next();
-                    }
-                });
+//                flow(new NoRollbackFlow() {
+//                    String __name__ = "check-license";
+    //
+//                    @Override
+//                    public void run(FlowTrigger trigger, Map data) {
+//                        for (PostHostConnectExtensionPoint p : pluginRgty.getExtensionList(PostHostConnectExtensionPoint.class)) {
+//                            p.postHostConnect(getSelfInventory());
+//                        }
+//                        trigger.next();
+//                    }
+//                });
+    //
+//                flow(new NoRollbackFlow() {
+//                    String __name__ = "recalculate-host-capacity";
+    //
+//                    @Override
+//                    public void run(FlowTrigger trigger, Map data) {
+//                        RecalculateHostCapacityMsg msg = new RecalculateHostCapacityMsg();
+//                        msg.setHostUuid(self.getUuid());
+//                        bus.makeLocalServiceId(msg, HostAllocatorConstant.SERVICE_ID);
+//                        bus.send(msg);
+//                        trigger.next();
+//                    }
+//                });
 
                 done(new FlowDoneHandler(completion, msg) {
                     @Override
                     public void handle(Map data) {
-                        changeConnectionState(HostStatusEvent.connected);
+//                        changeConnectionState(HostStatusEvent.connected);
                         tracker.trackHost(self.getUuid());
 
                         CollectionUtils.safeForEach(pluginRgty.getExtensionList(HostAfterConnectedExtensionPoint.class),
@@ -925,8 +927,13 @@ public abstract class HostBase extends AbstractHost {
                 });
             }
         }).start();
+    	
+    	 
     }
 
+    
+
+    
     
     
     private void connectHost(final ConnectHostMsg msg, final NoErrorCompletion completion) {

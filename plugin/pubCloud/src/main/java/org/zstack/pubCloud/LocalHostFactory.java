@@ -165,7 +165,7 @@ public class LocalHostFactory extends AbstractService implements HypervisorFacto
     ECSHostContext createHostContext(HostVO vo) {
         UriComponentsBuilder ub = UriComponentsBuilder.newInstance();
         ub.scheme(PubCloudGlobalProperty.AGENT_URL_SCHEME);
-        ub.host("133.133.135.15");
+        ub.host("127.0.0.1");
         ub.port(PubCloudGlobalProperty.AGENT_PORT);
         if (!"".equals(PubCloudGlobalProperty.AGENT_URL_ROOT_PATH)) {
             ub.path(PubCloudGlobalProperty.AGENT_URL_ROOT_PATH);

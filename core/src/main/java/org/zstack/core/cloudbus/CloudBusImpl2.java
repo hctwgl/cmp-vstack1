@@ -1957,7 +1957,7 @@ public class CloudBusImpl2 implements CloudBus, CloudBusIN, ManagementNodeChange
                     @Override
                     public void handleDelivery(String s, com.rabbitmq.client.Envelope envelope, AMQP.BasicProperties basicProperties, byte[] bytes) throws IOException {
                         try {
-                             final Message msg = wire.toMessage(bytes, basicProperties);
+                        	final Message msg = wire.toMessage(bytes, basicProperties);
 
                             if (logger.isTraceEnabled() && wire.logMessage(msg)) {
                                 logger.trace(String.format("[msg received]: %s", wire.dumpMessage(msg)));

@@ -6,13 +6,13 @@ import org.zstack.header.message.MessageReply;
  * Created by david on 8/4/16.
  */
 public class CreatePubVmInstanceReply extends MessageReply {
-    private VmInstanceInventory inventory;
+    private PubVmInstanceInventory inventory;
 
-    public VmInstanceInventory getInventory() {
+    public PubVmInstanceInventory getInventory() {
         return inventory;
     }
 
-    public void setInventory(VmInstanceInventory inventory) {
+    public void setInventory(PubVmInstanceInventory inventory) {
         this.inventory = inventory;
     }
 }

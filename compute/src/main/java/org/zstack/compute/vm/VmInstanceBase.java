@@ -2027,89 +2027,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 
         });
     }
-    
-//    protected void startPubVmFromNewCreate(final StartNewCreatedPubVmInstanceMsg msg, final SyncTaskChain taskChain) {
-// 
-//    	        FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
-//    	        chain.setName(String.format("add-host-%s", msg.getUuid()));
-//    	        chain.then(new NoRollbackFlow() {
-//    	            String __name__ = "send-connect-host-message";
-//
-//    	            @Override
-//    	            public void run(final FlowTrigger trigger, Map data) {
-//    	                new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
-//    	                AddLocalHostMsg addlocalMsg = new AddLocalHostMsg();
-//    	                addlocalMsg.setAccountUuid(msg.getUuid());
-//    	                addlocalMsg.setManagementIp("127.0.0.1");
-//    	                addlocalMsg.setUsername("root");
-//    	                addlocalMsg.setPassword("onceas");
-//    	                bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
-//    	                bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
-//    	                    @Override
-//    	                    public void run(MessageReply reply) {
-//    	                        if (reply.isSuccess()) {
-//    	                            trigger.next();
-//    	                        } else {
-//    	                            trigger.fail(reply.getError());
-//    	                        }
-//    	                    }
-//    	                });
-//    	            }
-//    	        }).then(new NoRollbackFlow() {
-//    	            String __name__ = "create-pub-vm-message";
-//
-//    	            @Override
-//    	            public void run(final FlowTrigger trigger, Map data) {
-//    	                new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
-//    	                CreateVmOnLocalMsg addlocalMsg = new CreateVmOnLocalMsg();
-//    	                addlocalMsg.getVmSpec().setName(msg.getName());
-//    	                addlocalMsg.getVmSpec().setAccesskeyID(msg.getAccesskeyID());
-//    	                addlocalMsg.getVmSpec().setAccesskeyKEY(msg.getAccesskeyKey());
-//    	                bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
-//    	                bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
-//    	                    @Override
-//    	                    public void run(MessageReply reply) {
-//    	                        if (reply.isSuccess()) {
-//    	                            trigger.next();
-//    	                        } else {
-//    	                            trigger.fail(reply.getError());
-//    	                        }
-//    	                    }
-//    	                });
-//    	            }
-//    	        })
-//    	        .done(new FlowDoneHandler(msg) {
-//    	            @Override
-//    	            public void handle(Map data) {
-////    	                HostInventory inv = factory.getHostInventory(vo.getUuid());
-////    	                inv.setStatus(HostStatus.Connected.toString());
-////    	                completion.success(inv);
-////
-////    	                new Log(inv.getUuid()).log(HostLogLabel.ADD_HOST_SUCCESS);
-////    	                logger.debug(String.format("successfully added host[name:%s, hypervisor:%s, uuid:%s]", vo.getName(), vo.getHypervisorType(), vo.getUuid()));
-//    	            }
-//    	        }).error(new FlowErrorHandler(msg) {
-//    	            @Override
-//    	            public void handle(ErrorCode errCode, Map data) {
-//    	                // delete host totally through the database, so other tables
-//    	                // refer to the host table will clean up themselves
-////    	                dbf.remove(vo);
-////    	                dbf.eoCleanup(HostVO.class);
-////
-////    	                CollectionUtils.safeForEach(pluginRgty.getExtensionList(FailToAddHostExtensionPoint.class), new ForEachFunction<FailToAddHostExtensionPoint>() {
-////    	                    @Override
-////    	                    public void run(FailToAddHostExtensionPoint ext) {
-////    	                        ext.failedToAddHost(inv, msg);
-////    	                    }
-////    	                });
-////
-////    	                completion.fail(errf.instantiateErrorCode(HostErrors.UNABLE_TO_ADD_HOST, errCode));
-//    	            }
-//    	        }).start();
-//
-//    	    }
-//
-
+     
      
     protected void startPubVmFromNewCreate(final StartNewCreatedPubVmInstanceMsg msg, final SyncTaskChain taskChain) {
     	 
@@ -2120,6 +2038,29 @@ public class VmInstanceBase extends AbstractVmInstance {
         FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
         chain.setName(String.format("add-host-%s", msg.getUuid()));
         chain.then(new NoRollbackFlow() {
+            String __name__ = "send-connect-host-message";
+
+            @Override
+            public void run(final FlowTrigger trigger, Map data) {
+                new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
+                AddLocalHostMsg addlocalMsg = new AddLocalHostMsg();
+                addlocalMsg.setAccountUuid(msg.getUuid());
+                addlocalMsg.setManagementIp("127.0.0.1");
+                addlocalMsg.setUsername("root");
+                addlocalMsg.setPassword("onceas");
+                bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
+                bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
+                    @Override
+                    public void run(MessageReply reply) {
+                        if (reply.isSuccess()) {
+                            trigger.next();
+                        } else {
+                            trigger.fail(reply.getError());
+                        }
+                    }
+                });
+            }
+        }).then(new NoRollbackFlow() {
             String __name__ = "create-pub-vm-message";
 
             @Override
@@ -2146,29 +2087,35 @@ public class VmInstanceBase extends AbstractVmInstance {
         .done(new FlowDoneHandler(msg) {
             @Override
             public void handle(Map data) {
-//                HostInventory inv = factory.getHostInventory(vo.getUuid());
-//                inv.setStatus(HostStatus.Connected.toString());
-//                completion.success(inv);
-//
-//                new Log(inv.getUuid()).log(HostLogLabel.ADD_HOST_SUCCESS);
-//                logger.debug(String.format("successfully added host[name:%s, hypervisor:%s, uuid:%s]", vo.getName(), vo.getHypervisorType(), vo.getUuid()));
+                logger.debug(String.format("successfully added ECS VM  [name:%s,  uuid:%s]", msg.getName(), msg.getUuid()));
+                VmInstanceVO vo = new VmInstanceVO();
+                vo.setName(msg.getName());
+                vo.setCreateDate(msg.getCreateData());
+                vo.setType("ECS");
+                vo.setState(VmInstanceState.Running);
+                vo.setUuid(msg.getUuid());
+                PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
+                StartNewCreatedPubVmInstanceReply reply = new StartNewCreatedPubVmInstanceReply();
+                reply.setVmInventory(inv);
+                bus.reply(msg, reply);
+                taskChain.next();
             }
         }).error(new FlowErrorHandler(msg) {
             @Override
             public void handle(ErrorCode errCode, Map data) {
                 // delete host totally through the database, so other tables
                 // refer to the host table will clean up themselves
-//                dbf.remove(vo);
-//                dbf.eoCleanup(HostVO.class);
-//
-//                CollectionUtils.safeForEach(pluginRgty.getExtensionList(FailToAddHostExtensionPoint.class), new ForEachFunction<FailToAddHostExtensionPoint>() {
-//                    @Override
-//                    public void run(FailToAddHostExtensionPoint ext) {
-//                        ext.failedToAddHost(inv, msg);
-//                    }
-//                });
-//
-//                completion.fail(errf.instantiateErrorCode(HostErrors.UNABLE_TO_ADD_HOST, errCode));
+            	 VmInstanceVO vo = new VmInstanceVO();
+                 vo.setName(msg.getName());
+                 vo.setCreateDate(msg.getCreateData());
+                 vo.setType("ECS");
+                 vo.setState(VmInstanceState.Error);
+                 vo.setUuid(msg.getUuid());
+                 PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
+            	StartNewCreatedPubVmInstanceReply reply = new StartNewCreatedPubVmInstanceReply();
+                reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
+                bus.reply(msg, reply);
+                taskChain.next();
             }
         }).start();
 
@@ -2179,32 +2126,9 @@ public class VmInstanceBase extends AbstractVmInstance {
     
     
     
-//    
-//    then(new NoRollbackFlow() {
-//        String __name__ = "send-connect-host-message";
-//
-//        @Override
-//        public void run(final FlowTrigger trigger, Map data) {
-//            new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
-//            AddLocalHostMsg addlocalMsg = new AddLocalHostMsg();
-//            addlocalMsg.setAccountUuid(msg.getUuid());
-//            addlocalMsg.setManagementIp("127.0.0.1");
-//            addlocalMsg.setUsername("root");
-//            addlocalMsg.setPassword("onceas");
-//            bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
-//            bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
-//                @Override
-//                public void run(MessageReply reply) {
-//                    if (reply.isSuccess()) {
-//                        trigger.next();
-//                    } else {
-//                        trigger.fail(reply.getError());
-//                    }
-//                }
-//            });
-//        }
-//    }).
-//    
+    
+    
+    
     
     
     

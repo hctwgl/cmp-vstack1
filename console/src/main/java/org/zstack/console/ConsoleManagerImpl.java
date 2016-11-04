@@ -63,7 +63,8 @@ public class ConsoleManagerImpl extends AbstractService implements ConsoleManage
     @Override
     @MessageSafe
     public void handleMessage(Message msg) {
-        if (msg instanceof ConsoleProxyAgentMessage) {
+
+    	if (msg instanceof ConsoleProxyAgentMessage) {
             passThrough(msg);
         } else if (msg instanceof APIMessage) {
             handleApiMessage((APIMessage) msg);

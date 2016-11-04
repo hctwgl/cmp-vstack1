@@ -1410,34 +1410,35 @@ public class ECSHost extends HostBase implements Host {
     }
 
     private void continueConnect(final boolean newAdded, final Completion completion) {
-//        ErrorCode errCode = connectToAgent();
-//        if (errCode != null) {
-//            throw new OperationFailureException(errCode);
-//        }
-//
-//        FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
-//        chain.setName(String.format("continue-connecting-kvm-host-%s-%s", self.getManagementIp(), self.getUuid()));
-//        for (KVMHostConnectExtensionPoint extp : factory.getConnectExtensions()) {
-//            KVMHostConnectedContext ctx = new KVMHostConnectedContext();
-//            ctx.setInventory((KVMHostInventory) getSelfInventory());
-//            ctx.setNewAddedHost(newAdded);
-//
-//            chain.then(extp.createKvmHostConnectingFlow(ctx));
-//        }
-//
-//        chain.done(new FlowDoneHandler(completion) {
-//            @Override
-//            public void handle(Map data) {
-//                completion.success();
-//            }
-//        }).error(new FlowErrorHandler(completion) {
-//            @Override
-//            public void handle(ErrorCode errCode, Map data) {
-//                String err = String.format("connection error for KVM host[uuid:%s, ip:%s]", self.getUuid(),
-//                        self.getManagementIp());
-//                completion.fail(errf.instantiateErrorCode(HostErrors.CONNECTION_ERROR, err, errCode));
-//            }
-//        }).start();
+    	
+        ErrorCode errCode = connectToAgent();
+        if (errCode != null) {
+            throw new OperationFailureException(errCode);
+        }
+
+        FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
+        chain.setName(String.format("continue-connecting-kvm-host-%s-%s", self.getManagementIp(), self.getUuid()));
+        for (KVMHostConnectExtensionPoint extp : factory.getConnectExtensions()) {
+            KVMHostConnectedContext ctx = new KVMHostConnectedContext();
+            ctx.setInventory((KVMHostInventory) getSelfInventory());
+            ctx.setNewAddedHost(newAdded);
+
+            chain.then(extp.createKvmHostConnectingFlow(ctx));
+        }
+
+        chain.done(new FlowDoneHandler(completion) {
+            @Override
+            public void handle(Map data) {
+                completion.success();
+            }
+        }).error(new FlowErrorHandler(completion) {
+            @Override
+            public void handle(ErrorCode errCode, Map data) {
+                String err = String.format("connection error for KVM host[uuid:%s, ip:%s]", self.getUuid(),
+                        self.getManagementIp());
+                completion.fail(errf.instantiateErrorCode(HostErrors.CONNECTION_ERROR, err, errCode));
+            }
+        }).start();
     }
 
     private void createHostVersionSystemTags(String distro, String release, String version) {
@@ -1583,7 +1584,7 @@ public class ECSHost extends HostBase implements Host {
 	                                runner.putArgument("init", "true");
 	                                runner.setFullDeploy(true);
 	                            }
-	                            runner.putArgument("pkg_aliyunagent", agentPackageName);
+	                            runner.putArgument("pkg_kvmagent", agentPackageName);
 	                            runner.putArgument("hostname", String.format("%s.zstack.org","127.0.0.1".replaceAll("\\.", "-")));
 
 	                            UriComponentsBuilder ub = UriComponentsBuilder.fromHttpUrl(restf.getBaseUrl());
@@ -1665,18 +1666,18 @@ public class ECSHost extends HostBase implements Host {
 	                        });
 	                    }
 
-	                    flow(new NoRollbackFlow() {
-	                        String __name__ = "prepare-host-env";
-
-	                        @Override
-	                        public void run(FlowTrigger trigger, Map data) {
-	                            new Log(self.getUuid()).log(LocalHostLabel.PREPARE_FIREWALL);
-
-	                            String script = "which iptables > /dev/null && iptables -C FORWARD -j REJECT --reject-with icmp-host-prohibited > /dev/null 2>&1 && iptables -D FORWARD -j REJECT --reject-with icmp-host-prohibited > /dev/null 2>&1 || true";
-	                            runShell(script);
-	                            trigger.next();
-	                        }
-	                    });
+//	                    flow(new NoRollbackFlow() {
+//	                        String __name__ = "prepare-host-env";
+//
+//	                        @Override
+//	                        public void run(FlowTrigger trigger, Map data) {
+//	                            new Log(self.getUuid()).log(LocalHostLabel.PREPARE_FIREWALL);
+//
+//	                            String script = "which iptables > /dev/null && iptables -C FORWARD -j REJECT --reject-with icmp-host-prohibited > /dev/null 2>&1 && iptables -D FORWARD -j REJECT --reject-with icmp-host-prohibited > /dev/null 2>&1 || true";
+//	                            runShell(script);
+//	                            trigger.next();
+//	                        }
+//	                    });
 
 	                    error(new FlowErrorHandler(complete) {
 	                        @Override
@@ -1688,7 +1689,8 @@ public class ECSHost extends HostBase implements Host {
 	                    done(new FlowDoneHandler(complete) {
 	                        @Override
 	                        public void handle(Map data) {
-	                            continueConnect(info.isNewAdded(), complete);
+//	                            continueConnect(info.isNewAdded(), complete);
+	                            complete.success();
 	                        }
 	                    });
 	                }

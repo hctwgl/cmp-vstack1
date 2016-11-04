@@ -556,6 +556,8 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         vo.setState("created");
         vo.setAccesskeyID(msg.getAccesskeyID());
         vo.setAccesskeyKey(msg.getAccesskeyKey());
+
+        //TODO  Add VmPubInstanceEO table in DB
 //        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmPubInstanceEO.class);
         
         //存入数据库/发起请求。将处理移到ECS Agent
@@ -579,7 +581,7 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
                 try {
                     CreatePubVmInstanceReply cr = new CreatePubVmInstanceReply();
                     if (reply.isSuccess()) {
-                        StartNewCreatedVmInstanceReply r = (StartNewCreatedVmInstanceReply) reply;
+                        StartNewCreatedPubVmInstanceReply r = (StartNewCreatedPubVmInstanceReply) reply;
                         cr.setInventory(r.getVmInventory());
                         completion.success(cr);
                     } else {
@@ -652,7 +654,7 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     
     private void handle(final APICreatePublicVmInstanceMsg msg) {
     	doCreatePublicVmInstance(fromAPICreatePublicVmInstanceMsg(msg), msg, new ReturnValueCompletion<CreatePubVmInstanceReply>() {
-            APICreateVmInstanceEvent evt = new APICreateVmInstanceEvent(msg.getId());
+            APICreatePubVmInstanceEvent evt = new APICreatePubVmInstanceEvent(msg.getId());
 
             @Override
             public void success(CreatePubVmInstanceReply returnValue) {

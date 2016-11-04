@@ -15,7 +15,10 @@ import org.zstack.core.defer.Deferred;
 import org.zstack.core.errorcode.ErrorFacade;
 import org.zstack.core.logging.Log;
 import org.zstack.core.thread.AsyncThread;
+import org.zstack.core.thread.ChainTask;
+import org.zstack.core.thread.SyncTaskChain;
 import org.zstack.core.thread.SyncThread;
+import org.zstack.core.thread.ThreadFacade;
 import org.zstack.core.workflow.FlowChainBuilder;
 import org.zstack.header.AbstractService;
 import org.zstack.header.allocator.HostCpuOverProvisioningManager;
@@ -71,6 +74,10 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     private TagManager tagMgr;
     @Autowired
     private HostCpuOverProvisioningManager cpuRatioMgr;
+    
+    @Autowired
+    protected ThreadFacade thdf;
+    protected String syncThreadName;
 
     private Map<String, HypervisorFactory> hypervisorFactories = Collections.synchronizedMap(new HashMap<String, HypervisorFactory>());
     private Map<String, HostMessageHandlerExtensionPoint> msgHandlers = Collections.synchronizedMap(new HashMap<String, HostMessageHandlerExtensionPoint>());
@@ -140,6 +147,7 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     		tmpvo.setUuid(msg.getHostUuid());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
+	        return;
     	}
     	if((msg instanceof CreateVmOnLocalMsg)) {
     		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
@@ -147,8 +155,9 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getUuid());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
+	        
+	        return;
     	}
-    	
     	
     		HostVO vo = dbf.findByUuid(msg.getHostUuid(), HostVO.class);
 	        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
@@ -391,7 +400,6 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
         final AddLocalHostMsg amsg =AddLocalHostMsg.valueOf(msg);
 
         FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
-//        final HostInventory inv = HostInventory.valueOf(vo);
         chain.setName(String.format("add-host-%s", hvo.getUuid()));
         chain.then(new NoRollbackFlow() {
             String __name__ = "send-connect-host-message";
@@ -470,21 +478,46 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     @Deferred
     private void handle(final AddLocalHostMsg msg) {
         final AddHostReply reply = new AddHostReply();
-
-        doAddLocalHost(msg, new ReturnValueCompletion<HostInventory>() {
+        
+        
+        thdf.chainSubmit(new ChainTask(msg) {
             @Override
-            public void success(HostInventory returnValue) {
-                reply.setInventory(returnValue);
-                bus.reply(msg, reply);
+            public String getSyncSignature() {
+                return "LocalECS"+ msg.getId();
             }
 
             @Override
-            public void fail(ErrorCode errorCode) {
-                reply.setError(errorCode);
-                bus.reply(msg, reply);
+            public void run(final SyncTaskChain chain) {
+            	doAddLocalHost(msg, new ReturnValueCompletion<HostInventory>() {
+                    @Override
+                    public void success(HostInventory returnValue) {
+                        reply.setInventory(returnValue);
+                        bus.reply(msg, reply);
+                        chain.next();
+                    }
+
+                    @Override
+                    public void fail(ErrorCode errorCode) {
+                        reply.setError(errorCode);
+                        bus.reply(msg, reply);
+                        chain.next();
+                    }
+                });
+            }
+
+            @Override
+            public String getName() {
+                return "Add local host for ECS";
             }
         });
+        
+        
+        
     }
+    
+    
+    
+    
 
 
     @Deferred
