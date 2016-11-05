@@ -1,9 +1,9 @@
 package org.zstack.header.vm;
 
 public interface VmPubInstanceFactory {
-    VmPubInstanceType getType();
+	VmInstanceType getType();
     
-    VmPubInstanceEO createVmInstance(VmPubInstanceEO vo, CreateECSInstanceMsg msg);
+    VmECSInstanceVO createVmInstance(VmECSInstanceVO vo, CreateECSInstanceMsg msg);
     
-    VmInstance getVmInstance(VmInstanceVO vo);
+    VmECSInstanceVO getVmInstance(VmECSInstanceVO vo);
 }

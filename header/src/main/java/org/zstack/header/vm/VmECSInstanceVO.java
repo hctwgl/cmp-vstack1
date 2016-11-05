@@ -12,11 +12,12 @@ import java.util.Set;
 @Entity
 @Table
 @Inheritance(strategy=InheritanceType.JOINED)
-@EO(EOClazz = VmPubInstanceEO.class)
+@EO(EOClazz = VmECSInstanceEO.class)
 @AutoDeleteTag
 public class VmECSInstanceVO  extends VmPubInstanceAO{
      
 	public VmECSInstanceVO() {
+		
     }
 
      

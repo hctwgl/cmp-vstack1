@@ -5,27 +5,27 @@ import org.zstack.core.db.DatabaseFacade;
 import org.zstack.header.vm.*;
 
 public class ECSVmFactory implements VmPubInstanceFactory {
-    private static final VmPubInstanceType type = new VmPubInstanceType("ECS");
+    private static final VmInstanceType type = new VmInstanceType("ECS");
     
     @Autowired
     private DatabaseFacade dbf;
     
     @Override
-    public VmInstance getVmInstance(VmInstanceVO vo) {
-        return new VmInstanceBase(vo);
+    public VmECSInstanceVO getVmInstance(VmECSInstanceVO vo) {
+        return vo;
     }
 
 	@Override
-	public VmPubInstanceType getType() {
-		// TODO Auto-generated method stub
-		return type;
-	}
-
-	@Override
-	public VmPubInstanceEO createVmInstance(VmPubInstanceEO vo, CreateECSInstanceMsg msg) {
+	public VmECSInstanceVO createVmInstance(VmECSInstanceVO vo, CreateECSInstanceMsg msg) {
 		// TODO Auto-generated method stub
 	        vo = dbf.persistAndRefresh(vo);
 	        return vo;
+	}
+
+	@Override
+	public VmInstanceType getType() {
+		// TODO Auto-generated method stub
+		return type;
 	}
 
 }

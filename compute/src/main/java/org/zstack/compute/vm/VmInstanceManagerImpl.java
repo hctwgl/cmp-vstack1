@@ -101,6 +101,7 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         RecoverVmExtensionPoint, VmBeforeExpungeExtensionPoint {
     private static final CLogger logger = Utils.getLogger(VmInstanceManagerImpl.class);
     private Map<String, VmInstanceFactory> vmInstanceFactories = Collections.synchronizedMap(new HashMap<String, VmInstanceFactory>());
+    private Map<String, VmPubInstanceFactory> vmPubInstanceFactories = Collections.synchronizedMap(new HashMap<String, VmPubInstanceFactory>());
     private List<String> createVmWorkFlowElements;
     private List<String> createPubVmWorkFlowElements;
     private List<String> stopVmWorkFlowElements;
@@ -547,32 +548,33 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
 
     
     private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg, ReturnValueCompletion<CreatePubVmInstanceReply> completion) {
-    	VmPubInstanceEO vo = new VmPubInstanceEO();
+    	VmECSInstanceVO vo = new VmECSInstanceVO();
         vo.setUuid(Platform.getUuid());
         if (msg.getConsolePassword() != null) {
             VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
         }
         vo.setName(msg.getName());
-        vo.setState("created");
+        vo.setState(VmInstanceState.Starting.toString());
         vo.setAccesskeyID(msg.getAccesskeyID());
         vo.setAccesskeyKey(msg.getAccesskeyKey());
 
         //TODO  Add VmPubInstanceEO table in DB
-//        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmPubInstanceEO.class);
+        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmECSInstanceVO.class);
         
         //存入数据库/发起请求。将处理移到ECS Agent
-//        VmPubInstanceFactory factory  = new ECSVmFactory();
-        String vmType = msg.getType() == null ? VmInstanceConstant.USER_VM_TYPE : msg.getType();
-        VmInstanceType type = VmInstanceType.valueOf(vmType);
-        VmInstanceFactory factory = getVmInstanceFactory(type);
+        VmPubInstanceFactory factory = getVmPubInstanceFactory("ECS");
         vo = factory.createVmInstance(vo, msg);
-        
-        
         
         if (cmsg != null) {
             tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmECSInstanceVO.class.getSimpleName());
         }
-        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmPubInstanceEO.class);
+        CreatePubVmInstanceReply testcr = new CreatePubVmInstanceReply();
+        PubVmInstanceInventory testPi = new PubVmInstanceInventory();
+        testPi.setName(msg.getName());
+        testPi.setDescription(msg.getAccesskeyID()+"...."+msg.getAccesskeyKey());
+        testPi.setState("running");
+        testcr.setInventory(testPi);
+        completion.success(testcr);
         
         StartNewCreatedPubVmInstanceMsg smsg = new StartNewCreatedPubVmInstanceMsg();
         smsg.setAccesskeyID(msg.getAccesskeyID());
@@ -721,6 +723,14 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
                         old.getClass().getName(), ext.getClass().getName(), ext.getType()));
             }
             vmInstanceFactories.put(ext.getType().toString(), ext);
+        }
+        for (VmPubInstanceFactory ext : pluginRgty.getExtensionList(VmPubInstanceFactory.class)) {
+        	VmPubInstanceFactory old = vmPubInstanceFactories.get(ext.getType().toString());
+            if (old != null) {
+                throw new CloudRuntimeException(String.format("duplicate VmInstanceFactory[%s, %s] for type[%s]",
+                        old.getClass().getName(), ext.getClass().getName(), ext.getType()));
+            }
+            vmPubInstanceFactories.put(ext.getType().toString(), ext);
         }
     }
 
@@ -914,10 +924,14 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         return factory;
     }
     
-    public VmPubInstanceFactory getVmPubInstanceFactory(VmPubInstanceType type) {
-        VmPubInstanceFactory factory = new ECSVmFactory();
+    public VmPubInstanceFactory getVmPubInstanceFactory(String type) {
+    	VmPubInstanceFactory factory = vmPubInstanceFactories.get(type);
+        if (factory == null) {
+            throw new CloudRuntimeException(String.format("No VmPubInstanceFactory of type[%s] found", type));
+        }
         return factory;
     }
+    
 
     @Transactional
     protected void putVmToUnknownState(final String hostUuid) {

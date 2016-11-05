@@ -8,7 +8,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table
-public class VmPubInstanceEO extends VmPubInstanceAO {
+public class VmECSInstanceEO extends VmPubInstanceAO {
 	
 	@Column
     private String deleted;
