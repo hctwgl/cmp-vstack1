@@ -603,6 +603,7 @@ CREATE TABLE  `zstack`.`VmInstanceEO` (
     `state` varchar(128) NOT NULL,
     `lastOpDate` timestamp ON UPDATE CURRENT_TIMESTAMP,
     `createDate` timestamp,
+    `platform` varchar(255) NOT NULL,
     `deleted` varchar(255) DEFAULT NULL,
     PRIMARY KEY  (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1351,7 +1352,9 @@ CREATE INDEX idxVolumeSnapshotEOname ON VolumeSnapshotEO (name);
 
 CREATE INDEX idxZoneEOname ON ZoneEO (name);
 
-CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid, clusterUuid, imageUuid, hostUuid, internalId, lastHostUuid, instanceOfferingUuid, rootVolumeUuid, defaultL3NetworkUuid, type, hypervisorType, cpuNum, cpuSpeed, memorySize, allocatorStrategy, createDate, lastOpDate, state FROM `zstack`.`VmInstanceEO` WHERE deleted IS NULL;
+CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid, clusterUuid, imageUuid, hostUuid, internalId, lastHostUuid, instanceOfferingUuid, rootVolumeUuid, defaultL3NetworkUuid, type, hypervisorType, cpuNum, cpuSpeed, memorySize, platform, allocatorStrategy, createDate, lastOpDate, state FROM `zstack`.`VmInstanceEO` WHERE deleted IS NULL  UNION SELECT uuid, name, 'ECS Vm', 'NULL', 'NULL', 'NULL', 'NULL', '000000', 'NULL', 'NULL', 'NULL', 'NULL', 'UserVm', 'NULL', '1', '521', '1024','aliyun', 'NULL', createDate, lastOpDate, state FROM `zstack`.`VmECSInstanceEO` WHERE deleted IS NULL;
+
+#CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid, clusterUuid, imageUuid, hostUuid, internalId, lastHostUuid, instanceOfferingUuid, rootVolumeUuid, defaultL3NetworkUuid, type, hypervisorType, cpuNum, cpuSpeed, memorySize, platform, allocatorStrategy, createDate, lastOpDate, state FROM `zstack`.`VmInstanceEO` WHERE deleted IS NULL;
 
 CREATE VIEW `zstack`.`VmECSInstanceVO` AS SELECT uuid, name, accesskeyID,accesskeyKey, createDate, lastOpDate, state FROM `zstack`.`VmECSInstanceEO` WHERE deleted IS NULL;
 

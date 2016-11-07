@@ -554,14 +554,12 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
             VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
         }
         vo.setName(msg.getName());
-        vo.setState(VmInstanceState.Starting.toString());
+        vo.setState(VmInstanceState.Running.toString());
         vo.setAccesskeyID(msg.getAccesskeyID());
         vo.setAccesskeyKey(msg.getAccesskeyKey());
 
         //TODO  Add VmPubInstanceEO table in DB
         acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmECSInstanceVO.class);
-        
-        //存入数据库/发起请求。将处理移到ECS Agent
         VmPubInstanceFactory factory = getVmPubInstanceFactory("ECS");
         vo = factory.createVmInstance(vo, msg);
         

@@ -26,7 +26,6 @@ CREATE TABLE  `zstack`.`IscsiIsoVO` (
 
 
 ALTER TABLE `zstack`.`PrimaryStorageEO` MODIFY `type` varchar(255);
-ALTER TABLE `zstack`.`VmInstanceEO` ADD COLUMN `platform` varchar(255) NOT NULL;
 
 ALTER TABLE `zstack`.`PrimaryStorageCapacityVO` ADD COLUMN `totalPhysicalCapacity` bigint unsigned DEFAULT 0;
 ALTER TABLE `zstack`.`PrimaryStorageCapacityVO` ADD COLUMN `availablePhysicalCapacity` bigint unsigned DEFAULT 0;
@@ -39,7 +38,4 @@ ALTER TABLE IscsiFileSystemBackendPrimaryStorageVO ADD CONSTRAINT fkIscsiFileSys
 
 ALTER TABLE IscsiIsoVO ADD CONSTRAINT fkIscsiIsoVOPrimaryStorageEO FOREIGN KEY (primaryStorageUuid) REFERENCES PrimaryStorageEO (uuid) ON DELETE CASCADE;
 ALTER TABLE IscsiIsoVO ADD CONSTRAINT fkIscsiIsoVOVmInstanceEO FOREIGN KEY (vmInstanceUuid) REFERENCES VmInstanceEO (uuid) ON DELETE SET NULL;
-
-DROP VIEW IF EXISTS `zstack`.`VmInstanceVO`;
-CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid, clusterUuid, imageUuid, hostUuid, internalId, lastHostUuid, instanceOfferingUuid, rootVolumeUuid, defaultL3NetworkUuid, type, hypervisorType, cpuNum, cpuSpeed, memorySize, platform, allocatorStrategy, createDate, lastOpDate, state FROM `zstack`.`VmInstanceEO` WHERE deleted IS NULL;
 
