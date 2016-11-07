@@ -602,13 +602,19 @@ public class ECSAgentCommands {
         
         private String ex_hostname;
         private String ex_io_optimized;
-        private String ex_system_disk;
         private String ex_data_disks;
         private String ex_vswitch_id;
         private String ex_private_ip_address;
         private String ex_client_token;
         
-        public String getHostManagementIp() {
+        private Map ex_system_disk = new HashMap();
+
+       
+        
+        public void setEx_system_disk(Map ex_system_disk) {
+			this.ex_system_disk = ex_system_disk;
+		}
+		public String getHostManagementIp() {
      			return hostManagementIp;
      		}
      		public void setHostManagementIp(String hostManagementIp) {
@@ -704,12 +710,7 @@ public class ECSAgentCommands {
      		public void setEx_io_optimized(String ex_io_optimized) {
      			this.ex_io_optimized = ex_io_optimized;
      		}
-     		public String getEx_system_disk() {
-     			return ex_system_disk;
-     		}
-     		public void setEx_system_disk(String ex_system_disk) {
-     			this.ex_system_disk = ex_system_disk;
-     		}
+     		 
      		public String getEx_data_disks() {
      			return ex_data_disks;
      		}

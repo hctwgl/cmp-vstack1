@@ -32,6 +32,7 @@ import org.zstack.header.configuration.DiskOfferingInventory;
 import org.zstack.header.configuration.DiskOfferingVO;
 import org.zstack.header.configuration.DiskOfferingVO_;
 import org.zstack.header.configuration.InstanceOfferingVO;
+import org.zstack.header.core.Completion;
 import org.zstack.header.core.ReturnValueCompletion;
 import org.zstack.header.core.scheduler.SchedulerVO;
 import org.zstack.header.core.scheduler.SchedulerVO_;
@@ -601,7 +602,6 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         });
     }
 
-    
     private void handle(final CreateVmInstanceMsg msg) {
         doCreateVmInstance(msg, null, new ReturnValueCompletion<CreateVmInstanceReply>() {
             @Override

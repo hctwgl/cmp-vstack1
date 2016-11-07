@@ -1080,7 +1080,7 @@ public class ECSHost extends HostBase implements Host {
 //        });
     }
 
-    private void handle(final StopVmOnHypervisorMsg msg) {
+    private void handle(final StopVmPubOnLocalMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getSyncSignature() {
@@ -1109,59 +1109,50 @@ public class ECSHost extends HostBase implements Host {
         });
     }
 
-    private void stopVm(final StopVmOnHypervisorMsg msg, final NoErrorCompletion completion) {
-//        checkStatus();
-//        final VmInstanceInventory vminv = msg.getVmInventory();
-//
-//        try {
-//            extEmitter.beforeStopVmOnKvm(KVMHostInventory.valueOf(getSelf()), vminv);
-//        } catch (KVMException e) {
-//            String err = String.format("failed to stop vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", vminv.getUuid(), vminv.getName(),
-//                    self.getUuid(), self.getManagementIp(), e.getMessage());
-//            logger.warn(err, e);
-//            throw new OperationFailureException(errf.stringToOperationError(err));
-//        }
-//
-//        StopVmCmd cmd = new StopVmCmd();
-//        cmd.setUuid(vminv.getUuid());
-//        cmd.setType(msg.getType());
-//        cmd.setTimeout(120);
-//        restf.asyncJsonPost(stopVmPath, cmd, new JsonAsyncRESTCallback<StopVmResponse>(msg, completion) {
-//            @Override
-//            public void fail(ErrorCode err) {
-//                StopVmOnHypervisorReply reply = new StopVmOnHypervisorReply();
-//                if (err.isError(SysErrors.IO_ERROR, SysErrors.HTTP_ERROR)) {
-//                    err = errf.instantiateErrorCode(HostErrors.OPERATION_FAILURE_GC_ELIGIBLE, "unable to stop a vm", err);
-//                }
-//
-//                reply.setError(err);
-//                extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, err);
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public void success(StopVmResponse ret) {
-//                StopVmOnHypervisorReply reply = new StopVmOnHypervisorReply();
-//                if (!ret.isSuccess()) {
-//                    String err = String.format("unable to stop vm[uuid:%s,  name:%s] on kvm host[uuid:%s, ip:%s], because %s", vminv.getUuid(),
-//                            vminv.getName(), self.getUuid(), self.getManagementIp(), ret.getError());
-//                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_STOP_VM_ON_HYPERVISOR, err));
-//                    logger.warn(err);
-//                    extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
-//                } else {
-//                    extEmitter.stopVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), vminv);
-//                }
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public Class<StopVmResponse> getReturnClass() {
-//                return StopVmResponse.class;
-//            }
-//
-//        });
+    private void stopVm(final StopVmPubOnLocalMsg msg, final NoErrorCompletion completion) {
+        checkStatus();
+        final VmInstanceInventory vminv = msg.getVmInventory();
+
+        StopVmCmd cmd = new StopVmCmd();
+        cmd.setUuid(vminv.getUuid());
+        cmd.setType(msg.getType());
+        cmd.setTimeout(120);
+        restf.asyncJsonPost(stopVmPath, cmd, new JsonAsyncRESTCallback<StopVmResponse>(msg, completion) {
+            @Override
+            public void fail(ErrorCode err) {
+                StopVmOnHypervisorReply reply = new StopVmOnHypervisorReply();
+                if (err.isError(SysErrors.IO_ERROR, SysErrors.HTTP_ERROR)) {
+                    err = errf.instantiateErrorCode(HostErrors.OPERATION_FAILURE_GC_ELIGIBLE, "unable to stop a vm", err);
+                }
+
+                reply.setError(err);
+                extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, err);
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public void success(StopVmResponse ret) {
+                StopVmOnHypervisorReply reply = new StopVmOnHypervisorReply();
+                if (!ret.isSuccess()) {
+                    String err = String.format("unable to stop vm[uuid:%s,  name:%s] on kvm host[uuid:%s, ip:%s], because %s", vminv.getUuid(),
+                            vminv.getName(), self.getUuid(), self.getManagementIp(), ret.getError());
+                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_STOP_VM_ON_HYPERVISOR, err));
+                    logger.warn(err);
+                    extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
+                } else {
+                    extEmitter.stopVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), vminv);
+                }
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public Class<StopVmResponse> getReturnClass() {
+                return StopVmResponse.class;
+            }
+
+        });
     }
 
     private void handle(final CreateVmOnLocalMsg msg) {
@@ -1221,9 +1212,12 @@ public class ECSHost extends HostBase implements Host {
          cmd.setEx_security_group_id("sg-2ze56hvvjveewzm12jar");
          cmd.setEx_internet_max_bandwidth_out(1);
          cmd.setEx_internet_charge_type("PayByTraffic");
-         cmd.setSize("ecs.t1.small");
-         
-        restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmResponse>(msg, completion) {
+//         cmd.setSize("ecs.t1.small");
+         cmd.setSize("ecs.n1.tiny");
+         Map sys_disk = new HashMap();
+         sys_disk.put("category", "cloud_efficiency");
+         cmd.setEx_system_disk(sys_disk);
+          restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmResponse>(msg, completion) {
             @Override
             public void fail(ErrorCode err) {
                 StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
