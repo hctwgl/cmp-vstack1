@@ -656,7 +656,6 @@ public abstract class ApplianceVmBase extends VmInstanceBase implements Applianc
             } else {
                 spec.setDataDiskOfferings(new ArrayList<DiskOfferingInventory>(0));
             }
-
             ImageVO imvo = dbf.findByUuid(spec.getVmInventory().getImageUuid(), ImageVO.class);
             spec.getImageSpec().setInventory(ImageInventory.valueOf(imvo));
 

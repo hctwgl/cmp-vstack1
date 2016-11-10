@@ -176,6 +176,7 @@ CREATE TABLE  `zstack`.`VmECSInstanceEO` (
     `state` varchar(32) NOT NULL COMMENT 'ECS state',
     `lastOpDate` timestamp ON UPDATE CURRENT_TIMESTAMP COMMENT 'last operation date',
     `createDate` timestamp,
+    `ECSId` varchar(200) DEFAULT NULL, 
     `deleted` varchar(255) DEFAULT NULL,
     PRIMARY KEY  (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

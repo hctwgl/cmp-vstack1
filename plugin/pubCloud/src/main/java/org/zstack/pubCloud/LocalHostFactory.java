@@ -162,7 +162,7 @@ public class LocalHostFactory extends AbstractService implements HypervisorFacto
         return connectExtensions;
     }
 
-    ECSHostContext createHostContext(HostVO vo) {
+    ECSHostContext createHostContext() {
         UriComponentsBuilder ub = UriComponentsBuilder.newInstance();
         ub.scheme(PubCloudGlobalProperty.AGENT_URL_SCHEME);
         ub.host("127.0.0.1");
@@ -179,8 +179,8 @@ public class LocalHostFactory extends AbstractService implements HypervisorFacto
     }
 
     public ECSHostContext getHostContext(String hostUuid) {
-    	HostVO kvo = dbf.findByUuid(hostUuid, HostVO.class);
-        return createHostContext(kvo);
+//    	HostVO kvo = dbf.findByUuid(hostUuid, HostVO.class);
+        return createHostContext();
     }
 
     @Override
@@ -304,7 +304,7 @@ public class LocalHostFactory extends AbstractService implements HypervisorFacto
 
 	@Override
 	public Host getHost(HostVO vo) {
-        	ECSHostContext  context = createHostContext(vo);
+        	ECSHostContext  context = createHostContext( );
         return   new ECSHost(vo, context);
 	}
 

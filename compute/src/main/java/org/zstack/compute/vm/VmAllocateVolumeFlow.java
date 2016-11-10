@@ -17,6 +17,7 @@ import org.zstack.header.exception.CloudRuntimeException;
 import org.zstack.header.image.ImageConstant.ImageMediaType;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.vm.VmInstanceConstant;
+import org.zstack.header.vm.VmInstanceEO;
 import org.zstack.header.vm.VmInstanceSpec;
 import org.zstack.header.vm.VmInstanceSpec.VolumeSpec;
 import org.zstack.header.vm.VmInstanceVO;
@@ -98,7 +99,7 @@ public class VmAllocateVolumeFlow implements Flow {
                         CreateVolumeReply cr = r.castReply();
                         VolumeInventory inv = cr.getInventory();
                         if (inv.getType().equals(VolumeType.Root.toString())) {
-                            UpdateQuery.New().entity(VmInstanceVO.class).set(VmInstanceVO_.rootVolumeUuid, inv.getUuid())
+                            UpdateQuery.New().entity(VmInstanceEO.class).set(VmInstanceVO_.rootVolumeUuid, inv.getUuid())
                                     .condAnd(VmInstanceVO_.uuid, Op.EQ, spec.getVmInventory().getUuid()).update();
                             spec.setDestRootVolume(inv);
                         } else {

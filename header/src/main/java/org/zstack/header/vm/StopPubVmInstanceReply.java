@@ -2,7 +2,7 @@ package org.zstack.header.vm;
 
 import org.zstack.header.message.MessageReply;
 
-public class StartNewCreatedPubVmInstanceReply extends MessageReply {
+public class StopPubVmInstanceReply extends MessageReply {
     private PubVmInstanceInventory vmInventory;
 
     public PubVmInstanceInventory getVmInventory() {

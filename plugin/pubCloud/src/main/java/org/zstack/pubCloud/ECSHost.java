@@ -207,8 +207,8 @@ public class ECSHost extends HostBase implements Host {
             handle((CheckNetworkPhysicalInterfaceMsg) msg);
         } else if (msg instanceof CreateVmOnLocalMsg) {
             handle((CreateVmOnLocalMsg) msg);
-        } else if (msg instanceof StopVmOnHypervisorMsg) {
-            handle((StopVmOnHypervisorMsg) msg);
+        } else if (msg instanceof StopVmPubOnLocalMsg) {
+            handle((StopVmPubOnLocalMsg) msg);
         } else if (msg instanceof RebootVmOnHypervisorMsg) {
             handle((RebootVmOnHypervisorMsg) msg);
         } else if (msg instanceof DestroyVmOnHypervisorMsg) {
@@ -1110,12 +1110,9 @@ public class ECSHost extends HostBase implements Host {
     }
 
     private void stopVm(final StopVmPubOnLocalMsg msg, final NoErrorCompletion completion) {
-        checkStatus();
-        final VmInstanceInventory vminv = msg.getVmInventory();
-
         StopVmCmd cmd = new StopVmCmd();
-        cmd.setUuid(vminv.getUuid());
-        cmd.setType(msg.getType());
+        cmd.setUuid(msg.getId());
+        cmd.setVmUuid(msg.getvMUuid());
         cmd.setTimeout(120);
         restf.asyncJsonPost(stopVmPath, cmd, new JsonAsyncRESTCallback<StopVmResponse>(msg, completion) {
             @Override
@@ -1126,7 +1123,7 @@ public class ECSHost extends HostBase implements Host {
                 }
 
                 reply.setError(err);
-                extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, err);
+//                extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, err);
                 bus.reply(msg, reply);
                 completion.done();
             }
@@ -1135,13 +1132,13 @@ public class ECSHost extends HostBase implements Host {
             public void success(StopVmResponse ret) {
                 StopVmOnHypervisorReply reply = new StopVmOnHypervisorReply();
                 if (!ret.isSuccess()) {
-                    String err = String.format("unable to stop vm[uuid:%s,  name:%s] on kvm host[uuid:%s, ip:%s], because %s", vminv.getUuid(),
-                            vminv.getName(), self.getUuid(), self.getManagementIp(), ret.getError());
+                    String err = String.format("unable to stop vm[uuid:%s ] on kvm host[uuid:%s, ip:%s], because %s", msg.getId(),
+                               self.getUuid(), self.getManagementIp(), ret.getError());
                     reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_STOP_VM_ON_HYPERVISOR, err));
                     logger.warn(err);
-                    extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
+//                    extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
                 } else {
-                    extEmitter.stopVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), vminv);
+//                    extEmitter.stopVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), vminv);
                 }
                 bus.reply(msg, reply);
                 completion.done();
@@ -1158,7 +1155,7 @@ public class ECSHost extends HostBase implements Host {
     private void handle(final CreateVmOnLocalMsg msg) {
     	
     	
-        thdf.chainSubmit(new ChainTask(msg) {
+    	  thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getSyncSignature() {
                 return id;
@@ -1217,7 +1214,7 @@ public class ECSHost extends HostBase implements Host {
          Map sys_disk = new HashMap();
          sys_disk.put("category", "cloud_efficiency");
          cmd.setEx_system_disk(sys_disk);
-          restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmResponse>(msg, completion) {
+          restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmPubResponse>(msg, completion) {
             @Override
             public void fail(ErrorCode err) {
                 StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
@@ -1228,8 +1225,8 @@ public class ECSHost extends HostBase implements Host {
             }
 
             @Override
-            public void success(StartVmResponse ret) {
-                StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
+            public void success(StartVmPubResponse ret) {
+            	StartVmOnPubReply reply = new StartVmOnPubReply();
                 if (ret.isSuccess()) {
                     String info = String.format("successfully start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s]", spec.getUuid(), spec.getName(),
                             self.getUuid(), self.getManagementIp());
@@ -1240,13 +1237,14 @@ public class ECSHost extends HostBase implements Host {
                     reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_START_VM_ON_HYPERVISOR, err));
                     logger.warn(err);
                 }
+                reply.setVmUuid(ret.getVmUuid());
                 bus.reply(msg, reply);
                 completion.done();
             }
 
             @Override
-            public Class<StartVmResponse> getReturnClass() {
-                return StartVmResponse.class;
+            public Class<StartVmPubResponse> getReturnClass() {
+                return StartVmPubResponse.class;
             }
         });
     }

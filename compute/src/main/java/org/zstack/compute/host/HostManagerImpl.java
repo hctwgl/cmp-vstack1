@@ -37,6 +37,7 @@ import org.zstack.header.message.Message;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.message.NeedReplyMessage;
 import org.zstack.header.vm.CreateVmOnLocalMsg;
+import org.zstack.header.vm.StopVmPubOnLocalMsg;
 import org.zstack.search.GetQuery;
 import org.zstack.search.SearchQuery;
 import org.zstack.tag.TagManager;
@@ -141,22 +142,34 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     }
 
     private void passThrough(HostMessage msg) {
-    	if((msg instanceof ConnectHostPubVmMsg)) {
+    	if (msg instanceof ConnectHostPubVmMsg) {
     		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
     		HostVO tmpvo = new HostVO();
-    		tmpvo.setUuid(msg.getHostUuid());
+    		tmpvo.setUuid(((ConnectHostPubVmMsg) msg).getHostUuid());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
 	        return;
     	}
-    	if((msg instanceof CreateVmOnLocalMsg)) {
+    	if (msg instanceof CreateVmOnLocalMsg) {
     		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
     		HostVO tmpvo = new HostVO();
-    		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getUuid());
+    		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
 	        
 	        return;
+    	}
+    	if (msg instanceof StopVmPubOnLocalMsg) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		
+    		//Bug!
+    		tmpvo.setUuid(((StopVmPubOnLocalMsg) msg).getId());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+	        
+	        return;
+    		
     	}
     	
     		HostVO vo = dbf.findByUuid(msg.getHostUuid(), HostVO.class);

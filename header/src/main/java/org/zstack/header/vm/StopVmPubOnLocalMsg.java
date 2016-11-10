@@ -6,8 +6,17 @@ import org.zstack.header.message.NeedReplyMessage;
 public class StopVmPubOnLocalMsg extends NeedReplyMessage implements HostMessage {
     private VmInstanceInventory vmInventory;
     private String type;
+    private String vMUuid;
 
-    public VmInstanceInventory getVmInventory() {
+    public String getvMUuid() {
+		return vMUuid;
+	}
+
+	public void setvMUuid(String vMUuid) {
+		this.vMUuid = vMUuid;
+	}
+
+	public VmInstanceInventory getVmInventory() {
         return vmInventory;
     }
 

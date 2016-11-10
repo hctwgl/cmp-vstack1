@@ -12,8 +12,19 @@ public class VmECSInstanceEO extends VmPubInstanceAO {
 	
 	@Column
     private String deleted;
+	
+	@Column
+    private String ECSId;
 
-    public String getDeleted() {
+    public String getECSId() {
+		return ECSId;
+	}
+
+	public void setECSId(String eCSId) {
+		ECSId = eCSId;
+	}
+
+	public String getDeleted() {
         return deleted;
     }
 

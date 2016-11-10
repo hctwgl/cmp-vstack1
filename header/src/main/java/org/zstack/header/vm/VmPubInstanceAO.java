@@ -31,6 +31,8 @@ public class VmPubInstanceAO  {
 	     private Timestamp lastOpDate;
 	
 	
+	
+	
 	 public VmPubInstanceAO() {
 	    }
 

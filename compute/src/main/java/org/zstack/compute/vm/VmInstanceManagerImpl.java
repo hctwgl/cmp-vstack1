@@ -555,7 +555,7 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
             VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
         }
         vo.setName(msg.getName());
-        vo.setState(VmInstanceState.Running.toString());
+        vo.setState(VmInstanceState.Starting.toString());
         vo.setAccesskeyID(msg.getAccesskeyID());
         vo.setAccesskeyKey(msg.getAccesskeyKey());
 
@@ -567,13 +567,6 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         if (cmsg != null) {
             tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmECSInstanceVO.class.getSimpleName());
         }
-        CreatePubVmInstanceReply testcr = new CreatePubVmInstanceReply();
-        PubVmInstanceInventory testPi = new PubVmInstanceInventory();
-        testPi.setName(msg.getName());
-        testPi.setDescription(msg.getAccesskeyID()+"...."+msg.getAccesskeyKey());
-        testPi.setState("running");
-        testcr.setInventory(testPi);
-        completion.success(testcr);
         
         StartNewCreatedPubVmInstanceMsg smsg = new StartNewCreatedPubVmInstanceMsg();
         smsg.setAccesskeyID(msg.getAccesskeyID());

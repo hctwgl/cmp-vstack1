@@ -740,7 +740,18 @@ public class ECSAgentCommands {
                
          
     }
-    public static class StartVmResponse extends AgentResponse {
+    public static class StartVmPubResponse extends AgentResponse {
+    	private String vmUuid;
+
+		public String getVmUuid() {
+			return vmUuid;
+		}
+
+		public void setVmUuid(String vmUuid) {
+			this.vmUuid = vmUuid;
+		}
+ 
+    	
     }
     public static class OnlineChangeCpuMemoryCmd extends AgentCommand{
         private String vmUuid;
@@ -824,7 +835,14 @@ public class ECSAgentCommands {
     public static class StopVmCmd extends AgentCommand {
     	private String uuid;
         private String type;
-    	private long timeout;
+        private String vmUuid;
+    	public String getVmUuid() {
+			return vmUuid;
+		}
+		public void setVmUuid(String vmUuid) {
+			this.vmUuid = vmUuid;
+		}
+		private long timeout;
 
 		public String getUuid() {
 			return uuid;
