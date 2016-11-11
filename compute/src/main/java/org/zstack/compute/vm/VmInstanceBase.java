@@ -2211,11 +2211,15 @@ public class VmInstanceBase extends AbstractVmInstance {
             handle((APICreateStopVmInstanceSchedulerMsg) msg);
         } else if (msg instanceof APIRebootVmInstanceMsg) {
             handle((APIRebootVmInstanceMsg) msg);
+        } else if (msg instanceof APIRebootVmPubInstanceMsg) {
+            handle((APIRebootVmPubInstanceMsg) msg);
         } else if (msg instanceof APICreateRebootVmInstanceSchedulerMsg) {
             handle((APICreateRebootVmInstanceSchedulerMsg) msg);
         } else if (msg instanceof APIDestroyVmInstanceMsg) {
             handle((APIDestroyVmInstanceMsg) msg);
-        } else if (msg instanceof APIStartVmInstanceMsg) {
+        } else if (msg instanceof APIDestroyVmPubInstanceMsg) {
+            handle((APIDestroyVmPubInstanceMsg) msg);
+        }  else if (msg instanceof APIStartVmInstanceMsg) {
             handle((APIStartVmInstanceMsg) msg);
         } else if (msg instanceof APICreateStartVmInstanceSchedulerMsg) {
             handle((APICreateStartVmInstanceSchedulerMsg) msg);
@@ -3717,7 +3721,43 @@ public class VmInstanceBase extends AbstractVmInstance {
             }
         });
     }
+    
+    
+    protected void handle(final APIDestroyVmPubInstanceMsg msg) {
+        thdf.chainSubmit(new ChainTask(msg) {
+            @Override
+            public String getName() {
+                return String.format("destroy-vm-%s", self.getUuid());
+            }
 
+            @Override
+            public String getSyncSignature() {
+                return syncThreadName;
+            }
+
+            @Override
+            public void run(final SyncTaskChain chain) {
+                final APIDestroyVmInstanceEvent evt = new APIDestroyVmInstanceEvent(msg.getId());
+                destroyVm(msg, new Completion(chain) {
+                    @Override
+                    public void success() {
+                        bus.publish(evt);
+                        chain.next();
+                    }
+
+                    @Override
+                    public void fail(ErrorCode errorCode) {
+                        evt.setErrorCode(errorCode);
+                        bus.publish(evt);
+                        chain.next();
+                    }
+                });
+            }
+        });
+    }
+    
+    
+    
     private void destroyVm(APIDestroyVmInstanceMsg msg, final Completion completion) {
         final String issuer = VmInstanceVO.class.getSimpleName();
         final List<VmDeletionStruct> ctx = new ArrayList<VmDeletionStruct>();
@@ -3791,6 +3831,66 @@ public class VmInstanceBase extends AbstractVmInstance {
                 completion.fail(errf.instantiateErrorCode(SysErrors.DELETE_RESOURCE_ERROR, errCode));
             }
         }).start();
+    }
+
+    
+
+    private void destroyVm(APIDestroyVmPubInstanceMsg msg, final Completion completion) {
+    	FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
+        chain.setName(String.format("delete-vm-%s", msg.getUuid()));
+        chain.then(new NoRollbackFlow() {
+            String __name__ = "delete-pub-vm-message";
+
+            @Override
+            public void run(final FlowTrigger trigger, Map data) {
+                new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
+                DeleteVmPubOnLocalMsg deletelocalMsg = new DeleteVmPubOnLocalMsg();
+                deletelocalMsg.setId(msg.getUuid());
+                VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+                deletelocalMsg.setvMUuid(eo.getECSId());
+                deletelocalMsg.setAccess_key_id(eo.getAccesskeyID());
+                deletelocalMsg.setAccess_key_secret(eo.getAccesskeyKey());
+                deletelocalMsg.setRegion("cn-beijing");
+                deletelocalMsg.setForce("False");
+                bus.makeTargetServiceIdByResourceUuid(deletelocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
+                bus.send(deletelocalMsg, new CloudBusCallBack(trigger) {
+                    @Override
+                    public void run(MessageReply reply) {
+                        if (reply.isSuccess()) {
+                            trigger.next();
+                        } else {
+                            trigger.fail(reply.getError());
+                        }
+                    }
+                });
+            }
+        })
+        .done(new FlowDoneHandler(msg) {
+            @Override
+            public void handle(Map data) {
+                logger.debug(String.format("successfully stop ECS VM  [name:%s]",  msg.getUuid()));
+                VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+                eo.setState(VmInstanceState.Destroyed.toString());
+                eo.setDeleted("Y");
+                dbf.updateAndRefresh(eo);
+                
+                DestroyVmInstanceReply reply = new DestroyVmInstanceReply();
+                bus.reply(msg, reply);
+            	completion.success();
+            }
+        }).error(new FlowErrorHandler(msg) {
+            @Override
+            public void handle(ErrorCode errCode, Map data) {
+                // delete host totally through the database, so other tables
+                // refer to the host table will clean up themselves
+             
+               DestroyVmInstanceReply reply = new DestroyVmInstanceReply();
+                reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
+                bus.reply(msg, reply);
+            	completion.fail(errCode);
+            }
+        }).start();
+    	 
     }
 
     protected void buildHostname(VmInstanceSpec spec) {
@@ -3950,6 +4050,95 @@ public class VmInstanceBase extends AbstractVmInstance {
         }).start();
     }
 
+    
+    protected void rebootVmPub(final APIRebootVmPubInstanceMsg msg, final Completion completion) {
+        refreshVO();
+        VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+//        ErrorCode allowed = validateOperationByState(msg, self.getState(), null);
+//        if (allowed != null) {
+//            completion.fail(allowed);
+//            return;
+//        }
+        //TODO 计算资源统计
+//        applyPendingCapacityChangeIfNeed();
+        VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
+        ErrorCode preReboot = extEmitter.preRebootVm(inv);
+        if (preReboot != null) {
+            completion.fail(preReboot);
+            return;
+        }
+ 
+//        changeVmStateInDb(VmInstanceStateEvent.rebooting);
+        
+        FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
+        chain.setName(String.format("reboot-ECSvm-%s", msg.getUuid()));
+        chain.then(new NoRollbackFlow() {
+            String __name__ = "reboot-pub-vm-message";
+
+            @Override
+            public void run(final FlowTrigger trigger, Map data) {
+                new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
+                //填好需要的信息.Bug! 需要获取到ECSID
+                RebootVmPubOnLocalMsg rebootlocalMsg = new RebootVmPubOnLocalMsg();
+                rebootlocalMsg.setId(msg.getUuid());
+                VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+                rebootlocalMsg.setvMUuid(eo.getECSId());
+                rebootlocalMsg.setAccess_key_id(eo.getAccesskeyID());
+                rebootlocalMsg.setAccess_key_secret(eo.getAccesskeyKey());
+                rebootlocalMsg.setRegion("cn-beijing");
+                rebootlocalMsg.setForce("False");
+                bus.makeTargetServiceIdByResourceUuid(rebootlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
+                bus.send(rebootlocalMsg, new CloudBusCallBack(trigger) {
+                    @Override
+                    public void run(MessageReply reply) {
+                        if (reply.isSuccess()) {
+                            trigger.next();
+                        } else {
+                            trigger.fail(reply.getError());
+                        }
+                    }
+                });
+            }
+        })
+        .done(new FlowDoneHandler(msg) {
+            @Override
+            public void handle(Map data) {
+                logger.debug(String.format("successfully stop ECS VM  [name:%s]",  msg.getUuid()));
+                eo.setState(VmInstanceState.Running.toString());
+                dbf.updateAndRefresh(eo);
+                VmInstanceVO vo = new VmInstanceVO();
+                vo.setName(eo.getName());
+                vo.setType("ECS");
+                vo.setState(VmInstanceState.Running);
+                vo.setUuid(msg.getUuid());
+                PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
+                RebootPubVmInstanceReply reply = new RebootPubVmInstanceReply();
+                reply.setVmInventory(inv);
+                bus.reply(msg, reply);
+            	completion.success();
+            }
+        }).error(new FlowErrorHandler(msg) {
+            @Override
+            public void handle(ErrorCode errCode, Map data) {
+                // delete host totally through the database, so other tables
+                // refer to the host table will clean up themselves
+                VmInstanceVO vo = new VmInstanceVO();
+                vo.setName(eo.getName());
+                vo.setType("ECS");
+                vo.setUuid(msg.getUuid());
+                PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
+            	StopPubVmInstanceReply reply = new StopPubVmInstanceReply();
+                reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
+                bus.reply(msg, reply);
+            	completion.fail(errCode);
+            }
+        }).start();
+        
+      
+    }
+
+    
+    
     protected void rebootVm(final APIRebootVmInstanceMsg msg, final SyncTaskChain taskChain) {
         rebootVm(msg, new Completion(taskChain) {
             @Override
@@ -3971,6 +4160,28 @@ public class VmInstanceBase extends AbstractVmInstance {
         });
     }
 
+    protected void rebootVmPub(final APIRebootVmPubInstanceMsg msg, final SyncTaskChain taskChain) {
+    	rebootVmPub(msg, new Completion(taskChain) {
+            @Override
+            public void success() {
+                APIRebootVmInstanceEvent evt = new APIRebootVmInstanceEvent(msg.getId());
+                VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
+                evt.setInventory(inv);
+                bus.publish(evt);
+                taskChain.next();
+            }
+
+            @Override
+            public void fail(ErrorCode errorCode) {
+                APIRebootVmInstanceEvent evt = new APIRebootVmInstanceEvent(msg.getId());
+                evt.setErrorCode(errf.instantiateErrorCode(VmErrors.REBOOT_ERROR, errorCode));
+                bus.publish(evt);
+                taskChain.next();
+            }
+        });
+    }
+
+    
     protected void handle(final APIRebootVmInstanceMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
@@ -3986,6 +4197,24 @@ public class VmInstanceBase extends AbstractVmInstance {
             @Override
             public void run(SyncTaskChain chain) {
                 rebootVm(msg, chain);
+            }
+        });
+    }
+    protected void handle(final APIRebootVmPubInstanceMsg msg) {
+        thdf.chainSubmit(new ChainTask(msg) {
+            @Override
+            public String getName() {
+                return String.format("reboot-vm-%s", self.getUuid());
+            }
+
+            @Override
+            public String getSyncSignature() {
+                return syncThreadName;
+            }
+
+            @Override
+            public void run(SyncTaskChain chain) {
+                rebootVmPub(msg, chain);
             }
         });
     }
@@ -4012,7 +4241,6 @@ public class VmInstanceBase extends AbstractVmInstance {
     }
     
     
-    //BUG!
     protected void stopVmPub(final APIStopVmPubInstanceMsg msg, final SyncTaskChain taskChain) {
         stopVmPub(msg, new Completion(taskChain) {
             @Override
@@ -4044,8 +4272,6 @@ public class VmInstanceBase extends AbstractVmInstance {
     
     
     private void stopVmPub(final APIStopVmPubInstanceMsg msg, final Completion completion) {
-    	
-    	 
         FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
         chain.setName(String.format("add-host-%s", msg.getUuid()));
         chain.then(new NoRollbackFlow() {
@@ -4099,17 +4325,18 @@ public class VmInstanceBase extends AbstractVmInstance {
             public void handle(ErrorCode errCode, Map data) {
                 // delete host totally through the database, so other tables
                 // refer to the host table will clean up themselves
-//            	 VmInstanceVO vo = new VmInstanceVO();
-//                 vo.setName(msg.getName());
-//                 vo.setCreateDate(msg.getCreateData());
-//                 vo.setType("ECS");
-//                 vo.setState(VmInstanceState.Error);
-//                 vo.setUuid(msg.getUuid());
-//                 PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
-//            	StartNewCreatedPubVmInstanceReply reply = new StartNewCreatedPubVmInstanceReply();
-//                reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
-//                bus.reply(msg, reply);
-//                taskChain.next();
+            	VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+                eo.setState(VmInstanceState.Stopped.toString());
+                dbf.updateAndRefresh(eo);
+                VmInstanceVO vo = new VmInstanceVO();
+                vo.setName(eo.getName());
+                vo.setType("ECS");
+                vo.setState(VmInstanceState.Stopped);
+                vo.setUuid(msg.getUuid());
+                PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
+            	StopPubVmInstanceReply reply = new StopPubVmInstanceReply();
+                reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
+                bus.reply(msg, reply);
             	completion.fail(errCode);
             }
         }).start();

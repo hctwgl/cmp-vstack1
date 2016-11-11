@@ -37,6 +37,8 @@ import org.zstack.header.message.Message;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.message.NeedReplyMessage;
 import org.zstack.header.vm.CreateVmOnLocalMsg;
+import org.zstack.header.vm.DeleteVmPubOnLocalMsg;
+import org.zstack.header.vm.RebootVmPubOnLocalMsg;
 import org.zstack.header.vm.StopVmPubOnLocalMsg;
 import org.zstack.search.GetQuery;
 import org.zstack.search.SearchQuery;
@@ -142,6 +144,8 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     }
 
     private void passThrough(HostMessage msg) {
+    	//Bug!
+    	
     	if (msg instanceof ConnectHostPubVmMsg) {
     		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
     		HostVO tmpvo = new HostVO();
@@ -156,20 +160,30 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
-	        
 	        return;
     	}
-    	if (msg instanceof StopVmPubOnLocalMsg) {
+    	if ((msg instanceof StopVmPubOnLocalMsg)) {
     		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
     		HostVO tmpvo = new HostVO();
-    		
-    		//Bug!
     		tmpvo.setUuid(((StopVmPubOnLocalMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
-	        
 	        return;
     		
+    	}if (msg instanceof RebootVmPubOnLocalMsg) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		tmpvo.setUuid(((RebootVmPubOnLocalMsg) msg).getId());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+	        return;
+    	}if (msg instanceof DeleteVmPubOnLocalMsg) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		tmpvo.setUuid(((DeleteVmPubOnLocalMsg) msg).getId());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+	        return;
     	}
     	
     		HostVO vo = dbf.findByUuid(msg.getHostUuid(), HostVO.class);

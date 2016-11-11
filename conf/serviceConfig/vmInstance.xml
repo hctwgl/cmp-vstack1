@@ -38,8 +38,14 @@
     <message>
         <name>org.zstack.header.vm.APIRebootVmInstanceMsg</name>
     </message>
+     <message>
+        <name>org.zstack.header.vm.APIRebootVmPubInstanceMsg</name>
+    </message>
     <message>
         <name>org.zstack.header.vm.APIDestroyVmInstanceMsg</name>
+    </message>
+     <message>
+        <name>org.zstack.header.vm.APIDestroyVmPubInstanceMsg</name>
     </message>
     <message>
         <name>org.zstack.header.vm.APIStartVmInstanceMsg</name>
