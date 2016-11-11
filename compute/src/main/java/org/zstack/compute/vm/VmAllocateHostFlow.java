@@ -109,7 +109,6 @@ public class VmAllocateHostFlow implements Flow {
 
         AllocateHostMsg msg = this.prepareMsg(data);
         new Log(spec.getVmInventory().getUuid()).log(VmLabels.VM_START_ALLOCATE_HOST);
-//------------------Error
         bus.send(msg, new CloudBusCallBack(chain) {
             @Override
             public void run(MessageReply reply) {

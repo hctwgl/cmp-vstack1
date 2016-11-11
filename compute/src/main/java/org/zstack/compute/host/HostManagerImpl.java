@@ -15,7 +15,10 @@ import org.zstack.core.defer.Deferred;
 import org.zstack.core.errorcode.ErrorFacade;
 import org.zstack.core.logging.Log;
 import org.zstack.core.thread.AsyncThread;
+import org.zstack.core.thread.ChainTask;
+import org.zstack.core.thread.SyncTaskChain;
 import org.zstack.core.thread.SyncThread;
+import org.zstack.core.thread.ThreadFacade;
 import org.zstack.core.workflow.FlowChainBuilder;
 import org.zstack.header.AbstractService;
 import org.zstack.header.allocator.HostCpuOverProvisioningManager;
@@ -33,6 +36,8 @@ import org.zstack.header.message.APIMessage;
 import org.zstack.header.message.Message;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.message.NeedReplyMessage;
+import org.zstack.header.vm.CreateVmOnLocalMsg;
+import org.zstack.header.vm.StopVmPubOnLocalMsg;
 import org.zstack.search.GetQuery;
 import org.zstack.search.SearchQuery;
 import org.zstack.tag.TagManager;
@@ -70,6 +75,10 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     private TagManager tagMgr;
     @Autowired
     private HostCpuOverProvisioningManager cpuRatioMgr;
+    
+    @Autowired
+    protected ThreadFacade thdf;
+    protected String syncThreadName;
 
     private Map<String, HypervisorFactory> hypervisorFactories = Collections.synchronizedMap(new HashMap<String, HypervisorFactory>());
     private Map<String, HostMessageHandlerExtensionPoint> msgHandlers = Collections.synchronizedMap(new HashMap<String, HostMessageHandlerExtensionPoint>());
@@ -133,22 +142,53 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
     }
 
     private void passThrough(HostMessage msg) {
-        HostVO vo = dbf.findByUuid(msg.getHostUuid(), HostVO.class);
-        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
-            HostEO eo = dbf.findByUuid(msg.getHostUuid(), HostEO.class);
-            vo = ObjectUtils.newAndCopy(eo, HostVO.class);
-        }
+    	if (msg instanceof ConnectHostPubVmMsg) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		tmpvo.setUuid(((ConnectHostPubVmMsg) msg).getHostUuid());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+	        return;
+    	}
+    	if (msg instanceof CreateVmOnLocalMsg) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getId());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+	        
+	        return;
+    	}
+    	if (msg instanceof StopVmPubOnLocalMsg) {
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HostVO tmpvo = new HostVO();
+    		
+    		//Bug!
+    		tmpvo.setUuid(((StopVmPubOnLocalMsg) msg).getId());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+	        
+	        return;
+    		
+    	}
+    	
+    		HostVO vo = dbf.findByUuid(msg.getHostUuid(), HostVO.class);
+	        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
+	            HostEO eo = dbf.findByUuid(msg.getHostUuid(), HostEO.class);
+	            vo = ObjectUtils.newAndCopy(eo, HostVO.class);
+	        }
 
-        if (vo == null) {
-            String err = "Cannot find host: " + msg.getHostUuid() + ", it may have been deleted";
-            bus.replyErrorByMessageType((Message) msg, err);
-            return;
-        }
+	        if (vo == null) {
+	            String err = "Cannot find host: " + msg.getHostUuid() + ", it may have been deleted";
+	            bus.replyErrorByMessageType((Message) msg, err);
+	            return;
+	        }
 
-        HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(vo.getHypervisorType()));
-        Host host = factory.getHost(vo);
-        host.handleMessage((Message) msg);
-    }
+	        HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(vo.getHypervisorType()));
+	        Host host = factory.getHost(vo);
+	        host.handleMessage((Message) msg);
+    	}
+       
 
     @Override
     @MessageSafe
@@ -165,6 +205,8 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
             passThrough((HostMessage) msg);
         } else if (msg instanceof AddHostMsg){
             handle((AddHostMsg) msg);
+        } else if (msg instanceof AddLocalHostMsg){
+            handle((AddLocalHostMsg) msg);
         } else {
             bus.dealWithUnknownMessage(msg);
         }
@@ -176,7 +218,7 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
         } else if (msg instanceof APIAddHostMsg) {
             return AddHostMsg.valueOf((APIAddHostMsg) msg);
         }
-
+        
         throw new CloudRuntimeException("unexpected addHost message: " + msg);
     }
 
@@ -359,6 +401,73 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 
     }
 
+    
+    private void doAddLocalHost(final AddLocalHostMsg msg, ReturnValueCompletion<HostInventory > completion) {
+        final HostVO hvo = new HostVO();
+        hvo.setUuid(Platform.getUuid());
+        hvo.setName(msg.getName());
+        hvo.setDescription(msg.getDescription());
+        hvo.setManagementIp(msg.getManagementIp());
+        hvo.setStatus(HostStatus.Connecting);
+        hvo.setState(HostState.Enabled);
+        final AddLocalHostMsg amsg =AddLocalHostMsg.valueOf(msg);
+
+        FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
+        chain.setName(String.format("add-host-%s", hvo.getUuid()));
+        chain.then(new NoRollbackFlow() {
+            String __name__ = "send-connect-host-message";
+
+            @Override
+            public void run(final FlowTrigger trigger, Map data) {
+                new Log(hvo.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
+
+                ConnectHostPubVmMsg connectMsg = new ConnectHostPubVmMsg(hvo.getUuid());
+                connectMsg.setNewAdd(true);
+                connectMsg.setStartPingTaskOnFailure(false);
+                bus.makeTargetServiceIdByResourceUuid(connectMsg, HostConstant.SERVICE_ID, hvo.getUuid());
+                bus.send(connectMsg, new CloudBusCallBack(trigger) {
+                    @Override
+                    public void run(MessageReply reply) {
+                        if (reply.isSuccess()) {
+                            trigger.next();
+                        } else {
+                            trigger.fail(reply.getError());
+                        }
+                    }
+                });
+            }
+        }).done(new FlowDoneHandler(amsg) {
+            @Override
+            public void handle(Map data) {
+                HostInventory inv = new HostInventory();
+                inv.setName("Local");
+                inv.setStatus(HostStatus.Connected.toString());
+                completion.success(inv);
+                new Log(inv.getUuid()).log(HostLogLabel.ADD_HOST_SUCCESS);
+                logger.debug(String.format("successfully added local host" ));
+            }
+        }).error(new FlowErrorHandler(amsg) {
+            @Override
+            public void handle(ErrorCode errCode, Map data) {
+                // delete host totally through the database, so other tables
+                // refer to the host table will clean up themselves
+
+                CollectionUtils.safeForEach(pluginRgty.getExtensionList(FailToAddHostExtensionPoint.class), new ForEachFunction<FailToAddHostExtensionPoint>() {
+                    @Override
+                    public void run(FailToAddHostExtensionPoint ext) {
+//                        ext.failedToAddHost(inv, msg);
+                    }
+                });
+
+                completion.fail(errf.instantiateErrorCode(HostErrors.UNABLE_TO_ADD_HOST, errCode));
+            }
+        }).start();
+
+    }
+
+    
+    
+    
     @Deferred
     private void handle(final AddHostMsg msg) {
         final AddHostReply reply = new AddHostReply();
@@ -377,6 +486,52 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
             }
         });
     }
+    
+    
+    @Deferred
+    private void handle(final AddLocalHostMsg msg) {
+        final AddHostReply reply = new AddHostReply();
+        
+        
+        thdf.chainSubmit(new ChainTask(msg) {
+            @Override
+            public String getSyncSignature() {
+                return "LocalECS"+ msg.getId();
+            }
+
+            @Override
+            public void run(final SyncTaskChain chain) {
+            	doAddLocalHost(msg, new ReturnValueCompletion<HostInventory>() {
+                    @Override
+                    public void success(HostInventory returnValue) {
+                        reply.setInventory(returnValue);
+                        bus.reply(msg, reply);
+                        chain.next();
+                    }
+
+                    @Override
+                    public void fail(ErrorCode errorCode) {
+                        reply.setError(errorCode);
+                        bus.reply(msg, reply);
+                        chain.next();
+                    }
+                });
+            }
+
+            @Override
+            public String getName() {
+                return "Add local host for ECS";
+            }
+        });
+        
+        
+        
+    }
+    
+    
+    
+    
+
 
     @Deferred
     private void handle(final APIAddHostMsg msg) {
@@ -556,10 +711,9 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 
     public HypervisorFactory getHypervisorFactory(HypervisorType type) {
         HypervisorFactory factory = hypervisorFactories.get(type.toString());
-        if (factory == null) {
+        if (factory == null ) {
             throw new CloudRuntimeException("No factory for hypervisor: " + type + " found, check your HypervisorManager.xml");
         }
-
         return factory;
     }
 

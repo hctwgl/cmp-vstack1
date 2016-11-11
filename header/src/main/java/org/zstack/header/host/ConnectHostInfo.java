@@ -28,4 +28,11 @@ public class ConnectHostInfo {
         info.setStartPingTaskOnFailure(msg.isStartPingTaskOnFailure());
         return info;
     }
+    
+    public static ConnectHostInfo fromConnectHostMsg(ConnectHostPubVmMsg msg) {
+        ConnectHostInfo info = new ConnectHostInfo();
+        info.setNewAdded(msg.isNewAdd());
+        info.setStartPingTaskOnFailure(msg.isStartPingTaskOnFailure());
+        return info;
+    }
 }

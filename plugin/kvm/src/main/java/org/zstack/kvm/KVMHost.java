@@ -796,7 +796,8 @@ public class KVMHost extends HostBase implements Host {
         VolumeInventory volume = msg.getTo();
 
         if (volume.getVmInstanceUuid() != null) {
-            SimpleQuery<VmInstanceVO> q = dbf.createQuery(VmInstanceVO.class);
+        	//Vo-Eo
+            SimpleQuery<VmInstanceEO> q = dbf.createQuery(VmInstanceEO.class);
             q.select(VmInstanceVO_.state);
             q.add(VmInstanceVO_.uuid, Op.EQ, volume.getVmInstanceUuid());
             VmInstanceState state = q.findValue();

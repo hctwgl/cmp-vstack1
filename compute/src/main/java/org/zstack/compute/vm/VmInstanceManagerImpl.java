@@ -32,6 +32,7 @@ import org.zstack.header.configuration.DiskOfferingInventory;
 import org.zstack.header.configuration.DiskOfferingVO;
 import org.zstack.header.configuration.DiskOfferingVO_;
 import org.zstack.header.configuration.InstanceOfferingVO;
+import org.zstack.header.core.Completion;
 import org.zstack.header.core.ReturnValueCompletion;
 import org.zstack.header.core.scheduler.SchedulerVO;
 import org.zstack.header.core.scheduler.SchedulerVO_;
@@ -101,7 +102,9 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         RecoverVmExtensionPoint, VmBeforeExpungeExtensionPoint {
     private static final CLogger logger = Utils.getLogger(VmInstanceManagerImpl.class);
     private Map<String, VmInstanceFactory> vmInstanceFactories = Collections.synchronizedMap(new HashMap<String, VmInstanceFactory>());
+    private Map<String, VmPubInstanceFactory> vmPubInstanceFactories = Collections.synchronizedMap(new HashMap<String, VmPubInstanceFactory>());
     private List<String> createVmWorkFlowElements;
+    private List<String> createPubVmWorkFlowElements;
     private List<String> stopVmWorkFlowElements;
     private List<String> rebootVmWorkFlowElements;
     private List<String> startVmWorkFlowElements;
@@ -112,6 +115,7 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     private List<String> attachVolumeWorkFlowElements;
     private List<String> expungeVmWorkFlowElements;
     private FlowChainBuilder createVmFlowBuilder;
+    private FlowChainBuilder createPubVmFlowBuilder;
     private FlowChainBuilder stopVmFlowBuilder;
     private FlowChainBuilder rebootVmFlowBuilder;
     private FlowChainBuilder startVmFlowBuilder;
@@ -168,21 +172,37 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     }
 
     void passThrough(VmInstanceMessage msg) {
-        VmInstanceVO vo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceVO.class);
-        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
-            VmInstanceEO eo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceEO.class);
-            vo = ObjectUtils.newAndCopy(eo, VmInstanceVO.class);
-        }
+    	if(msg.getVmInstanceUuid()==null){
+    		return ;
+    	}
+    	if(msg instanceof StartNewCreatedPubVmInstanceMsg) {
+    		VmECSInstanceVO eo = new VmECSInstanceVO();
+    		eo.setAccesskeyID(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyID());
+    		eo.setAccesskeyKey(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyKey());
+    		eo.setUuid(((StartNewCreatedPubVmInstanceMsg) msg).getUuid());
+    		eo.setName(((StartNewCreatedPubVmInstanceMsg) msg).getName());
+    		eo.setCreateDate(((StartNewCreatedPubVmInstanceMsg) msg).getCreateData());
+    		
+    		VmInstance vm = new VmInstanceBase(eo); 
+            vm.handleMessage((Message) msg);
+    	}else  {
+    		 VmInstanceVO vo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceVO.class);
+    	        if (vo == null && allowedMessageAfterSoftDeletion.contains(msg.getClass())) {
+    	            VmInstanceEO eo = dbf.findByUuid(msg.getVmInstanceUuid(), VmInstanceEO.class);
+    	            vo = ObjectUtils.newAndCopy(eo, VmInstanceVO.class);
+    	        }
 
-        if (vo == null) {
-            String err = String.format("Cannot find VmInstance[uuid:%s], it may have been deleted", msg.getVmInstanceUuid());
-            bus.replyErrorByMessageType((Message) msg, err);
-            return;
-        }
+    	        if (vo == null) {
+    	            String err = String.format("Cannot find VmInstance[uuid:%s], it may have been deleted", msg.getVmInstanceUuid());
+    	            bus.replyErrorByMessageType((Message) msg, err);
+    	            return;
+    	        }
 
-        VmInstanceFactory factory = getVmInstanceFactory(VmInstanceType.valueOf(vo.getType()));
-        VmInstance vm = factory.getVmInstance(vo);
-        vm.handleMessage((Message) msg);
+    	        VmInstanceFactory factory = getVmInstanceFactory(VmInstanceType.valueOf(vo.getType()));
+    	        VmInstance vm = factory.getVmInstance(vo);
+    	        vm.handleMessage((Message) msg);
+    	}
+       
     }
 
     private void handleLocalMessage(Message msg) {
@@ -198,6 +218,8 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     private void handleApiMessage(APIMessage msg) {
         if (msg instanceof APICreateVmInstanceMsg) {
             handle((APICreateVmInstanceMsg) msg);
+        }else if (msg instanceof APICreatePublicVmInstanceMsg) {
+            handle((APICreatePublicVmInstanceMsg) msg);
         } else if (msg instanceof APIListVmInstanceMsg) {
             handle((APIListVmInstanceMsg) msg);
         } else if (msg instanceof APISearchVmInstanceMsg) {
@@ -525,6 +547,54 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         });
     }
 
+    
+    private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg, ReturnValueCompletion<CreatePubVmInstanceReply> completion) {
+    	VmECSInstanceVO vo = new VmECSInstanceVO();
+        vo.setUuid(Platform.getUuid());
+        if (msg.getConsolePassword() != null) {
+            VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
+        }
+        vo.setName(msg.getName());
+        vo.setState(VmInstanceState.Starting.toString());
+        vo.setAccesskeyID(msg.getAccesskeyID());
+        vo.setAccesskeyKey(msg.getAccesskeyKey());
+
+        //TODO  Add VmPubInstanceEO table in DB
+        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmECSInstanceVO.class);
+        VmPubInstanceFactory factory = getVmPubInstanceFactory("ECS");
+        vo = factory.createVmInstance(vo, msg);
+        
+        if (cmsg != null) {
+            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmECSInstanceVO.class.getSimpleName());
+        }
+        
+        StartNewCreatedPubVmInstanceMsg smsg = new StartNewCreatedPubVmInstanceMsg();
+        smsg.setAccesskeyID(msg.getAccesskeyID());
+        smsg.setAccesskeyKey(msg.getAccesskeyKey());
+        smsg.setName(msg.getName());
+        smsg.setUuid(vo.getUuid());
+        smsg.setId(msg.getId());
+        bus.makeTargetServiceIdByResourceUuid(smsg, VmInstanceConstant.SERVICE_ID, vo.getUuid());
+        bus.send(smsg, new CloudBusCallBack() {
+            @Override
+            public void run(MessageReply reply) {
+                try {
+                    CreatePubVmInstanceReply cr = new CreatePubVmInstanceReply();
+                    if (reply.isSuccess()) {
+                        StartNewCreatedPubVmInstanceReply r = (StartNewCreatedPubVmInstanceReply) reply;
+                        cr.setInventory(r.getVmInventory());
+                        completion.success(cr);
+                    } else {
+                        completion.fail(reply.getError());
+                    }
+                } catch (Exception e) {
+                    bus.logExceptionWithMessageDump(msg, e);
+                    bus.replyErrorByMessageType(msg, e);
+                }
+            }
+        });
+    }
+
     private void handle(final CreateVmInstanceMsg msg) {
         doCreateVmInstance(msg, null, new ReturnValueCompletion<CreateVmInstanceReply>() {
             @Override
@@ -567,6 +637,37 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         cmsg.setConsolePassword(msg.getConsolePassword());
         return cmsg;
     }
+    
+    private CreateECSInstanceMsg fromAPICreatePublicVmInstanceMsg(APICreatePublicVmInstanceMsg msg) {
+    	
+    	CreateECSInstanceMsg cmsg = new CreateECSInstanceMsg();
+        cmsg.setType(msg.getType());
+        cmsg.setAccountUuid(msg.getSession().getAccountUuid());
+        cmsg.setName(msg.getName());
+        cmsg.setAccesskeyID(msg.getAccesskeyID());
+        cmsg.setAccesskeyKey(msg.getAccesskeyKey());
+       
+        return cmsg;
+    }
+    
+    
+    private void handle(final APICreatePublicVmInstanceMsg msg) {
+    	doCreatePublicVmInstance(fromAPICreatePublicVmInstanceMsg(msg), msg, new ReturnValueCompletion<CreatePubVmInstanceReply>() {
+            APICreatePubVmInstanceEvent evt = new APICreatePubVmInstanceEvent(msg.getId());
+
+            @Override
+            public void success(CreatePubVmInstanceReply returnValue) {
+                evt.setInventory(returnValue.getInventory());
+                bus.publish(evt);
+            }
+
+            @Override
+            public void fail(ErrorCode errorCode) {
+                evt.setErrorCode(errorCode);
+                bus.publish(evt);
+            }
+        });
+    }
 
     private void handle(final APICreateVmInstanceMsg msg) {
         doCreateVmInstance(fromAPICreateVmInstanceMsg(msg), msg, new ReturnValueCompletion<CreateVmInstanceReply>() {
@@ -593,6 +694,7 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
 
     private void createVmFlowChainBuilder() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         createVmFlowBuilder = FlowChainBuilder.newBuilder().setFlowClassNames(createVmWorkFlowElements).construct();
+        createPubVmFlowBuilder = FlowChainBuilder.newBuilder().setFlowClassNames(createPubVmWorkFlowElements).construct();
         stopVmFlowBuilder = FlowChainBuilder.newBuilder().setFlowClassNames(stopVmWorkFlowElements).construct();
         rebootVmFlowBuilder = FlowChainBuilder.newBuilder().setFlowClassNames(rebootVmWorkFlowElements).construct();
         startVmFlowBuilder = FlowChainBuilder.newBuilder().setFlowClassNames(startVmWorkFlowElements).construct();
@@ -612,6 +714,14 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
                         old.getClass().getName(), ext.getClass().getName(), ext.getType()));
             }
             vmInstanceFactories.put(ext.getType().toString(), ext);
+        }
+        for (VmPubInstanceFactory ext : pluginRgty.getExtensionList(VmPubInstanceFactory.class)) {
+        	VmPubInstanceFactory old = vmPubInstanceFactories.get(ext.getType().toString());
+            if (old != null) {
+                throw new CloudRuntimeException(String.format("duplicate VmInstanceFactory[%s, %s] for type[%s]",
+                        old.getClass().getName(), ext.getClass().getName(), ext.getType()));
+            }
+            vmPubInstanceFactories.put(ext.getType().toString(), ext);
         }
     }
 
@@ -804,6 +914,15 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         }
         return factory;
     }
+    
+    public VmPubInstanceFactory getVmPubInstanceFactory(String type) {
+    	VmPubInstanceFactory factory = vmPubInstanceFactories.get(type);
+        if (factory == null) {
+            throw new CloudRuntimeException(String.format("No VmPubInstanceFactory of type[%s] found", type));
+        }
+        return factory;
+    }
+    
 
     @Transactional
     protected void putVmToUnknownState(final String hostUuid) {
@@ -829,7 +948,11 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     public FlowChain getCreateVmWorkFlowChain(VmInstanceInventory inv) {
         return createVmFlowBuilder.build();
     }
-
+    @Override
+    public FlowChain getCreatePubVmWorkFlowChain() {
+        return createPubVmFlowBuilder.build();
+    }
+    
     @Override
     public FlowChain getStopVmWorkFlowChain(VmInstanceInventory inv) {
         return stopVmFlowBuilder.build();
@@ -878,6 +1001,10 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
 
     public void setCreateVmWorkFlowElements(List<String> createVmWorkFlowElements) {
         this.createVmWorkFlowElements = createVmWorkFlowElements;
+    }
+
+    public void setcreatePubVmWorkFlowElements(List<String> createPubVmWorkFlowElements) {
+        this.createPubVmWorkFlowElements = createPubVmWorkFlowElements;
     }
 
     public void setStopVmWorkFlowElements(List<String> stopVmWorkFlowElements) {

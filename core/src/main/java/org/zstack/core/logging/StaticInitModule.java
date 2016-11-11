@@ -38,7 +38,7 @@ public class StaticInitModule {
 
             LogLabel lab = f.getAnnotation(LogLabel.class);
             String labelName = (String) f.get(null);
-
+            
             for (String msg : lab.messages()) {
                 String[] pair = msg.split("=", 2);
                 if (pair.length != 2) {

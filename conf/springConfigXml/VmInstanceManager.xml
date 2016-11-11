@@ -25,6 +25,13 @@
                 <value>org.zstack.compute.vm.VmInstantiateResourcePostFlow</value>
             </list>
         </property>
+       <property name="createPubVmWorkFlowElements">
+            <list>
+                <value>org.zstack.compute.vm.VmDeployProxytFlow</value>
+                <value>org.zstack.compute.vm.VmCreatePubECSFlow</value>
+            </list>
+        </property>
+
         <property name="stopVmWorkFlowElements">
             <list>
                 <value>org.zstack.compute.vm.VmStopOnHypervisorFlow</value>
@@ -114,6 +121,12 @@
             <zstack:extension interface="org.zstack.header.vm.VmInstanceFactory" />
         </zstack:plugin>
     </bean>
+    
+      <bean id="ECSVmFactory" class="org.zstack.compute.vm.ECSVmFactory">
+        <zstack:plugin>
+            <zstack:extension interface="org.zstack.header.vm.VmPubInstanceFactory" />
+        </zstack:plugin>
+     </bean>
 
     <bean id="VmInstanceExtensionPointEmitter" class="org.zstack.compute.vm.VmInstanceExtensionPointEmitter">
         <zstack:plugin>

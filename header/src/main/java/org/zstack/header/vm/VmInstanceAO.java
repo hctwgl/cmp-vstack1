@@ -274,11 +274,11 @@ public class VmInstanceAO {
         this.rootVolumeUuid = rootVolumeUuid;
     }
 
-    public long getInternalId() {
+    public Long getInternalId() {
         return internalId;
     }
 
-    public void setInternalId(long internalId) {
+    public void setInternalId(Long internalId) {
         this.internalId = internalId;
     }
 
@@ -298,7 +298,5 @@ public class VmInstanceAO {
         this.lastOpDate = lastOpDate;
     }
 
-    public void setInternalId(Long internalId) {
-        this.internalId = internalId;
-    }
+   
 }

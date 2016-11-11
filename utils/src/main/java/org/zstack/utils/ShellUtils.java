@@ -245,7 +245,7 @@ public class ShellUtils {
                 stdoutConsumer.start();
                 process.waitFor();
                 stderrConsumer.join(TimeUnit.SECONDS.toMillis(30));
-                stdoutConsumer.join(TimeUnit.SECONDS.toMillis(30));
+                 stdoutConsumer.join(TimeUnit.SECONDS.toMillis(30));
 
                 ShellResult ret = new ShellResult();
                 ret.setCommand(command);

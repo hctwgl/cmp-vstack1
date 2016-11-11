@@ -7,6 +7,7 @@ import org.zstack.header.vm.VmInstanceType;
 
 public interface VmInstanceManager {
     FlowChain getCreateVmWorkFlowChain(VmInstanceInventory inv);
+    FlowChain getCreatePubVmWorkFlowChain( );
     
     FlowChain getStopVmWorkFlowChain(VmInstanceInventory inv);
     

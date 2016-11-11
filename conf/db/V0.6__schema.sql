@@ -167,6 +167,21 @@ CREATE TABLE  `zstack`.`ClusterEO` (
     PRIMARY KEY  (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+CREATE TABLE  `zstack`.`VmECSInstanceEO` (
+    `uuid` varchar(32) NOT NULL UNIQUE COMMENT 'cluster uuid',
+    `name` varchar(255) NOT NULL COMMENT 'cluster name',
+    `accesskeyID` varchar(255) NOT NULL COMMENT 'ECS Accesskey ID',
+    `accesskeyKey` varchar(255) NOT NULL COMMENT 'ECS Accesskey Key',
+    `state` varchar(32) NOT NULL COMMENT 'ECS state',
+    `lastOpDate` timestamp ON UPDATE CURRENT_TIMESTAMP COMMENT 'last operation date',
+    `createDate` timestamp,
+    `ECSId` varchar(200) DEFAULT NULL, 
+    `deleted` varchar(255) DEFAULT NULL,
+    PRIMARY KEY  (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 CREATE TABLE  `zstack`.`HostEO` (
     `uuid` varchar(32) NOT NULL UNIQUE COMMENT 'host uuid',
     `zoneUuid` varchar(32) NOT NULL COMMENT 'zone uuid',
@@ -589,6 +604,7 @@ CREATE TABLE  `zstack`.`VmInstanceEO` (
     `state` varchar(128) NOT NULL,
     `lastOpDate` timestamp ON UPDATE CURRENT_TIMESTAMP,
     `createDate` timestamp,
+    `platform` varchar(255) NOT NULL,
     `deleted` varchar(255) DEFAULT NULL,
     PRIMARY KEY  (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1337,7 +1353,12 @@ CREATE INDEX idxVolumeSnapshotEOname ON VolumeSnapshotEO (name);
 
 CREATE INDEX idxZoneEOname ON ZoneEO (name);
 
-CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid, clusterUuid, imageUuid, hostUuid, internalId, lastHostUuid, instanceOfferingUuid, rootVolumeUuid, defaultL3NetworkUuid, type, hypervisorType, cpuNum, cpuSpeed, memorySize, allocatorStrategy, createDate, lastOpDate, state FROM `zstack`.`VmInstanceEO` WHERE deleted IS NULL;
+CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid, clusterUuid, imageUuid, hostUuid, internalId, lastHostUuid, instanceOfferingUuid, rootVolumeUuid, defaultL3NetworkUuid, type, hypervisorType, cpuNum, cpuSpeed, memorySize, platform, allocatorStrategy, createDate, lastOpDate, state FROM `zstack`.`VmInstanceEO` WHERE deleted IS NULL  UNION SELECT uuid, name, 'ECS Vm', 'NULL', 'NULL', 'NULL', 'NULL', '000000', 'NULL', 'NULL', 'NULL', 'NULL', 'UserVm', 'NULL', '1', '521', '1024','aliyun', 'NULL', createDate, lastOpDate, state FROM `zstack`.`VmECSInstanceEO` WHERE deleted IS NULL;
+
+#CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid, clusterUuid, imageUuid, hostUuid, internalId, lastHostUuid, instanceOfferingUuid, rootVolumeUuid, defaultL3NetworkUuid, type, hypervisorType, cpuNum, cpuSpeed, memorySize, platform, allocatorStrategy, createDate, lastOpDate, state FROM `zstack`.`VmInstanceEO` WHERE deleted IS NULL;
+
+CREATE VIEW `zstack`.`VmECSInstanceVO` AS SELECT uuid, name, accesskeyID,accesskeyKey, createDate, lastOpDate, state FROM `zstack`.`VmECSInstanceEO` WHERE deleted IS NULL;
+
 
 CREATE VIEW `zstack`.`ImageVO` AS SELECT uuid, name, description, status, state, size, md5Sum, platform, type, format, url, system, mediaType, createDate, lastOpDate, guestOsType FROM `zstack`.`ImageEO` WHERE deleted IS NULL;
 
@@ -1362,6 +1383,8 @@ CREATE VIEW `zstack`.`IpRangeVO` AS SELECT uuid, l3NetworkUuid, name, descriptio
 CREATE VIEW `zstack`.`L2NetworkVO` AS SELECT uuid, name, description, type, zoneUuid, physicalInterface, createDate, lastOpDate FROM `zstack`.`L2NetworkEO` WHERE deleted IS NULL;
 
 CREATE VIEW `zstack`.`ClusterVO` AS SELECT uuid, zoneUuid, name, type, description, state, hypervisorType, createDate, lastOpDate, managementNodeId FROM `zstack`.`ClusterEO` WHERE deleted IS NULL;
+
+#CREATE VIEW `zstack`.`ClusterVO` AS SELECT uuid, zoneUuid, name, type, description, state, hypervisorType, createDate, lastOpDate, managementNodeId FROM `zstack`.`Cl0usterEO` WHERE deleted IS NULL UNION ALL SELECT uuid, zoneUuid, name,'ECS', description, state,'ECS', createDate, lastOpDate, managementNodeId FROM `zstack`.`ECSEO` WHERE deleted IS NULL;
 
 CREATE VIEW `zstack`.`ZoneVO` AS SELECT uuid, name, type, description, state, createDate, lastOpDate FROM `zstack`.`ZoneEO` WHERE deleted IS NULL;
 

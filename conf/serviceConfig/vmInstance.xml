@@ -6,11 +6,19 @@
     <message>
         <name>org.zstack.header.vm.APICreateVmInstanceMsg</name>
     </message>
+    
+    <message>
+        <name>org.zstack.header.vm.APICreatePublicVmInstanceMsg</name>
+    </message>
+    
     <message>
         <name>org.zstack.header.vm.APIListVmInstanceMsg</name>
     </message>
     <message>
         <name>org.zstack.header.vm.APIStopVmInstanceMsg</name>
+    </message>
+    <message>
+        <name>org.zstack.header.vm.APIStopVmPubInstanceMsg</name>
     </message>
     <message>
         <name>org.zstack.header.vm.APICreateStopVmInstanceSchedulerMsg</name>
