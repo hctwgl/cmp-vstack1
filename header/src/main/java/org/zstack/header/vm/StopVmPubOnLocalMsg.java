@@ -5,8 +5,44 @@ import org.zstack.header.message.NeedReplyMessage;
 
 public class StopVmPubOnLocalMsg extends NeedReplyMessage implements HostMessage {
     private VmInstanceInventory vmInventory;
-    private String type;
+    public String getAccess_key_id() {
+		return access_key_id;
+	}
+
+	public void setAccess_key_id(String access_key_id) {
+		this.access_key_id = access_key_id;
+	}
+
+	public String getAccess_key_secret() {
+		return access_key_secret;
+	}
+
+	public void setAccess_key_secret(String access_key_secret) {
+		this.access_key_secret = access_key_secret;
+	}
+
+	public String getRegion() {
+		return region;
+	}
+
+	public void setRegion(String region) {
+		this.region = region;
+	}
+
+	public String getForce() {
+		return force;
+	}
+
+	public void setForce(String force) {
+		this.force = force;
+	}
+	private String type;
     private String vMUuid;
+    
+    private String access_key_id;
+    private String access_key_secret;
+    private String region;
+    private String force;
 
     public String getvMUuid() {
 		return vMUuid;

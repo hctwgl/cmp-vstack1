@@ -4011,13 +4011,23 @@ public class VmInstanceBase extends AbstractVmInstance {
         });
     }
     
+    
+    //BUG!
     protected void stopVmPub(final APIStopVmPubInstanceMsg msg, final SyncTaskChain taskChain) {
         stopVmPub(msg, new Completion(taskChain) {
             @Override
             public void success() {
+            	VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(),VmECSInstanceEO.class);
+                VmInstanceVO vo = new VmInstanceVO();
+                vo.setName(eo.getName());
+                vo.setCreateDate(eo.getCreateDate());
+                vo.setType("UserVm");
+                vo.setState(VmInstanceState.Stopped);
+                vo.setUuid(msg.getUuid());
+                vo.setDescription("This is aliyun VmInstance");
+                VmInstanceInventory inv =  VmInstanceInventory.valueOf(vo);
                 APIStopVmInstanceEvent evt = new APIStopVmInstanceEvent(msg.getId());
-//                VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
-//                evt.setInventory(inv);
+                evt.setInventory(inv);
                 bus.publish(evt);
                 taskChain.next();
             }
@@ -4049,6 +4059,10 @@ public class VmInstanceBase extends AbstractVmInstance {
                 stoplocalMsg.setId(msg.getUuid());
                 VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
                 stoplocalMsg.setvMUuid(eo.getECSId());
+                stoplocalMsg.setAccess_key_id(eo.getAccesskeyID());
+                stoplocalMsg.setAccess_key_secret(eo.getAccesskeyKey());
+                stoplocalMsg.setRegion("cn-beijing");
+                stoplocalMsg.setForce("False");
                 bus.makeTargetServiceIdByResourceUuid(stoplocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
                 bus.send(stoplocalMsg, new CloudBusCallBack(trigger) {
                     @Override
@@ -4067,7 +4081,7 @@ public class VmInstanceBase extends AbstractVmInstance {
             public void handle(Map data) {
                 logger.debug(String.format("successfully stop ECS VM  [name:%s]",  msg.getUuid()));
                 VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
-                eo.setState(VmInstanceStateEvent.stopped.toString());
+                eo.setState(VmInstanceState.Stopped.toString());
                 dbf.updateAndRefresh(eo);
                 VmInstanceVO vo = new VmInstanceVO();
                 vo.setName(eo.getName());

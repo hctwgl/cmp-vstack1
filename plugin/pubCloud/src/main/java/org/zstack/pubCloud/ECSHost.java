@@ -1114,6 +1114,12 @@ public class ECSHost extends HostBase implements Host {
         cmd.setUuid(msg.getId());
         cmd.setVmUuid(msg.getvMUuid());
         cmd.setTimeout(120);
+        cmd.setAccess_key_id(msg.getAccess_key_id());
+        cmd.setAccess_key_secret(msg.getAccess_key_secret());
+        cmd.setRegion(msg.getRegion());
+        cmd.setForce("False");
+        
+        
         restf.asyncJsonPost(stopVmPath, cmd, new JsonAsyncRESTCallback<StopVmResponse>(msg, completion) {
             @Override
             public void fail(ErrorCode err) {
