@@ -940,7 +940,7 @@ public class ECSHost extends HostBase implements Host {
     private void destroyVm(final DeleteVmPubOnLocalMsg msg, final NoErrorCompletion completion) {
 
     	DestroyVmCmd cmd = new DestroyVmCmd();
-        cmd.setUuid(msg.getId());
+        cmd.setUuid(msg.getvMUuid());
         cmd.setVmUuid(msg.getvMUuid());
         cmd.setTimeout(120);
         cmd.setAccess_key_id(msg.getAccess_key_id());
@@ -1054,7 +1054,7 @@ public class ECSHost extends HostBase implements Host {
 
         RebootVmCmd cmd = new RebootVmCmd();
         long timeout = TimeUnit.MILLISECONDS.toSeconds(msg.getTimeout());
-        cmd.setUuid(msg.getId());
+        cmd.setUuid(msg.getvMUuid());
         cmd.setVmUuid(msg.getvMUuid());
         cmd.setTimeout(120);
         cmd.setAccess_key_id(msg.getAccess_key_id());
