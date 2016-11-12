@@ -900,18 +900,49 @@ public class ECSAgentCommands {
     
     public static class RebootVmCmd extends AgentCommand {
     	private String uuid;
-    	private long timeout;
-        private List<String> bootDev;
+        private String type;
+        private String vmUuid;
+        private String access_key_id;
+        private String access_key_secret;
+        private String region;
+        private String force;
+        
+        
+        
+        public String getAccess_key_id() {
+			return access_key_id;
+		}
+		public void setAccess_key_id(String access_key_id) {
+			this.access_key_id = access_key_id;
+		}
+		public String getAccess_key_secret() {
+			return access_key_secret;
+		}
+		public void setAccess_key_secret(String access_key_secret) {
+			this.access_key_secret = access_key_secret;
+		}
+		public String getRegion() {
+			return region;
+		}
+		public void setRegion(String region) {
+			this.region = region;
+		}
+		public String getForce() {
+			return force;
+		}
+		public void setForce(String force) {
+			this.force = force;
+		}
+		
+    	public String getVmUuid() {
+			return vmUuid;
+		}
+		public void setVmUuid(String vmUuid) {
+			this.vmUuid = vmUuid;
+		}
+		private long timeout;
 
-        public List<String> getBootDev() {
-            return bootDev;
-        }
-
-        public void setBootDev(List<String> bootDev) {
-            this.bootDev = bootDev;
-        }
-
-        public String getUuid() {
+		public String getUuid() {
 			return uuid;
 		}
 		public void setUuid(String uuid) {
@@ -923,12 +954,59 @@ public class ECSAgentCommands {
 		public void setTimeout(long timeout) {
 			this.timeout = timeout;
 		}
+        public String getType() {
+            return type;
+        }
+        public void setType(String type) {
+            this.type = type;
+        }
     }
     public static class RebootVmResponse extends AgentResponse {
     }
     
     public static class DestroyVmCmd extends AgentCommand {
     	private String uuid;
+        private String type;
+        private String vmUuid;
+        private String access_key_id;
+        private String access_key_secret;
+        private String region;
+        private String force;
+        
+        
+        
+        public String getAccess_key_id() {
+			return access_key_id;
+		}
+		public void setAccess_key_id(String access_key_id) {
+			this.access_key_id = access_key_id;
+		}
+		public String getAccess_key_secret() {
+			return access_key_secret;
+		}
+		public void setAccess_key_secret(String access_key_secret) {
+			this.access_key_secret = access_key_secret;
+		}
+		public String getRegion() {
+			return region;
+		}
+		public void setRegion(String region) {
+			this.region = region;
+		}
+		public String getForce() {
+			return force;
+		}
+		public void setForce(String force) {
+			this.force = force;
+		}
+		
+    	public String getVmUuid() {
+			return vmUuid;
+		}
+		public void setVmUuid(String vmUuid) {
+			this.vmUuid = vmUuid;
+		}
+		private long timeout;
 
 		public String getUuid() {
 			return uuid;
@@ -936,6 +1014,18 @@ public class ECSAgentCommands {
 		public void setUuid(String uuid) {
 			this.uuid = uuid;
 		}
+		public long getTimeout() {
+			return timeout;
+		}
+		public void setTimeout(long timeout) {
+			this.timeout = timeout;
+		}
+        public String getType() {
+            return type;
+        }
+        public void setType(String type) {
+            this.type = type;
+        }
     }
     public static class DestroyVmResponse extends AgentResponse {
     }

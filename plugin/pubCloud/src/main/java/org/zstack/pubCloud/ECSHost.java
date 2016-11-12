@@ -209,11 +209,11 @@ public class ECSHost extends HostBase implements Host {
             handle((CreateVmOnLocalMsg) msg);
         } else if (msg instanceof StopVmPubOnLocalMsg) {
             handle((StopVmPubOnLocalMsg) msg);
-        } else if (msg instanceof RebootVmOnHypervisorMsg) {
-            handle((RebootVmOnHypervisorMsg) msg);
-        } else if (msg instanceof DestroyVmOnHypervisorMsg) {
-            handle((DestroyVmOnHypervisorMsg) msg);
-        }    else if (msg instanceof MigrateVmOnHypervisorMsg) {
+        }  else if (msg instanceof RebootVmPubOnLocalMsg) {
+            handle((RebootVmPubOnLocalMsg) msg);
+        }   else if (msg instanceof DeleteVmPubOnLocalMsg) {
+            handle((DeleteVmPubOnLocalMsg) msg);
+        } else if (msg instanceof MigrateVmOnHypervisorMsg) {
             handle((MigrateVmOnHypervisorMsg) msg);
         } 
         else {
@@ -901,7 +901,10 @@ public class ECSHost extends HostBase implements Host {
      
 
   
-    private void handle(final DestroyVmOnHypervisorMsg msg) {
+    
+    
+    
+    private void handle(final DeleteVmPubOnLocalMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getSyncSignature() {
@@ -929,62 +932,78 @@ public class ECSHost extends HostBase implements Host {
             }
         });
     }
+    
+    
+     
+    
 
-    private void destroyVm(final DestroyVmOnHypervisorMsg msg, final NoErrorCompletion completion) {
-        checkStatus();
-//
-//        final VmInstanceInventory vminv = msg.getVmInventory();
-//
-//        try {
-//            extEmitter.beforeDestroyVmOnKvm(KVMHostInventory.valueOf(getSelf()), vminv);
-//        } catch (KVMException e) {
-//            String err = String.format("failed to destroy vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", vminv.getUuid(), vminv.getName(),
-//                    self.getUuid(), self.getManagementIp(), e.getMessage());
-//            logger.warn(err, e);
-//            throw new OperationFailureException(errf.stringToOperationError(err));
-//        }
-//
-//        DestroyVmCmd cmd = new DestroyVmCmd();
-//        cmd.setUuid(vminv.getUuid());
-//        restf.asyncJsonPost(destroyVmPath, cmd, new JsonAsyncRESTCallback<DestroyVmResponse>(msg, completion) {
-//            @Override
-//            public void fail(ErrorCode err) {
-//                DestroyVmOnHypervisorReply reply = new DestroyVmOnHypervisorReply();
-//
-//                if (err.isError(SysErrors.HTTP_ERROR, SysErrors.IO_ERROR)) {
-//                    err = errf.instantiateErrorCode(HostErrors.OPERATION_FAILURE_GC_ELIGIBLE, "unable to destroy a vm", err);
-//                }
-//
-//                reply.setError(err);
-//                extEmitter.destroyVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public void success(DestroyVmResponse ret) {
-//                DestroyVmOnHypervisorReply reply = new DestroyVmOnHypervisorReply();
-//                if (!ret.isSuccess()) {
-//                    String err = String.format("unable to destroy vm[uuid:%s,  name:%s] on kvm host [uuid:%s, ip:%s], because %s", vminv.getUuid(),
-//                            vminv.getName(), self.getUuid(), self.getManagementIp(), ret.getError());
-//                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_DESTROY_VM_ON_HYPERVISOR, err));
-//                    extEmitter.destroyVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
-//                } else {
-//                    logger.debug(String.format("successfully destroyed vm[uuid:%s] on kvm host[uuid:%s]", vminv.getUuid(), self.getUuid()));
-//                    extEmitter.destroyVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), vminv);
-//                }
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public Class<DestroyVmResponse> getReturnClass() {
-//                return DestroyVmResponse.class;
-//            }
-//        });
+    private void destroyVm(final DeleteVmPubOnLocalMsg msg, final NoErrorCompletion completion) {
+
+    	DestroyVmCmd cmd = new DestroyVmCmd();
+        cmd.setUuid(msg.getvMUuid());
+        cmd.setVmUuid(msg.getvMUuid());
+        cmd.setTimeout(120);
+        cmd.setAccess_key_id(msg.getAccess_key_id());
+        cmd.setAccess_key_secret(msg.getAccess_key_secret());
+        cmd.setRegion(msg.getRegion());
+        cmd.setForce("False");
+        
+        
+        restf.asyncJsonPost(destroyVmPath, cmd, new JsonAsyncRESTCallback<StopVmResponse>(msg, completion) {
+            @Override
+            public void fail(ErrorCode err) {
+            	DestroyVmOnHypervisorReply reply = new DestroyVmOnHypervisorReply();
+                if (err.isError(SysErrors.IO_ERROR, SysErrors.HTTP_ERROR)) {
+                    err = errf.instantiateErrorCode(HostErrors.OPERATION_FAILURE_GC_ELIGIBLE, "unable to stop a vm", err);
+                }
+
+                reply.setError(err);
+//                extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, err);
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public void success(StopVmResponse ret) {
+                StopVmOnHypervisorReply reply = new StopVmOnHypervisorReply();
+                if (!ret.isSuccess()) {
+                    String err = String.format("unable to stop vm[uuid:%s ] on kvm host[uuid:%s, ip:%s], because %s", msg.getId(),
+                               self.getUuid(), self.getManagementIp(), ret.getError());
+                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_STOP_VM_ON_HYPERVISOR, err));
+                    logger.warn(err);
+//                    extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
+                } else {
+//                    extEmitter.stopVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), vminv);
+                }
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public Class<StopVmResponse> getReturnClass() {
+                return StopVmResponse.class;
+            }
+
+        });
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+         
     }
 
-    private void handle(final RebootVmOnHypervisorMsg msg) {
+    
+    private void handle(final RebootVmPubOnLocalMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getSyncSignature() {
@@ -993,7 +1012,7 @@ public class ECSHost extends HostBase implements Host {
 
             @Override
             public void run(final SyncTaskChain chain) {
-                rebootVm(msg, new NoErrorCompletion(chain) {
+                rebootVmPub(msg, new NoErrorCompletion(chain) {
                     @Override
                     public void done() {
                         chain.next();
@@ -1029,56 +1048,49 @@ public class ECSHost extends HostBase implements Host {
         return ret;
     }
 
-    private void rebootVm(final RebootVmOnHypervisorMsg msg, final NoErrorCompletion completion) {
-//        checkStateAndStatus();
-//        final VmInstanceInventory vminv = msg.getVmInventory();
-//
-//        try {
-//            extEmitter.beforeRebootVmOnKvm(KVMHostInventory.valueOf(getSelf()), vminv);
-//        } catch (KVMException e) {
-//            String err = String.format("failed to reboot vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", vminv.getUuid(), vminv.getName(),
-//                    self.getUuid(), self.getManagementIp(), e.getMessage());
-//            logger.warn(err, e);
-//            throw new OperationFailureException(errf.stringToOperationError(err));
-//        }
-//
-//        RebootVmCmd cmd = new RebootVmCmd();
-//        long timeout = TimeUnit.MILLISECONDS.toSeconds(msg.getTimeout());
-//        cmd.setUuid(vminv.getUuid());
-//        cmd.setTimeout(timeout);
-//        cmd.setBootDev(toKvmBootDev(msg.getBootOrders()));
-//        restf.asyncJsonPost(rebootVmPath, cmd, new JsonAsyncRESTCallback<RebootVmResponse>(msg, completion) {
-//            @Override
-//            public void fail(ErrorCode err) {
-//                RebootVmOnHypervisorReply reply = new RebootVmOnHypervisorReply();
-//                reply.setError(err);
-//                extEmitter.rebootVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, err);
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public void success(RebootVmResponse ret) {
-//                RebootVmOnHypervisorReply reply = new RebootVmOnHypervisorReply();
-//                if (!ret.isSuccess()) {
-//                    String err = String.format("unable to reboot vm[uuid:%s, name:%s] on kvm host[uuid:%s, ip:%s], because %s", vminv.getUuid(),
-//                            vminv.getName(), self.getUuid(), self.getManagementIp(), ret.getError());
-//                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_REBOOT_VM_ON_HYPERVISOR, err));
-//                    extEmitter.rebootVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()), vminv, reply.getError());
-//                } else {
-//                    extEmitter.rebootVmOnKvmSuccess(KVMHostInventory.valueOf(getSelf()), vminv);
-//                }
-//                bus.reply(msg, reply);
-//                completion.done();
-//            }
-//
-//            @Override
-//            public Class<RebootVmResponse> getReturnClass() {
-//                return RebootVmResponse.class;
-//            }
-//
-//        });
+    
+    
+    private void rebootVmPub(final RebootVmPubOnLocalMsg msg, final NoErrorCompletion completion) {
+
+        RebootVmCmd cmd = new RebootVmCmd();
+        long timeout = TimeUnit.MILLISECONDS.toSeconds(msg.getTimeout());
+        cmd.setUuid(msg.getvMUuid());
+        cmd.setVmUuid(msg.getvMUuid());
+        cmd.setTimeout(120);
+        cmd.setAccess_key_id(msg.getAccess_key_id());
+        cmd.setAccess_key_secret(msg.getAccess_key_secret());
+        cmd.setRegion(msg.getRegion());
+        cmd.setForce("False");
+        cmd.setTimeout(timeout);
+        restf.asyncJsonPost(rebootVmPath, cmd, new JsonAsyncRESTCallback<RebootVmResponse>(msg, completion) {
+            @Override
+            public void fail(ErrorCode err) {
+            	RebootVmPubOnLocalReply reply = new RebootVmPubOnLocalReply();
+                reply.setError(err);
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public void success(RebootVmResponse ret) {
+            	RebootVmPubOnLocalReply reply = new RebootVmPubOnLocalReply();
+                if (!ret.isSuccess()) {
+                    String err = String.format("unable to reboot vm[uuid:%s] on kvm host[uuid:%s, ip:%s], because %s", cmd.getUuid(),
+                             self.getUuid(), self.getManagementIp(), ret.getError());
+                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_REBOOT_VM_ON_HYPERVISOR, err));
+                }  
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public Class<RebootVmResponse> getReturnClass() {
+                return RebootVmResponse.class;
+            }
+
+        });
     }
+    
 
     private void handle(final StopVmPubOnLocalMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
