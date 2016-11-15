@@ -1,5 +1,7 @@
 package org.zstack.compute.vm;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -8,7 +10,11 @@ import org.zstack.core.cloudbus.CloudBus;
 import org.zstack.core.cloudbus.CloudBusCallBack;
 import org.zstack.core.db.DatabaseFacade;
 import org.zstack.core.errorcode.ErrorFacade;
-import org.zstack.header.allocator.*;
+import org.zstack.header.allocator.AllocateHostMsg;
+import org.zstack.header.allocator.AllocateHostReply;
+import org.zstack.header.allocator.DesignatedAllocateHostMsg;
+import org.zstack.header.allocator.HostAllocatorConstant;
+import org.zstack.header.allocator.ReturnHostCapacityMsg;
 import org.zstack.header.core.workflow.Flow;
 import org.zstack.header.core.workflow.FlowRollback;
 import org.zstack.header.core.workflow.FlowTrigger;
@@ -16,12 +22,12 @@ import org.zstack.header.host.HostInventory;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.network.l3.L3NetworkInventory;
 import org.zstack.header.vm.VmInstanceConstant;
+import org.zstack.header.vm.VmInstanceEO;
 import org.zstack.header.vm.VmInstanceSpec;
 import org.zstack.header.vm.VmInstanceVO;
 import org.zstack.utils.CollectionUtils;
+import org.zstack.utils.ObjectUtils;
 import org.zstack.utils.function.Function;
-
-import java.util.Map;
 
 @Configurable(preConstruction = true, autowire = Autowire.BY_TYPE)
 public class VmAllocateHostForStoppedVmFlow implements Flow {
@@ -67,14 +73,14 @@ public class VmAllocateHostForStoppedVmFlow implements Flow {
         bus.send(amsg, new CloudBusCallBack(chain) {
             @Transactional
             private void setVmHostUuid(String huuid) {
-                VmInstanceVO vo = dbf.getEntityManager().find(VmInstanceVO.class, spec.getVmInventory().getUuid());
+            	VmInstanceEO vo = dbf.getEntityManager().find(VmInstanceEO.class, spec.getVmInventory().getUuid());
                 vo.setHostUuid(huuid);
                 dbf.getEntityManager().merge(vo);
             }
 
             @Override
             public void run(MessageReply reply) {
-                if (reply.isSuccess()) {
+                 if (reply.isSuccess()) {
                     AllocateHostReply areply = (AllocateHostReply) reply;
                     spec.setDestHost(areply.getHost());
                     setVmHostUuid(areply.getHost().getUuid());

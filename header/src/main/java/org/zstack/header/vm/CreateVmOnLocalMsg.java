@@ -8,7 +8,6 @@ import org.zstack.header.message.NeedReplyMessage;
 public class CreateVmOnLocalMsg extends NeedReplyMessage implements HostMessage {
     private VmPubInstanceSpec vmSpec;
    
-    
     private String name;
 	 private String uuid;
 	    public String getUuid() {

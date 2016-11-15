@@ -209,10 +209,12 @@ public class ECSHost extends HostBase implements Host {
             handle((CreateVmOnLocalMsg) msg);
         } else if (msg instanceof StopVmPubOnLocalMsg) {
             handle((StopVmPubOnLocalMsg) msg);
-        }  else if (msg instanceof RebootVmPubOnLocalMsg) {
+        } else if (msg instanceof RebootVmPubOnLocalMsg) {
             handle((RebootVmPubOnLocalMsg) msg);
-        }   else if (msg instanceof DeleteVmPubOnLocalMsg) {
+        } else if (msg instanceof DeleteVmPubOnLocalMsg) {
             handle((DeleteVmPubOnLocalMsg) msg);
+        } else if (msg instanceof StartVmPubOnLocalMsg) {
+            handle((StartVmPubOnLocalMsg) msg);
         } else if (msg instanceof MigrateVmOnHypervisorMsg) {
             handle((MigrateVmOnHypervisorMsg) msg);
         } 
@@ -934,6 +936,36 @@ public class ECSHost extends HostBase implements Host {
     }
     
     
+    private void handle(final StartVmPubOnLocalMsg msg) {
+        thdf.chainSubmit(new ChainTask(msg) {
+            @Override
+            public String getSyncSignature() {
+                return id;
+            }
+
+            @Override
+            public void run(final SyncTaskChain chain) {
+                startVm(msg, new NoErrorCompletion(chain) {
+                    @Override
+                    public void done() {
+                        chain.next();
+                    }
+                });
+            }
+
+            @Override
+            public String getName() {
+                return String.format("destroy-vm-on-kvm-%s", self.getUuid());
+            }
+
+            @Override
+            protected int getSyncLevel() {
+                return getHostSyncLevel();
+            }
+        });
+    }
+    
+    
      
     
 
@@ -1181,7 +1213,7 @@ public class ECSHost extends HostBase implements Host {
 
             @Override
             public void run(final SyncTaskChain chain) {
-                startVm(msg, msg, new NoErrorCompletion(chain) {
+            	createVm(msg, msg, new NoErrorCompletion(chain) {
                     @Override
                     public void done() {
                         chain.next();
@@ -1216,7 +1248,7 @@ public class ECSHost extends HostBase implements Host {
         return vol.getInstallPath().startsWith("iscsi") ? VolumeTO.ISCSI : VolumeTO.FILE;
     }
 
-    private void startVm(final CreateVmOnLocalMsg spec, final NeedReplyMessage msg, final NoErrorCompletion completion) {
+    private void createVm(final CreateVmOnLocalMsg spec, final NeedReplyMessage msg, final NoErrorCompletion completion) {
         final StartVmCmd cmd = new StartVmCmd();
          cmd.setAccess_key_id(spec.getAccesskeyID());
          cmd.setAccess_key_secret(spec.getAccesskeyKEY());
@@ -1257,6 +1289,58 @@ public class ECSHost extends HostBase implements Host {
                 }
                 reply.setVmUuid(ret.getVmUuid());
                 bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public Class<StartVmPubResponse> getReturnClass() {
+                return StartVmPubResponse.class;
+            }
+        });
+    }
+
+    
+    private void startVm(final StartVmPubOnLocalMsg spec, final NoErrorCompletion completion) {
+        final StartVmCmd cmd = new StartVmCmd();
+         cmd.setAccess_key_id(spec.getAccess_key_id());
+         cmd.setAccess_key_secret(spec.getAccess_key_secret());
+         cmd.setRegion("cn-beijing");
+         cmd.setImage("ecs.image.ubuntu1404.64");
+         cmd.setAuth("P@$$w0rd");
+         cmd.setEx_security_group_id("sg-2ze56hvvjveewzm12jar");
+         cmd.setEx_internet_max_bandwidth_out(1);
+         cmd.setEx_internet_charge_type("PayByTraffic");
+         cmd.setVmInstanceUuid(spec.getvMUuid());
+//         cmd.setSize("ecs.t1.small");
+         cmd.setSize("ecs.n1.tiny");
+         Map sys_disk = new HashMap();
+         sys_disk.put("category", "cloud_efficiency");
+         cmd.setEx_system_disk(sys_disk);
+          restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmPubResponse>(spec, completion) {
+            @Override
+            public void fail(ErrorCode err) {
+                StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
+                reply.setError(err);
+                reply.setSuccess(false);
+                bus.reply(spec, reply);
+                completion.done();
+            }
+
+            @Override
+            public void success(StartVmPubResponse ret) {
+            	StartVmOnPubReply reply = new StartVmOnPubReply();
+                if (ret.isSuccess()) {
+                    String info = String.format("successfully start vm[uuid:%s ] on kvm host[uuid:%s, ip:%s]", spec.getvMUuid() ,
+                            self.getUuid(), self.getManagementIp());
+                    logger.debug(info);
+                } else {
+                    String err = String.format("failed to start vm[uuid:%s  ] on kvm host[uuid:%s, ip:%s], because %s", spec.getvMUuid() ,
+                            self.getUuid(), self.getManagementIp(), ret.getError());
+                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_START_VM_ON_HYPERVISOR, err));
+                    logger.warn(err);
+                }
+                reply.setVmUuid(ret.getVmUuid());
+                bus.reply(spec, reply);
                 completion.done();
             }
 
