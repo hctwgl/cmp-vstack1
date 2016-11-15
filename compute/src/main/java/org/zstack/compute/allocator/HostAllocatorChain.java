@@ -80,14 +80,16 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
             public HostCapacityVO call(HostCapacityVO cap) {
                 long availCpu = cap.getAvailableCpu() - cpu;
                 if (availCpu < 0) {
-                    throw new UnableToReserveHostCapacityException(String.format("no enough CPU[%s] on the host[uuid:%s]", cpu, hostUuid));
+                    throw new UnableToReserveHostCapacityException(
+                            String.format("no enough CPU[%s] on the host[uuid:%s]", cpu, hostUuid));
                 }
 
                 cap.setAvailableCpu(availCpu);
 
                 long availMemory = cap.getAvailableMemory() - ratioMgr.calculateMemoryByRatio(hostUuid, memory);
                 if (availMemory < 0) {
-                    throw new UnableToReserveHostCapacityException(String.format("no enough memory[%s] on the host[uuid:%s]", memory, hostUuid));
+                    throw new UnableToReserveHostCapacityException(
+                            String.format("no enough memory[%s] on the host[uuid:%s]", memory, hostUuid));
                 }
 
                 cap.setAvailableMemory(availMemory);
@@ -119,9 +121,11 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
         // in case a wrong flow returns an empty result set
         if (result.isEmpty()) {
             if (isDryRun) {
-                dryRunCompletion.fail(errf.instantiateErrorCode(HostAllocatorError.NO_AVAILABLE_HOST, "host allocation flow doesn't indicate any details"));
+                dryRunCompletion.fail(errf.instantiateErrorCode(HostAllocatorError.NO_AVAILABLE_HOST,
+                        "host allocation flow doesn't indicate any details"));
             } else {
-                completion.fail(errf.instantiateErrorCode(HostAllocatorError.NO_AVAILABLE_HOST, "host allocation flow doesn't indicate any details"));
+                completion.fail(errf.instantiateErrorCode(HostAllocatorError.NO_AVAILABLE_HOST,
+                        "host allocation flow doesn't indicate any details"));
             }
             return;
         }
@@ -138,7 +142,8 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
                 try {
                     reserveCapacity(h.getUuid(), allocationSpec.getCpuCapacity(), allocationSpec.getMemoryCapacity());
                     logger.debug(String.format("[Host Allocation]: successfully reserved cpu[%s], memory[%s bytes] on host[uuid:%s] for vm[uuid:%s]",
-                            allocationSpec.getCpuCapacity(), allocationSpec.getMemoryCapacity(), h.getUuid(), allocationSpec.getVmInstance().getUuid()));
+                            allocationSpec.getCpuCapacity(), allocationSpec.getMemoryCapacity(), h.getUuid(),
+                            allocationSpec.getVmInstance().getUuid()));
                     completion.success(HostInventory.valueOf(h));
                     return;
                 } catch (UnableToReserveHostCapacityException e) {
@@ -149,13 +154,15 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
 
             if (paginationInfo != null) {
                 logger.debug("[Host Allocation]: unable to reserve cpu/memory on all candidate hosts; because of pagination is enabled, allocation will start over");
-                seriesErrorWhenPagination.add(String.format("{unable to reserve cpu[%s], memory[%s bytes] on all candidate hosts}", allocationSpec.getCpuCapacity(), allocationSpec.getMemoryCapacity()));
+                seriesErrorWhenPagination.add(String.format("{unable to reserve cpu[%s], memory[%s bytes] on all candidate hosts}",
+                        allocationSpec.getCpuCapacity(), allocationSpec.getMemoryCapacity()));
                 startOver();
             } else {
-                completion.fail(errf.instantiateErrorCode(HostAllocatorError.NO_AVAILABLE_HOST, "reservation on cpu/memory failed on all candidates host"));
+                completion.fail(errf.instantiateErrorCode(HostAllocatorError.NO_AVAILABLE_HOST,
+                        "reservation on cpu/memory failed on all candidates host"));
             }
         } catch (Throwable t) {
-            logger.debug(t.getClass().getName(),t);
+            logger.debug(t.getClass().getName(), t);
             completion.fail(errf.throwableToInternalError(t));
         }
     }
@@ -176,7 +183,9 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
             flow.allocate();
         } catch (OperationFailureException ofe) {
             if (ofe.getErrorCode().getCode().equals(HostAllocatorConstant.PAGINATION_INTERMEDIATE_ERROR.getCode())) {
-                logger.debug(String.format("[Host Allocation]: intermediate failure; because of pagination, will start over allocation again; current pagination info %s; failure details: %s",
+                logger.debug(String.format("[Host Allocation]: intermediate failure; " +
+                                "because of pagination, will start over allocation again; " +
+                                "current pagination info %s; failure details: %s",
                         JSONObjectUtil.toJsonString(paginationInfo), ofe.getErrorCode().getDetails()));
                 seriesErrorWhenPagination.add(String.format("{%s}", ofe.getErrorCode().getDetails()));
                 startOver();
@@ -221,11 +230,13 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
         DebugUtils.Assert(!candidates.isEmpty(), "cannot pass empty candidates to next() method");
         result = candidates;
         VmInstanceInventory vm = allocationSpec.getVmInstance();
-        logger.debug(String.format("[Host Allocation]: flow[%s] successfully found %s candidate hosts for vm[uuid:%s, name:%s]", lastFlow.getClass().getName(), result.size(), vm.getUuid(), vm.getName()));
+        logger.debug(String.format("[Host Allocation]: flow[%s] successfully found %s candidate hosts for vm[uuid:%s, name:%s]",
+                lastFlow.getClass().getName(), result.size(), vm.getUuid(), vm.getName()));
         if (logger.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder("[Host Allocation Details]:");
             for (HostVO vo : result) {
-                sb.append(String.format("\ncandidate host[name:%s, uuid:%s, zoneUuid:%s, clusterUuid:%s, hypervisorType:%s]", vo.getName(), vo.getUuid(), vo.getZoneUuid(), vo.getClusterUuid(), vo.getHypervisorType()));
+                sb.append(String.format("\ncandidate host[name:%s, uuid:%s, zoneUuid:%s, clusterUuid:%s, hypervisorType:%s]",
+                        vo.getName(), vo.getUuid(), vo.getZoneUuid(), vo.getClusterUuid(), vo.getHypervisorType()));
             }
             logger.trace(sb.toString());
         }
@@ -240,7 +251,8 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
 
     @Override
     public void skip() {
-        logger.debug(String.format("[Host Allocation]: flow[%s] asks to skip itself, we are running to the next flow", lastFlow.getClass()));
+        logger.debug(String.format("[Host Allocation]: flow[%s] asks to skip itself, we are running to the next flow",
+                lastFlow.getClass()));
 
         if (it.hasNext()) {
             runFlow(it.next());
@@ -258,10 +270,13 @@ public class HostAllocatorChain implements HostAllocatorTrigger, HostAllocatorSt
     private void fail(ErrorCode errorCode) {
         result = null;
         if (seriesErrorWhenPagination.isEmpty()) {
-            logger.debug(String.format("[Host Allocation] flow[%s] failed to allocate host; %s", lastFlow.getClass().getName(), errorCode.getDetails()));
+            logger.debug(String.format("[Host Allocation] flow[%s] failed to allocate host; %s",
+                    lastFlow.getClass().getName(), errorCode.getDetails()));
             this.errorCode = errorCode;
         } else {
-            String err = String.format("unable to allocate hosts; due to pagination is enabled, there might be several allocation failures happened before; the error list is %s", seriesErrorWhenPagination);
+            String err = String.format("unable to allocate hosts; due to pagination is enabled, " +
+                    "there might be several allocation failures happened before;" +
+                    " the error list is %s", seriesErrorWhenPagination);
             logger.debug(err);
             this.errorCode = errf.instantiateErrorCode(HostAllocatorError.NO_AVAILABLE_HOST, err);
         }

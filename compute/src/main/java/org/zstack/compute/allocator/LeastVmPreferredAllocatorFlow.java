@@ -9,7 +9,9 @@ import org.zstack.header.allocator.AbstractHostAllocatorFlow;
 import org.zstack.header.host.HostVO;
 import org.zstack.utils.CollectionDSL;
 import org.zstack.utils.CollectionUtils;
+import org.zstack.utils.Utils;
 import org.zstack.utils.function.Function;
+import org.zstack.utils.logging.CLogger;
 
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
@@ -21,6 +23,7 @@ import java.util.Map;
  */
 @Configurable(preConstruction = true, autowire = Autowire.BY_TYPE)
 public class LeastVmPreferredAllocatorFlow extends AbstractHostAllocatorFlow {
+    private static final CLogger logger = Utils.getLogger(LeastVmPreferredAllocatorFlow.class);
     @Autowired
     private DatabaseFacade dbf;
 
@@ -31,9 +34,14 @@ public class LeastVmPreferredAllocatorFlow extends AbstractHostAllocatorFlow {
 
     @Transactional(readOnly = true)
     private List<Tuple> findLeastVmHost(List<String> huuids) {
-        String sql = "select count(vm), host.uuid from VmInstanceVO vm, HostVO host where vm.hostUuid = host.uuid and host.uuid in (:huuids) group by host.uuid";
+        String sql = "select count(vm), host.uuid" +
+                " from VmInstanceVO vm, HostVO host" +
+                " where vm.hostUuid = host.uuid" +
+                " and host.uuid in (:huuids)" +
+                " group by host.uuid";
         TypedQuery<Tuple> q = dbf.getEntityManager().createQuery(sql, Tuple.class);
         q.setParameter("huuids", huuids);
+        logger.debug(huuids.stream().toString());
         return q.getResultList();
     }
 
@@ -49,15 +57,15 @@ public class LeastVmPreferredAllocatorFlow extends AbstractHostAllocatorFlow {
             return;
         }
 
-        // no VM running on host
+        // no VM running on any candidate host(s)
         if (tuples.isEmpty()) {
             next(candidates);
             return;
         }
 
 
-        // for host not having vm running, put vm number to zero
-        Map<String, VmNumHost> mp = new HashMap<String, VmNumHost>();
+        //
+        Map<String, VmNumHost> mp = new HashMap<>();
         for (Tuple t : tuples) {
             long num = t.get(0, Long.class);
             String hostUuid = t.get(1, String.class);
@@ -67,6 +75,7 @@ public class LeastVmPreferredAllocatorFlow extends AbstractHostAllocatorFlow {
             mp.put(hostUuid, vh);
         }
 
+        // for host not having vm running, put vm number to zero
         for (String huuid : huuids) {
             VmNumHost vh = mp.get(huuid);
             if (vh == null) {

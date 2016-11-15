@@ -2221,7 +2221,9 @@ public class VmInstanceBase extends AbstractVmInstance {
             handle((APIDestroyVmPubInstanceMsg) msg);
         }  else if (msg instanceof APIStartVmInstanceMsg) {
             handle((APIStartVmInstanceMsg) msg);
-        } else if (msg instanceof APICreateStartVmInstanceSchedulerMsg) {
+        }else if (msg instanceof APIStartVmPubInstanceMsg) {
+            handle((APIStartVmPubInstanceMsg) msg);
+        }  else if (msg instanceof APICreateStartVmInstanceSchedulerMsg) {
             handle((APICreateStartVmInstanceSchedulerMsg) msg);
         } else if (msg instanceof APIMigrateVmMsg) {
             handle((APIMigrateVmMsg) msg);
@@ -3544,6 +3546,9 @@ public class VmInstanceBase extends AbstractVmInstance {
         }
     }
 
+    
+    
+    
     protected void startVm(final Message msg, final Completion completion) {
         refreshVO();
         ErrorCode allowed = validateOperationByState(msg, self.getState(), null);
@@ -3628,6 +3633,66 @@ public class VmInstanceBase extends AbstractVmInstance {
         }).start();
     }
 
+    
+    protected void startVmPub(final APIStartVmPubInstanceMsg msg, final Completion completion) {
+        refreshVO();
+        FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
+        chain.setName(String.format("start-vm-%s", msg.getUuid()));
+        chain.then(new NoRollbackFlow() {
+            String __name__ = "start-pub-vm-message";
+
+            @Override
+            public void run(final FlowTrigger trigger, Map data) {
+                new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
+                StartVmPubOnLocalMsg startlocalMsg = new StartVmPubOnLocalMsg();
+                startlocalMsg.setId(msg.getUuid());
+                VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+                startlocalMsg.setvMUuid(eo.getECSId());
+                startlocalMsg.setAccess_key_id(eo.getAccesskeyID());
+                startlocalMsg.setAccess_key_secret(eo.getAccesskeyKey());
+                startlocalMsg.setRegion("cn-beijing");
+                startlocalMsg.setForce("False");
+                bus.makeTargetServiceIdByResourceUuid(startlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
+                bus.send(startlocalMsg, new CloudBusCallBack(trigger) {
+                    @Override
+                    public void run(MessageReply reply) {
+                        if (reply.isSuccess()) {
+                            trigger.next();
+                        } else {
+                            trigger.fail(reply.getError());
+                        }
+                    }
+                });
+            }
+        })
+        .done(new FlowDoneHandler(msg) {
+            @Override
+            public void handle(Map data) {
+                logger.debug(String.format("successfully stop ECS VM  [name:%s]",  msg.getUuid()));
+                VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+                eo.setState(VmInstanceState.Running.toString());
+                dbf.updateAndRefresh(eo);
+                
+                StartVmInstanceReply reply = new StartVmInstanceReply();
+                bus.reply(msg, reply);
+            	completion.success();
+            }
+        }).error(new FlowErrorHandler(msg) {
+            @Override
+            public void handle(ErrorCode errCode, Map data) {
+                // delete host totally through the database, so other tables
+                // refer to the host table will clean up themselves
+             
+            	StartVmInstanceReply reply = new StartVmInstanceReply();
+                reply.setError(errf.instantiateErrorCode(SysErrors.OPERATION_ERROR, errCode));
+                bus.reply(msg, reply);
+            	completion.fail(errCode);
+            }
+        }).start();
+    }
+
+    
+    
     protected void startVm(final StartVmInstanceMsg msg, final SyncTaskChain taskChain) {
         startVm(msg, new Completion(taskChain) {
             @Override
@@ -3648,7 +3713,31 @@ public class VmInstanceBase extends AbstractVmInstance {
             }
         });
     }
+    
+   
+    
+    protected void startVm(final APIStartVmPubInstanceMsg msg, final SyncTaskChain taskChain) {
+        startVmPub(msg, new Completion(taskChain) {
+            @Override
+            public void success() {
+                VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
+                APIStartVmInstanceEvent evt = new APIStartVmInstanceEvent(msg.getId());
+                evt.setInventory(inv);
+                bus.publish(evt);
+                taskChain.next();
+            }
 
+            @Override
+            public void fail(ErrorCode errorCode) {
+                APIStartVmInstanceEvent evt = new APIStartVmInstanceEvent(msg.getId());
+                evt.setErrorCode(errf.instantiateErrorCode(VmErrors.START_ERROR, errorCode));
+                bus.publish(evt);
+                taskChain.next();
+            }
+        });
+    }
+    
+    
     protected void startVm(final APIStartVmInstanceMsg msg, final SyncTaskChain taskChain) {
         startVm(msg, new Completion(taskChain) {
             @Override
@@ -3671,6 +3760,25 @@ public class VmInstanceBase extends AbstractVmInstance {
     }
 
     protected void handle(final APIStartVmInstanceMsg msg) {
+        thdf.chainSubmit(new ChainTask(msg) {
+            @Override
+            public String getName() {
+                return String.format("start-vm-%s", self.getUuid());
+            }
+
+            @Override
+            public String getSyncSignature() {
+                return syncThreadName;
+            }
+
+            @Override
+            public void run(SyncTaskChain chain) {
+                startVm(msg, chain);
+            }
+        });
+    }
+    
+    protected void handle(final APIStartVmPubInstanceMsg msg) {
         thdf.chainSubmit(new ChainTask(msg) {
             @Override
             public String getName() {
