@@ -9,6 +9,7 @@ import org.zstack.core.db.DatabaseFacade;
 import org.zstack.core.errorcode.ErrorFacade;
 import org.zstack.core.logging.Log;
 import org.zstack.header.allocator.*;
+import org.zstack.header.cluster.ClusterVO;
 import org.zstack.header.configuration.DiskOfferingInventory;
 import org.zstack.header.configuration.DiskOfferingVO;
 import org.zstack.header.core.workflow.Flow;
@@ -16,6 +17,7 @@ import org.zstack.header.core.workflow.FlowRollback;
 import org.zstack.header.core.workflow.FlowTrigger;
 import org.zstack.header.exception.CloudRuntimeException;
 import org.zstack.header.host.HostInventory;
+import org.zstack.header.host.HostVO;
 import org.zstack.header.image.ImageConstant.ImageMediaType;
 import org.zstack.header.image.ImageInventory;
 import org.zstack.header.message.MessageReply;
@@ -108,6 +110,14 @@ public class VmAllocateHostFlow implements Flow {
         }
 
         AllocateHostMsg msg = this.prepareMsg(data);
+        if (msg.getVmInstance().getHypervisorType()==null && msg.getVmInstance().getClusterUuid()!=null ){
+        	ClusterVO vo = dbf.findByUuid(msg.getVmInstance().getClusterUuid(), ClusterVO.class);
+        	msg.getVmInstance().setHypervisorType(vo.getHypervisorType());
+        }
+        if (msg.getVmInstance().getHypervisorType()==null && msg.getVmInstance().getHostUuid()!=null ){
+        	HostVO vo = dbf.findByUuid(msg.getVmInstance().getHostUuid(), HostVO.class);
+        	msg.getVmInstance().setHypervisorType(vo.getHypervisorType());
+        }
         new Log(spec.getVmInventory().getUuid()).log(VmLabels.VM_START_ALLOCATE_HOST);
         bus.send(msg, new CloudBusCallBack(chain) {
             @Override
