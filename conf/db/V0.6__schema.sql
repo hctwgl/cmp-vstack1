@@ -182,6 +182,18 @@ CREATE TABLE  `zstack`.`VmECSInstanceEO` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+CREATE TABLE  `zstack`.`AccountPubCloudEO` (
+    `uuid` varchar(32) NOT NULL UNIQUE COMMENT 'account uuid',
+    `name` varchar(255) NOT NULL COMMENT 'user name',
+    `password` varchar(255) NOT NULL COMMENT 'password',
+    `accesskeyID` varchar(255) NOT NULL COMMENT ' Accesskey ID',
+    `accesskeyKey` varchar(255) NOT NULL COMMENT 'Accesskey ID',
+    `token` varchar(255) NOT NULL COMMENT 'ECS Accesskey Key',
+    `deleted` varchar(255) DEFAULT NULL,
+    PRIMARY KEY  (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 CREATE TABLE  `zstack`.`HostEO` (
     `uuid` varchar(32) NOT NULL UNIQUE COMMENT 'host uuid',
     `zoneUuid` varchar(32) NOT NULL COMMENT 'zone uuid',
