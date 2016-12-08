@@ -101,6 +101,12 @@ public class AccountBase extends AbstractAccount {
         }
     }
 
+    
+    
+    
+    private void handle(final APIDeletePubAccountMsg msg) {
+    	
+    }
 
     private void handle(final APIDeleteAccountMsg msg) {
         final APIDeleteAccountEvent evt = new APIDeleteAccountEvent(msg.getId());
@@ -271,6 +277,8 @@ public class AccountBase extends AbstractAccount {
             handle((APIUpdateQuotaMsg) msg);
         } else if (msg instanceof APIDeleteAccountMsg) {
             handle((APIDeleteAccountMsg) msg);
+        } else if (msg instanceof APIDeletePubAccountMsg) {
+            handle((APIDeletePubAccountMsg) msg);
         } else if (msg instanceof APIGetAccountQuotaUsageMsg) {
             handle((APIGetAccountQuotaUsageMsg) msg);
         } else if (msg instanceof APIAttachPoliciesToUserMsg) {

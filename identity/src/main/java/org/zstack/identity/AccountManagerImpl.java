@@ -37,12 +37,14 @@ import org.zstack.header.message.APIParam;
 import org.zstack.header.message.Message;
 import org.zstack.header.search.APIGetMessage;
 import org.zstack.header.search.APISearchMessage;
+import org.zstack.header.zone.ZoneVO;
 import org.zstack.utils.*;
 import org.zstack.utils.function.ForEachFunction;
 import org.zstack.utils.gson.JSONObjectUtil;
 import org.zstack.utils.logging.CLogger;
 import org.zstack.utils.path.PathUtil;
 
+import javax.persistence.Column;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
@@ -259,7 +261,9 @@ public class AccountManagerImpl extends AbstractService implements AccountManage
     private void handleApiMessage(APIMessage msg) {
         if (msg instanceof APICreateAccountMsg) {
             handle((APICreateAccountMsg) msg);
-        } else if (msg instanceof APIListAccountMsg) {
+        }else if (msg instanceof APICreatePubAccountMsg) {
+            handle((APICreatePubAccountMsg) msg);
+        }   else if (msg instanceof APIListAccountMsg) {
             handle((APIListAccountMsg) msg);
         } else if (msg instanceof APIListUserMsg) {
             handle((APIListUserMsg) msg);
@@ -510,6 +514,36 @@ public class AccountManagerImpl extends AbstractService implements AccountManage
         APIListAccountReply reply = new APIListAccountReply();
         reply.setInventories(invs);
         bus.reply(msg, reply);
+    }
+    
+    @Transactional
+    private void handle(APICreatePubAccountMsg msg) {
+    	
+    	PubAccountEO vo = new PubAccountEO();
+        if (msg.getResourceUuid() != null) {
+            vo.setUuid(msg.getResourceUuid());
+        } else {
+            vo.setUuid(Platform.getUuid());
+        }
+        vo.setUsername(msg.getUsername()); 
+        vo.setDescription(msg.getDescription());
+        vo.setCloudType(PubCloudType.valueOf(msg.getCloudType()));
+        vo.setPassword(msg.getPassword());
+        vo.setAccesskeyID(msg.getAccesskeyID());
+        vo.setAccesskeyKey(msg.getAccesskeyKey());
+        vo.setToken(msg.getToken());
+        dbf.getEntityManager().persist(vo);
+        APICreatePubAccountEvent evt = new APICreatePubAccountEvent(msg.getId());
+        PubAccountInventory inv = new PubAccountInventory();
+        inv.setAccesskeyID(msg.getAccesskeyID());
+        inv.setUsername(msg.getUsername()); 
+        inv.setDescription(msg.getDescription());
+        inv.setCloudType( msg.getCloudType());
+        inv.setAccesskeyID(msg.getAccesskeyID());
+        inv.setAccesskeyKey(msg.getAccesskeyKey());
+        inv.setToken(msg.getToken());
+        evt.setInventory(inv);
+        bus.publish(evt);
     }
 
     @Transactional

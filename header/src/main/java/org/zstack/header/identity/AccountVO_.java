@@ -1,7 +1,14 @@
 package org.zstack.header.identity;
 
+import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
+
+import org.zstack.header.vo.Index;
+
 import java.sql.Timestamp;
 
 @StaticMetamodel(AccountVO.class)
@@ -14,3 +21,5 @@ public class AccountVO_ {
     public static volatile SingularAttribute<AccountVO, Timestamp> createDate;
     public static volatile SingularAttribute<AccountVO, Timestamp> lastOpDate;
 }
+
+ 

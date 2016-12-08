@@ -6,6 +6,6 @@ import org.zstack.header.query.AutoQuery;
 /**
  * Created by frank on 7/14/2015.
  */
-@AutoQuery(replyClass = APIQueryAccountMsg.class, inventoryClass = AccountInventory.class)
-public class APIQueryAccountMsg extends APIQueryMessage {
+@AutoQuery(replyClass = APIQueryPubAccountReply.class, inventoryClass = PubAccountInventory.class)
+public class APIQueryPubAccountMsg extends APIQueryMessage {
 }
