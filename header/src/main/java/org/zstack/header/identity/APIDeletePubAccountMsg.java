@@ -23,4 +23,9 @@ public class APIDeletePubAccountMsg extends APIDeleteMessage implements AccountM
     public String getAccountUuid() {
         return uuid;
     }
+
+	public String getPubAccountUuid() {
+		// TODO Auto-generated method stub
+		 return uuid;
+	}
 }

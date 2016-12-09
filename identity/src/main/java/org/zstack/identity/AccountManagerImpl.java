@@ -247,15 +247,20 @@ public class AccountManagerImpl extends AbstractService implements AccountManage
     }
 
     private void passThrough(AccountMessage msg) {
-        AccountVO vo = dbf.findByUuid(msg.getAccountUuid(), AccountVO.class);
-        if (vo == null) {
+        AccountVO accvo = dbf.findByUuid(msg.getAccountUuid(), AccountVO.class);
+        PubAccountVO pubaccvo = dbf.findByUuid(msg.getAccountUuid(), PubAccountVO.class);
+        if (accvo == null && pubaccvo == null) {
             String err = String.format("unable to find account[uuid=%s]", msg.getAccountUuid());
             bus.replyErrorByMessageType((Message) msg, errf.instantiateErrorCode(SysErrors.RESOURCE_NOT_FOUND, err));
             return;
+        }else if (accvo != null){
+        	 AccountBase base = new AccountBase(accvo);
+             base.handleMessage((Message) msg);
+        }else {
+        	 AccountBase base = new AccountBase(pubaccvo);
+             base.handleMessage((Message) msg);
         }
-
-        AccountBase base = new AccountBase(vo);
-        base.handleMessage((Message) msg);
+       
     }
 
     private void handleApiMessage(APIMessage msg) {
