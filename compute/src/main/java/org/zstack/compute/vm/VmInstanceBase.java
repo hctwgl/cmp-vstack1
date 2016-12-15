@@ -2271,7 +2271,7 @@ public class VmInstanceBase extends AbstractVmInstance {
             handle((APIDeleteVmStaticIpMsg) msg);
         } else if (msg instanceof APIGetVmHostnameMsg) {
             handle((APIGetVmHostnameMsg) msg);
-        } else if (msg instanceof APIGetVmStartingCandidateClustersHostsMsg) {
+        }  else if (msg instanceof APIGetVmStartingCandidateClustersHostsMsg) {
             handle((APIGetVmStartingCandidateClustersHostsMsg) msg);
         } else if (msg instanceof APIGetVmCapabilitiesMsg) {
             handle((APIGetVmCapabilitiesMsg) msg);
@@ -2285,6 +2285,9 @@ public class VmInstanceBase extends AbstractVmInstance {
             bus.dealWithUnknownMessage(msg);
         }
     }
+    
+    
+    
 
     private void handle(APIGetVmCapabilitiesMsg msg) {
         APIGetVmCapabilitiesReply reply = new APIGetVmCapabilitiesReply();

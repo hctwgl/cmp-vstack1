@@ -218,6 +218,8 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     private void handleApiMessage(APIMessage msg) {
         if (msg instanceof APICreateVmInstanceMsg) {
             handle((APICreateVmInstanceMsg) msg);
+        }else if (msg instanceof APIGetPubCloudTypesMsg) {
+            handle((APIGetPubCloudTypesMsg) msg);
         }else if (msg instanceof APICreatePublicVmInstanceMsg) {
             handle((APICreatePublicVmInstanceMsg) msg);
         } else if (msg instanceof APIListVmInstanceMsg) {
@@ -239,6 +241,18 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
         }
     }
 
+    
+
+    private void handle(APIGetPubCloudTypesMsg msg) {
+    	APIGetPubCloudTypesReply reply = new APIGetPubCloudTypesReply();
+         List<String> res = new ArrayList<String>();
+//         res.addAll(HypervisorType.getAllTypeNames());
+         res.add("ECS");
+         res.add("EC2");
+         reply.setCloudTypes(res);
+         bus.reply(msg, reply);
+    }
+    
     private void handle(APIGetInterdependentL3NetworksImagesMsg msg) {
         if (msg.getImageUuid() != null) {
             getInterdependentL3NetworksByImageUuid(msg);
