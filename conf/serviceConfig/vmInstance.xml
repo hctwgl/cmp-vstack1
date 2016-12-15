@@ -170,10 +170,7 @@
     
   <!--   
     
-    <message>
-        <name>org.zstack.header.vm.APIQueryPubVmInstanceMsg</name>
-        <serviceId>query</serviceId>
-    </message>
+   
     <message>
         <name>org.zstack.header.vm.APICreatePubVmInstanceMsg</name>
         <serviceId>query</serviceId>
@@ -183,11 +180,6 @@
         <serviceId>query</serviceId>
     </message> 
     
-    <message>
-        <name>org.zstack.header.vm.APIQueryPubVmInstanceMsg</name>
-        <serviceId>query</serviceId>
-    </message>
-    <message>
         <name>org.zstack.header.vm.APICreatePubVmInstanceMsg</name>
         <serviceId>query</serviceId>
     </message>

@@ -201,7 +201,6 @@ CREATE TABLE  `zstack`.`PubAccountEO` (
 CREATE TABLE  `zstack`.`PubVmInstanceEO` (
     `uuid` varchar(32) NOT NULL UNIQUE COMMENT 'account uuid',
     `hostname` varchar(255) NOT NULL COMMENT 'cloudType',
-    `description` varchar(255) NOT NULL COMMENT 'user name',
     `accountUuid` varchar(255) NOT NULL COMMENT 'password',
     `image` varchar(255) NOT NULL COMMENT ' Accesskey ID',
     `cpuInfo` varchar(255) NOT NULL COMMENT 'Accesskey Key',
@@ -210,6 +209,7 @@ CREATE TABLE  `zstack`.`PubVmInstanceEO` (
     `cloudType` varchar(2048) DEFAULT NULL COMMENT 'host description',
     `otherInfo` varchar(255) NOT NULL COMMENT '  Accesskey token',
     `region` varchar(255) NOT NULL COMMENT '  Accesskey token',
+    `state` varchar(255) NOT NULL COMMENT '  Accesskey token',
     `deleted` varchar(255) DEFAULT NULL,
     `lastOpDate` timestamp ON UPDATE CURRENT_TIMESTAMP COMMENT 'last operation date',
     `createDate` timestamp,

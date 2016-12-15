@@ -11,17 +11,8 @@ public class PubVmInstanceAO {
     private String uuid;
     
     @Column
-    @Index(length = 128)
     private String hostname;
     
-    public String getHostname() {
-		return hostname;
-	}
-
-	public void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
 	@Column
     private String description;
     
@@ -57,9 +48,6 @@ public class PubVmInstanceAO {
     @Column
     private String state;
     
-    
-     
-   
     public PubVmInstanceAO() {
     }
 
@@ -92,7 +80,15 @@ public class PubVmInstanceAO {
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
 	}
+	
+	
+	 public String getHostname() {
+			return hostname;
+		}
 
+		public void setHostname(String hostname) {
+			this.hostname = hostname;
+		}
 	public String getDescription() {
 		return description;
 	}
