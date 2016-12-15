@@ -20,12 +20,11 @@ public class PubVmInstanceInventory {
 	    private String memorySize;
 	    private String otherInfo;
 	    private String region;
+	    private String state;
 	    private Timestamp createDate;
 	    private Timestamp lastOpDate;
-	    private String state;
 	    
-     
-    
+	    
     public static PubVmInstanceInventory valueOf(PubVmInstanceVO vo) {
     	PubVmInstanceInventory inv = new PubVmInstanceInventory();
         inv.setUuid(vo.getUuid());

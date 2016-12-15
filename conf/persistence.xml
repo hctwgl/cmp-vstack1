@@ -61,6 +61,8 @@
         <class>org.zstack.header.vm.VmInstanceEO</class>
         <class>org.zstack.header.vm.VmECSInstanceVO</class>
         <class>org.zstack.header.vm.VmECSInstanceEO</class>
+        <class>org.zstack.header.vm.PubVmInstanceVO</class> 
+        <class>org.zstack.header.vm.PubVmInstanceEO</class> 
         <class>org.zstack.header.vm.VmInstanceSequenceNumberVO</class>
         <class>org.zstack.appliancevm.ApplianceVmVO</class>
         <class>org.zstack.appliancevm.ApplianceVmFirewallRuleVO</class>
