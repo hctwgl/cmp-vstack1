@@ -2131,13 +2131,12 @@ public class VmInstanceBase extends AbstractVmInstance {
             @Override
             public void handle(Map data) {
                 logger.debug(String.format("successfully added ECS VM  [name:%s,  uuid:%s]", msg.getName(), msg.getUuid()));
-                VmInstanceVO vo = new VmInstanceVO();
-                vo.setName(msg.getName());
+                PubVmInstanceVO vo = new PubVmInstanceVO();
+                vo.setHostname(msg.getName());
+                vo.setCloudType("ECS");
                 vo.setCreateDate(msg.getCreateData());
-                vo.setType("ECS");
-                vo.setState(VmInstanceState.Running);
+                vo.setState(VmInstanceState.Running.toString());
                 vo.setUuid(msg.getUuid());
-                vo.setInternalId((long) 0);
                 PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
                 StartNewCreatedPubVmInstanceReply reply = new StartNewCreatedPubVmInstanceReply();
                 reply.setVmInventory(inv);
@@ -2149,11 +2148,11 @@ public class VmInstanceBase extends AbstractVmInstance {
             public void handle(ErrorCode errCode, Map data) {
                 // delete host totally through the database, so other tables
                 // refer to the host table will clean up themselves
-            	 VmInstanceVO vo = new VmInstanceVO();
-                 vo.setName(msg.getName());
+            	 PubVmInstanceVO vo = new PubVmInstanceVO();
+                 vo.setHostname(msg.getName());
                  vo.setCreateDate(msg.getCreateData());
-                 vo.setType("ECS");
-                 vo.setState(VmInstanceState.Error);
+                 vo.setCloudType("ECS");
+                 vo.setState(VmInstanceState.Error.toString());
                  vo.setUuid(msg.getUuid());
                  PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
             	StartNewCreatedPubVmInstanceReply reply = new StartNewCreatedPubVmInstanceReply();
@@ -4217,10 +4216,10 @@ public class VmInstanceBase extends AbstractVmInstance {
                 logger.debug(String.format("successfully stop ECS VM  [name:%s]",  msg.getUuid()));
                 eo.setState(VmInstanceState.Running.toString());
                 dbf.updateAndRefresh(eo);
-                VmInstanceVO vo = new VmInstanceVO();
-                vo.setName(eo.getName());
-                vo.setType("ECS");
-                vo.setState(VmInstanceState.Running);
+                PubVmInstanceVO vo = new PubVmInstanceVO();
+                vo.setHostname(eo.getName());
+                vo.setCloudType("ECS");
+                vo.setState(VmInstanceState.Running.toString());
                 vo.setUuid(msg.getUuid());
                 PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
                 RebootPubVmInstanceReply reply = new RebootPubVmInstanceReply();
@@ -4233,9 +4232,10 @@ public class VmInstanceBase extends AbstractVmInstance {
             public void handle(ErrorCode errCode, Map data) {
                 // delete host totally through the database, so other tables
                 // refer to the host table will clean up themselves
-                VmInstanceVO vo = new VmInstanceVO();
-                vo.setName(eo.getName());
-                vo.setType("ECS");
+            	
+            	PubVmInstanceVO vo = new PubVmInstanceVO();
+            	 vo.setHostname(eo.getName());
+                 vo.setCloudType("ECS");
                 vo.setUuid(msg.getUuid());
                 PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
             	StopPubVmInstanceReply reply = new StopPubVmInstanceReply();
@@ -4420,10 +4420,10 @@ public class VmInstanceBase extends AbstractVmInstance {
                 VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
                 eo.setState(VmInstanceState.Stopped.toString());
                 dbf.updateAndRefresh(eo);
-                VmInstanceVO vo = new VmInstanceVO();
-                vo.setName(eo.getName());
-                vo.setType("ECS");
-                vo.setState(VmInstanceState.Stopped);
+                PubVmInstanceVO vo = new PubVmInstanceVO();
+                vo.setHostname(eo.getName());
+                vo.setCloudType("ECS");
+                vo.setState(VmInstanceState.Stopped.toString());
                 vo.setUuid(msg.getUuid());
                 PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
             	StopPubVmInstanceReply reply = new StopPubVmInstanceReply();
@@ -4439,10 +4439,10 @@ public class VmInstanceBase extends AbstractVmInstance {
             	VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
                 eo.setState(VmInstanceState.Stopped.toString());
                 dbf.updateAndRefresh(eo);
-                VmInstanceVO vo = new VmInstanceVO();
-                vo.setName(eo.getName());
-                vo.setType("ECS");
-                vo.setState(VmInstanceState.Stopped);
+                PubVmInstanceVO vo = new PubVmInstanceVO();
+                vo.setHostname(eo.getName());
+                vo.setCloudType("ECS");
+                vo.setState(VmInstanceState.Stopped.toString());
                 vo.setUuid(msg.getUuid());
                 PubVmInstanceInventory inv =  PubVmInstanceInventory.valueOf(vo);
             	StopPubVmInstanceReply reply = new StopPubVmInstanceReply();

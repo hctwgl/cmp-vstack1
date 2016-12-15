@@ -12,9 +12,17 @@ public class PubVmInstanceAO {
     
     @Column
     @Index(length = 128)
-    private String name;
+    private String hostname;
     
-    @Column
+    public String getHostname() {
+		return hostname;
+	}
+
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
+
+	@Column
     private String description;
     
     @Column
@@ -57,7 +65,7 @@ public class PubVmInstanceAO {
 
     public PubVmInstanceAO(PubVmInstanceAO other) {
         this.uuid = other.uuid;
-        this.name = other.name;
+        this.hostname = other.hostname;
         this.region = other.region;
         this.accountUuid = other.accountUuid;
         this.description = other.description;
@@ -83,14 +91,6 @@ public class PubVmInstanceAO {
 
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getDescription() {
