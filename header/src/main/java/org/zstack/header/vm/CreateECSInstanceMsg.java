@@ -10,23 +10,17 @@ import java.util.List;
  */
 @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
 public class CreateECSInstanceMsg extends NeedReplyMessage     {
+    private String pubAccountUuid;
+	private String description;
+    private String cloudType;
+    private String hostname;
+    private String memorySize;
+    private String cpuInfo;
+    private String image;
     private String accountUuid;
-	private String name;
-    private String type;
-    private String consolePassword;
-    private String accesskeyID;
-    private String accesskeyKey;
-    private String region;
-    
-    public String getName() {
-		return name;
-	}
+	 
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-    public String getAccountUuid() {
+	public String getAccountUuid() {
 		return accountUuid;
 	}
 
@@ -34,54 +28,70 @@ public class CreateECSInstanceMsg extends NeedReplyMessage     {
 		this.accountUuid = accountUuid;
 	}
 
-	public String getType() {
-		return type;
+	public String getPubAccountUuid() {
+		return pubAccountUuid;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setPubAccountUuid(String pubAccountUuid) {
+		this.pubAccountUuid = pubAccountUuid;
 	}
 
-	public String getConsolePassword() {
-		return consolePassword;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setConsolePassword(String consolePassword) {
-		this.consolePassword = consolePassword;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
-	public String getAccesskeyID() {
-		return accesskeyID;
+	public String getCloudType() {
+		return cloudType;
 	}
 
-	public void setAccesskeyID(String accesskeyID) {
-		this.accesskeyID = accesskeyID;
+	public void setCloudType(String cloudType) {
+		this.cloudType = cloudType;
 	}
 
-	public String getAccesskeyKey() {
-		return accesskeyKey;
+	public String getHostname() {
+		return hostname;
 	}
 
-	public void setAccesskeyKey(String accesskeyKey) {
-		this.accesskeyKey = accesskeyKey;
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
 	}
 
-	public String getRegion() {
-		return region;
+	public String getMemorySize() {
+		return memorySize;
 	}
 
-	public void setRegion(String region) {
-		this.region = region;
+	public void setMemorySize(String memorySize) {
+		this.memorySize = memorySize;
 	}
 
+	public String getCpuInfo() {
+		return cpuInfo;
+	}
+
+	public void setCpuInfo(String cpuInfo) {
+		this.cpuInfo = cpuInfo;
+	}
+	public String getImage() {
+		return image;
+	}
+	public void setImage(String image) {
+		this.image = image;
+	}
 
 	public static CreateECSInstanceMsg valueOf(final APICreatePublicVmInstanceMsg msg) {
+		
         CreateECSInstanceMsg cmsg = new CreateECSInstanceMsg();
-        cmsg.setAccesskeyID(msg.getAccesskeyID());
-        cmsg.setAccesskeyKey(msg.getAccesskeyKey());
         cmsg.setAccountUuid(msg.getSession().getAccountUuid());
-        cmsg.setName(msg.getName());
-        cmsg.setType(msg.getType());
+        cmsg.setCloudType(msg.getCloudType());
+        cmsg.setCpuInfo(msg.getCpuInfo());
+        cmsg.setDescription(msg.getDescription());
+        cmsg.setHostname(msg.getHostname());
+        cmsg.setMemorySize(msg.getMemorySize());
+        cmsg.setImage(msg.getImage());
         return cmsg;
     }
 }

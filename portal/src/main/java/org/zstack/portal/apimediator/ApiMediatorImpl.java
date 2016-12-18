@@ -59,7 +59,6 @@ public class ApiMediatorImpl extends AbstractService implements ApiMediator, Glo
             return;
         }
 
-
         try {
             msg.setServiceId(null);
             msg = processor.process(msg);

@@ -8,79 +8,131 @@ import java.util.List;
 
 import javax.persistence.Column;
 
-@ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
-public class StartNewCreatedPubVmInstanceMsg extends NeedReplyMessage implements VmInstanceMessage  { 
-		private String Uuid;
-		     private String name;
-		     private String accesskeyID;
-		     private String accesskeyKey;
-		     private String state;
-		     private Timestamp createData;
-		     private Timestamp lastOpDate;
-		
-		
-		 
+@ApiTimeout(apiClasses = { APICreateVmInstanceMsg.class })
+public class StartNewCreatedPubVmInstanceMsg extends NeedReplyMessage implements VmInstanceMessage {
+	private String Uuid;
+	private String hostname;
+	private String description;
+	private String pubAccountUuid;
+	private String image;
+	private String cloudType;
+	private String cpuInfo;
+	private String memorySize;
+	private String otherInfo;
+	private String region;
+	private Timestamp createDate;
+	private Timestamp lastOpDate;
+	private String state;
 
-		    public String getUuid() {
-				return Uuid;
-			}
+	public String getUuid() {
+		return Uuid;
+	}
 
-			public void setUuid(String setUuid) {
-				this.Uuid = setUuid;
-			}
+	public void setUuid(String uuid) {
+		Uuid = uuid;
+	}
 
-			public String getName() {
-				return name;
-			}
+	public String getHostname() {
+		return hostname;
+	}
 
-			public void setName(String name) {
-				this.name = name;
-			}
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
 
-			public String getAccesskeyID() {
-				return accesskeyID;
-			}
+	public String getDescription() {
+		return description;
+	}
 
-			public void setAccesskeyID(String accesskeyID) {
-				this.accesskeyID = accesskeyID;
-			}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+ 
 
-			public String getAccesskeyKey() {
-				return accesskeyKey;
-			}
+	public String getPubAccountUuid() {
+		return pubAccountUuid;
+	}
 
-			public void setAccesskeyKey(String accesskeyKey) {
-				this.accesskeyKey = accesskeyKey;
-			}
+	public void setPubAccountUuid(String pubAccountUuid) {
+		this.pubAccountUuid = pubAccountUuid;
+	}
 
-			public String getState() {
-				return state;
-			}
+	public String getImage() {
+		return image;
+	}
 
-			public void setState(String state) {
-				this.state = state;
-			}
+	public void setImage(String image) {
+		this.image = image;
+	}
 
-			public Timestamp getCreateData() {
-				return createData;
-			}
+	public String getCloudType() {
+		return cloudType;
+	}
 
-			public void setCreateData(Timestamp createData) {
-				this.createData = createData;
-			}
+	public void setCloudType(String cloudType) {
+		this.cloudType = cloudType;
+	}
 
-			public Timestamp getLastOpDate() {
-				return lastOpDate;
-			}
+	public String getCpuInfo() {
+		return cpuInfo;
+	}
 
-			public void setLastOpDate(Timestamp lastOpDate) {
-				this.lastOpDate = lastOpDate;
-			}
+	public void setCpuInfo(String cpuInfo) {
+		this.cpuInfo = cpuInfo;
+	}
 
-			@Override
-			public String getVmInstanceUuid() {
-				// TODO Auto-generated method stub
-				return Uuid;
-			}
-			
+	public String getMemorySize() {
+		return memorySize;
+	}
+
+	public void setMemorySize(String memorySize) {
+		this.memorySize = memorySize;
+	}
+
+	public String getOtherInfo() {
+		return otherInfo;
+	}
+
+	public void setOtherInfo(String otherInfo) {
+		this.otherInfo = otherInfo;
+	}
+
+	public String getRegion() {
+		return region;
+	}
+
+	public void setRegion(String region) {
+		this.region = region;
+	}
+
+	public Timestamp getCreateDate() {
+		return createDate;
+	}
+
+	public void setCreateDate(Timestamp createDate) {
+		this.createDate = createDate;
+	}
+
+	public Timestamp getLastOpDate() {
+		return lastOpDate;
+	}
+
+	public void setLastOpDate(Timestamp lastOpDate) {
+		this.lastOpDate = lastOpDate;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	@Override
+	public String getVmInstanceUuid() {
+		// TODO Auto-generated method stub
+		return Uuid;
+	}
+
 }

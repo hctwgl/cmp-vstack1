@@ -17,7 +17,7 @@ public class PubVmInstanceAO {
     private String description;
     
     @Column
-    private String accountUuid;
+    private String pubAccountUuid;
     
     @Column
     private String image;
@@ -55,7 +55,7 @@ public class PubVmInstanceAO {
         this.uuid = other.uuid;
         this.hostname = other.hostname;
         this.region = other.region;
-        this.accountUuid = other.accountUuid;
+        this.pubAccountUuid = other.pubAccountUuid;
         this.description = other.description;
         this.image = other.image;
         this.cloudType = other.cloudType;
@@ -97,12 +97,14 @@ public class PubVmInstanceAO {
 		this.description = description;
 	}
 	 
-	public String getAccountUuid() {
-		return accountUuid;
+	 
+
+	public String getPubAccountUuid() {
+		return pubAccountUuid;
 	}
 
-	public void setAccountUuid(String accountUuid) {
-		this.accountUuid = accountUuid;
+	public void setPubAccountUuid(String pubAccountUuid) {
+		this.pubAccountUuid = pubAccountUuid;
 	}
 
 	public String getImage() {

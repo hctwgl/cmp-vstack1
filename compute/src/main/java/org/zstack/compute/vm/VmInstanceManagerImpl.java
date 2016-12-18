@@ -83,6 +83,7 @@ import org.zstack.utils.gson.JSONObjectUtil;
 import org.zstack.utils.logging.CLogger;
 import org.zstack.utils.network.NetworkUtils;
 
+import javax.persistence.Column;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import java.sql.Timestamp;
@@ -176,13 +177,8 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     		return ;
     	}
     	if(msg instanceof StartNewCreatedPubVmInstanceMsg) {
-    		VmECSInstanceVO eo = new VmECSInstanceVO();
-    		eo.setAccesskeyID(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyID());
-    		eo.setAccesskeyKey(((StartNewCreatedPubVmInstanceMsg) msg).getAccesskeyKey());
+    		PubVmInstanceVO eo = new PubVmInstanceVO();
     		eo.setUuid(((StartNewCreatedPubVmInstanceMsg) msg).getUuid());
-    		eo.setName(((StartNewCreatedPubVmInstanceMsg) msg).getName());
-    		eo.setCreateDate(((StartNewCreatedPubVmInstanceMsg) msg).getCreateData());
-    		
     		VmInstance vm = new VmInstanceBase(eo); 
             vm.handleMessage((Message) msg);
     	}else  {
@@ -563,29 +559,39 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
 
     
     private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg, ReturnValueCompletion<CreatePubVmInstanceReply> completion) {
-    	VmECSInstanceVO vo = new VmECSInstanceVO();
+    	
+    	
+    	PubVmInstanceVO vo = new PubVmInstanceVO();
         vo.setUuid(Platform.getUuid());
-        if (msg.getConsolePassword() != null) {
-            VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
-        }
-        vo.setName(msg.getName());
+//        if (msg.getConsolePassword() != null) {
+//            VmSystemTags.CONSOLE_PASSWORD.recreateInherentTag(vo.getUuid(), map(e(VmSystemTags.CONSOLE_PASSWORD_TOKEN, msg.getConsolePassword())));
+//        }
+        vo.setHostname(msg.getHostname());
+        vo.setDescription(msg.getDescription());
+        vo.setPubAccountUuid(msg.getPubAccountUuid());
+        vo.setImage(msg.getImage());
+        vo.setCloudType(msg.getCloudType());
+        vo.setCpuInfo(msg.getCpuInfo());
+        vo.setMemorySize(vo.getMemorySize());
         vo.setState(VmInstanceState.Starting.toString());
-        vo.setAccesskeyID(msg.getAccesskeyID());
-        vo.setAccesskeyKey(msg.getAccesskeyKey());
-
+         
         //TODO  Add VmPubInstanceEO table in DB
-        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), VmECSInstanceVO.class);
-        VmPubInstanceFactory factory = getVmPubInstanceFactory("ECS");
-        vo = factory.createVmInstance(vo, msg);
-        
+        acntMgr.createAccountResourceRef(msg.getAccountUuid(), vo.getUuid(), PubVmInstanceVO.class);
+//        VmPubInstanceFactory factory = getVmPubInstanceFactory("ECS");
+//        vo = factory.createVmInstance(vo, msg);
+//        
         if (cmsg != null) {
-            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), VmECSInstanceVO.class.getSimpleName());
+            tagMgr.createTagsFromAPICreateMessage(cmsg, vo.getUuid(), PubVmInstanceVO.class.getSimpleName());
         }
         
         StartNewCreatedPubVmInstanceMsg smsg = new StartNewCreatedPubVmInstanceMsg();
-        smsg.setAccesskeyID(msg.getAccesskeyID());
-        smsg.setAccesskeyKey(msg.getAccesskeyKey());
-        smsg.setName(msg.getName());
+        smsg.setHostname(msg.getHostname());
+        smsg.setDescription(msg.getDescription());
+        smsg.setImage(msg.getImage());
+        smsg.setPubAccountUuid(msg.getPubAccountUuid());
+        smsg.setCloudType(msg.getCloudType());
+        smsg.setCpuInfo(msg.getCpuInfo());
+        smsg.setMemorySize(vo.getMemorySize());
         smsg.setUuid(vo.getUuid());
         smsg.setId(msg.getId());
         bus.makeTargetServiceIdByResourceUuid(smsg, VmInstanceConstant.SERVICE_ID, vo.getUuid());
@@ -654,13 +660,15 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     
     private CreateECSInstanceMsg fromAPICreatePublicVmInstanceMsg(APICreatePublicVmInstanceMsg msg) {
     	
-    	CreateECSInstanceMsg cmsg = new CreateECSInstanceMsg();
-        cmsg.setType(msg.getType());
+        CreateECSInstanceMsg cmsg = new CreateECSInstanceMsg();
         cmsg.setAccountUuid(msg.getSession().getAccountUuid());
-        cmsg.setName(msg.getName());
-        cmsg.setAccesskeyID(msg.getAccesskeyID());
-        cmsg.setAccesskeyKey(msg.getAccesskeyKey());
-       
+        cmsg.setPubAccountUuid(msg.getAccountUuid());
+        cmsg.setCloudType(msg.getCloudType());
+        cmsg.setCpuInfo(msg.getCpuInfo());
+        cmsg.setDescription(msg.getDescription());
+        cmsg.setHostname(msg.getHostname());
+        cmsg.setMemorySize(msg.getMemorySize());
+        cmsg.setImage(msg.getImage());
         return cmsg;
     }
     

@@ -79,43 +79,64 @@ public class APICreatePublicVmInstanceMsg extends APICreateMessage {
      * @desc max length of 255 characters
      */
     @APIParam(maxLength = 255)
-    private String name;
-    @APIParam(validValues = {"UserVm", "ApplianceVm","ECS"}, required = false)
-    private String type;
-    @APIParam(required = false)
-    private String accesskeyID;
-    private String accesskeyKey;
+    private String hostname;
     
+    @APIParam( required = true)
+    private String cloudType;
     
+    @APIParam(required = true)
+    private String accountUuid;
     
-    public String getName() {
-        return name;
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
+    private String description;
+    private String memorySize;
+    private String cpuInfo;
+    private String image;
+      
     
-    public String getType() {
-        return type;
-    }
-    public void setType(String type) {
-        this.type = type;
-    }
-    public String getAccesskeyID() {
-		return accesskeyID;
+    public String getHostname() {
+		return hostname;
 	}
-
-	public void setAccesskeyID(String accesskeyID) {
-		this.accesskeyID = accesskeyID;
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
 	}
-
-	public String getAccesskeyKey() {
-		return accesskeyKey;
+	 
+	public String getAccountUuid() {
+		return accountUuid;
 	}
-
-	public void setAccesskeyKey(String accesskeyKey) {
-		this.accesskeyKey = accesskeyKey;
+	public void setAccountUuid(String accountUuid) {
+		this.accountUuid = accountUuid;
 	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public String getCloudType() {
+		return cloudType;
+	}
+	public void setCloudType(String cloudType) {
+		this.cloudType = cloudType;
+	}
+	public String getMemorySize() {
+		return memorySize;
+	}
+	public void setMemorySize(String memorySize) {
+		this.memorySize = memorySize;
+	}
+	public String getCpuInfo() {
+		return cpuInfo;
+	}
+	public void setCpuInfo(String cpuInfo) {
+		this.cpuInfo = cpuInfo;
+	}
+	public String getImage() {
+		return image;
+	}
+	public void setImage(String image) {
+		this.image = image;
+	}
+	
 
 	 
 }

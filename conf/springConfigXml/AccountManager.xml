@@ -27,6 +27,7 @@
 			<list>
 				<value>org.zstack.header.vm.VmInstanceVO</value>
 				<value>org.zstack.header.vm.VmECSInstanceVO</value>
+				<value>org.zstack.header.vm.PubVmInstanceVO</value>
 				<value>org.zstack.header.vm.VmNicVO</value>
 				<value>org.zstack.header.volume.VolumeVO</value>
 				<value>org.zstack.header.image.ImageVO</value>

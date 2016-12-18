@@ -1038,7 +1038,7 @@ public class AccountManagerImpl extends AbstractService implements AccountManage
         q.setParameter("auuid", accountUuid);
         List<AccountType> types = q.getResultList();
         if (types.isEmpty()) {
-            throw new OperationFailureException(errf.stringToInvalidArgumentError(
+            throw new OperationFailureException(errf.stringToInvalidArgumentError(	
                     String.format("cannot find the account[uuid:%s]", accountUuid)
             ));
         }
