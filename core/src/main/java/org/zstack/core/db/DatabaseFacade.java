@@ -39,10 +39,13 @@ public interface DatabaseFacade {
     void removeCollection(Collection entities, Class entityClazz);
 
     void removeByPrimaryKeys(Collection priKeys, Class entityClazz);
+    
+    void removeByColumName(Class entityClass, String name, String value);
 
     void removeByPrimaryKey(Object primaryKey, Class<?> entityClass);
 
     void hardDeleteCollectionSelectedBySQL(String sql, Class entityClass);
+    void clearDB(Class entityClass) ;
 
     CriteriaBuilder  getCriteriaBuilder();
     

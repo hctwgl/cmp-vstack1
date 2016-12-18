@@ -192,6 +192,7 @@ CREATE TABLE  `zstack`.`PubAccountEO` (
     `description` varchar(2048) DEFAULT NULL COMMENT 'host description',
     `token` varchar(255) DEFAULT NULL COMMENT '  Accesskey token',
     `deleted` varchar(255) DEFAULT NULL,
+    `providerUuid` varchar(255) DEFAULT NULL COMMENT 'ID on provider',
     `lastOpDate` timestamp ON UPDATE CURRENT_TIMESTAMP COMMENT 'last operation date',
     `createDate` timestamp,
     PRIMARY KEY  (`uuid`)
@@ -1394,7 +1395,7 @@ CREATE VIEW `zstack`.`VmInstanceVO` AS SELECT uuid, name, description, zoneUuid,
 
 CREATE VIEW `zstack`.`VmECSInstanceVO` AS SELECT uuid, name, accesskeyID,accesskeyKey, createDate, lastOpDate, state FROM `zstack`.`VmECSInstanceEO` WHERE deleted IS NULL;
 
-CREATE VIEW `zstack`.`PubAccountVO` AS SELECT uuid,cloudType, description, username, accesskeyID, accesskeyKey, token,createDate, lastOpDate FROM `zstack`.`PubAccountEO` WHERE deleted IS NULL;
+CREATE VIEW `zstack`.`PubAccountVO` AS SELECT uuid,cloudType, description, username, accesskeyID,providerUuid, accesskeyKey, token,createDate, lastOpDate FROM `zstack`.`PubAccountEO` WHERE deleted IS NULL;
  
 CREATE VIEW `zstack`.`PubVmInstanceVO` AS SELECT uuid,hostname, description, pubAccountUuid, image, cloudType, cpuInfo,memorySize,otherInfo,region,state,createDate, lastOpDate FROM `zstack`.`PubVmInstanceEO` WHERE deleted IS NULL;
 

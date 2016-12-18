@@ -354,6 +354,20 @@ public class DatabaseFacadeImpl implements DatabaseFacade, Component {
             }
             fireHardDeleteExtension(ids);
         }
+        
+        private void clearDB(Class entityClass) {
+                String sql = String.format("truncate table "+entityClass.getName());
+                Query q = getEntityManager().createQuery(sql);
+                q.executeUpdate();
+        }
+        
+        public void removeByColumName(Class entityClass, String type) {
+    		// TODO Auto-generated method stub
+        	String sql = String.format("delete from %s eo where eo.cloudType = :id", entityClass.getSimpleName());
+            Query q = getEntityManager().createQuery(sql);
+            q.setParameter("id",type);
+            q.executeUpdate();
+    	}
 
         @Transactional
         private void nativeSqlDelete(Collection ids) {
@@ -834,4 +848,22 @@ public class DatabaseFacadeImpl implements DatabaseFacade, Component {
 
         info.fireLifeCycleEvent(evt, entity);
     }
+
+	
+
+	@Override
+	public void clearDB(Class entityClass) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeByColumName(Class entityClass, String name, String value) {
+		// TODO Auto-generated method stub
+		String sql = String.format("delete from %s eo where eo.%s = :id", entityClass.getSimpleName(),name);
+        Query q = getEntityManager().createQuery(sql);
+        q.setParameter("id",value);
+        q.executeUpdate();
+       
+	}
 }

@@ -2061,7 +2061,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 //    	msg.setAccesskeyID("LTAIrgvAPlmGRPQY");
 //    	msg.setAccesskeyKey("oAIuo2xWVqnWOmrsoXLcLEFYvNCRr0");
     	isLocalHostRunning = true;
-    	
+    	PubAccountVO vo = dbf.findByUuid(msg.getPubAccountUuid(), PubAccountVO.class);
         FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
         chain.setName(String.format("add-host-%s", msg.getUuid()));
         chain.then(new NoRollbackFlow() {
@@ -2098,7 +2098,6 @@ public class VmInstanceBase extends AbstractVmInstance {
             @Override
             public void run(final FlowTrigger trigger, Map data) {
                 new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
-                PubAccountVO vo = dbf.findByUuid(msg.getPubAccountUuid(), PubAccountVO.class);
             	
                 CreateVmOnLocalMsg addlocalMsg = new CreateVmOnLocalMsg();
                 //TODO need input more variable
@@ -2130,16 +2129,18 @@ public class VmInstanceBase extends AbstractVmInstance {
             public void run(final FlowTrigger trigger, Map data) {
                 new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
 //                trigger.next();
-                UpdatePubVmInstanceDBMsg updateMsg = new UpdatePubVmInstanceDBMsg();
+                GetPubVmInstanceListMsg updateMsg = new GetPubVmInstanceListMsg();
                 bus.makeTargetServiceIdByResourceUuid(updateMsg, HostConstant.SERVICE_ID, msg.getUuid());
                 bus.send(updateMsg, new CloudBusCallBack(trigger) {
                     @Override
                     public void run(MessageReply reply) {
                         if (reply.isSuccess()) {
-                        	StartVmOnPubReply rep = (StartVmOnPubReply)reply;
-                        	VmECSInstanceEO updatedEo= new VmECSInstanceEO ();
-                        	updatedEo.setState(VmInstanceState.Running.toString());
-                        	dbf.updateAndRefresh(updatedEo);
+                        	//TODO let information lost
+                        	GetPubVmInstanceListReply rep = (GetPubVmInstanceListReply)reply;
+//                        	List<PubVmInstanceEO> oldEO = dbf.listByColumName(PubVmInstanceEO.class,"cloudType",rep.getCloudType());
+                        	List<PubVmInstanceEO> newPriderEO = rep.getPubVmVOFromVms();
+                        	dbf.removeByColumName(PubVmInstanceEO.class,"cloudType",rep.getCloudType());
+                        	dbf.persistCollection(newPriderEO);
                             trigger.next();
                         } else {
                             trigger.fail(reply.getError());

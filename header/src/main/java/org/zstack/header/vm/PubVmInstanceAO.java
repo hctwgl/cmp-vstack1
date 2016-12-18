@@ -20,6 +20,17 @@ public class PubVmInstanceAO {
     private String pubAccountUuid;
     
     @Column
+    private String providerUuid;
+    
+    public String getProviderUuid() {
+		return providerUuid;
+	}
+
+	public void setProviderUuid(String providerUuid) {
+		this.providerUuid = providerUuid;
+	}
+
+	@Column
     private String image;
  
    

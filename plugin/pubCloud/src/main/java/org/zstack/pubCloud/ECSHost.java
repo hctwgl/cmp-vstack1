@@ -212,8 +212,8 @@ public class ECSHost extends HostBase implements Host {
             handle((CheckNetworkPhysicalInterfaceMsg) msg);
         } else if (msg instanceof CreateVmOnLocalMsg) {
             handle((CreateVmOnLocalMsg) msg);
-        }  else if (msg instanceof UpdatePubVmInstanceDBMsg) {
-            handle((UpdatePubVmInstanceDBMsg) msg);
+        }  else if (msg instanceof GetPubVmInstanceListMsg) {
+            handle((GetPubVmInstanceListMsg) msg);
         }   else if (msg instanceof StopVmPubOnLocalMsg) {
             handle((StopVmPubOnLocalMsg) msg);
         } else if (msg instanceof RebootVmPubOnLocalMsg) {
@@ -1209,7 +1209,7 @@ public class ECSHost extends HostBase implements Host {
         });
     }
 
-    private void handle(final UpdatePubVmInstanceDBMsg msg) {
+    private void handle(final GetPubVmInstanceListMsg msg) {
     	
     	
     	  thdf.chainSubmit(new ChainTask(msg) {
@@ -1220,7 +1220,7 @@ public class ECSHost extends HostBase implements Host {
 
             @Override
             public void run(final SyncTaskChain chain) {
-            	updateVmDB(msg, msg, new NoErrorCompletion(chain) {
+            	getPubVmList(msg, msg, new NoErrorCompletion(chain) {
                     @Override
                     public void done() {
                         chain.next();
@@ -1336,13 +1336,12 @@ public class ECSHost extends HostBase implements Host {
             }
         });
     }
-
     
-    private void updateVmDB(final UpdatePubVmInstanceDBMsg spec, final NeedReplyMessage msg, final NoErrorCompletion completion) {
+    private void getPubVmList(final GetPubVmInstanceListMsg spec, final NeedReplyMessage msg, final NoErrorCompletion completion) {
         final GetPubVmCmd cmd = new GetPubVmCmd();
          cmd.setAccess_key_id(spec.getAccesskeyID());
          cmd.setAccess_key_secret(spec.getAccesskeyKEY());
-          restf.asyncJsonPost(getPubVmPath, cmd, new JsonAsyncRESTCallback<StartVmPubResponse>(msg, completion) {
+          restf.asyncJsonPost(getPubVmPath, cmd, new JsonAsyncRESTCallback<GetPubVmResponse>(msg, completion) {
             @Override
             public void fail(ErrorCode err) {
                 StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
@@ -1353,26 +1352,25 @@ public class ECSHost extends HostBase implements Host {
             }
 
             @Override
-            public void success(StartVmPubResponse ret) {
-            	StartVmOnPubReply reply = new StartVmOnPubReply();
+            public void success(GetPubVmResponse ret) {
+            	GetPubVmInstanceListReply reply = new GetPubVmInstanceListReply();
+            	reply.setCloudType("ECS");
                 if (ret.isSuccess()) {
-                    String info = String.format("successfully start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s]", spec.getUuid(), spec.getName(),
-                            self.getUuid(), self.getManagementIp());
+                    String info = String.format("successfully Get Vm Lists");
                     logger.debug(info);
                 } else {
-                    String err = String.format("failed to start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", spec.getUuid(), spec.getName(),
-                            self.getUuid(), self.getManagementIp(), ret.getError());
+                    String err = String.format("failed to Get Vm Lists");
                     reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_START_VM_ON_HYPERVISOR, err));
                     logger.warn(err);
                 }
-                reply.setVmUuid(ret.getVmUuid());
+                reply.setVms(ret.getVms());
                 bus.reply(msg, reply);
                 completion.done();
             }
 
             @Override
-            public Class<StartVmPubResponse> getReturnClass() {
-                return StartVmPubResponse.class;
+            public Class<GetPubVmResponse> getReturnClass() {
+                return GetPubVmResponse.class;
             }
         });
     }

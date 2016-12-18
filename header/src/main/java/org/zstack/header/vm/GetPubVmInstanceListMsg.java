@@ -5,7 +5,7 @@ import org.zstack.header.host.HostMessage;
 import org.zstack.header.message.NeedReplyMessage;
 
 @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
-public class UpdatePubVmInstanceDBMsg extends NeedReplyMessage implements HostMessage {
+public class GetPubVmInstanceListMsg extends NeedReplyMessage implements HostMessage {
     private VmPubInstanceSpec vmSpec;
    
     private String name;

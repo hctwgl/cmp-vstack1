@@ -7,6 +7,7 @@ import org.zstack.header.core.ApiTimeout;
 import org.zstack.header.core.validation.Validation;
 import org.zstack.header.storage.snapshot.APIDeleteVolumeSnapshotMsg;
 import org.zstack.header.vm.APICreateVmInstanceMsg;
+import org.zstack.header.vm.ECSNode;
 import org.zstack.header.vm.VmBootDevice;
 import org.zstack.header.volume.APICreateVolumeSnapshotMsg;
 import org.zstack.network.securitygroup.SecurityGroupRuleTO;
@@ -732,10 +733,6 @@ public class ECSAgentCommands {
      		public void setEx_client_token(String ex_client_token) {
      			this.ex_client_token = ex_client_token;
      		}
-        
-        
-               
-         
     }
     public static class StartVmPubResponse extends AgentResponse {
     	private String vmUuid;
@@ -861,16 +858,21 @@ public class ECSAgentCommands {
         }
     }
     
-    public static class GetPubVmResponse extends AgentCommand {
-    	private String vmUuid;
+    public static class GetPubVmResponse extends AgentResponse {
 
-        public String getVmUuid() {
-            return vmUuid;
-        }
+    	private List<ECSNode> vms;
+    	
+    	public List<ECSNode> getVms() {
+    		return vms;
+    	}
 
-        public void setVmUuid(String vmUuid) {
-            this.vmUuid = vmUuid;
-        }
+    	public void setVms(List<ECSNode> vms) {
+    		this.vms = vms;
+    	}
+
+    	public GetPubVmResponse(){
+    		vms = new ArrayList<ECSNode>();
+    	}
     }
     
     public static class StopVmCmd extends AgentCommand {
