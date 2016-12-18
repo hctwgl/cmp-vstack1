@@ -76,6 +76,7 @@ public class ECSHost extends HostBase implements Host {
     private String pingPath;
     private String checkPhysicalNetworkInterfacePath;
     private String startVmPath;
+    private String getPubVmPath;
     private String stopVmPath;
     private String rebootVmPath;
     private String destroyVmPath;
@@ -118,7 +119,11 @@ public class ECSHost extends HostBase implements Host {
         ub = UriComponentsBuilder.fromHttpUrl(baseUrl);
         ub.path(PubCloudConstant.KVM_START_VM_PATH);
         startVmPath = ub.build().toString();
-
+        
+        ub = UriComponentsBuilder.fromHttpUrl(baseUrl);
+        ub.path(PubCloudConstant.KVM_GET_PUB_VM_PATH);
+        getPubVmPath = ub.build().toString();
+        
         ub = UriComponentsBuilder.fromHttpUrl(baseUrl);
         ub.path(PubCloudConstant.KVM_STOP_VM_PATH);
         stopVmPath = ub.build().toString();
@@ -207,7 +212,9 @@ public class ECSHost extends HostBase implements Host {
             handle((CheckNetworkPhysicalInterfaceMsg) msg);
         } else if (msg instanceof CreateVmOnLocalMsg) {
             handle((CreateVmOnLocalMsg) msg);
-        } else if (msg instanceof StopVmPubOnLocalMsg) {
+        }  else if (msg instanceof UpdatePubVmInstanceDBMsg) {
+            handle((UpdatePubVmInstanceDBMsg) msg);
+        }   else if (msg instanceof StopVmPubOnLocalMsg) {
             handle((StopVmPubOnLocalMsg) msg);
         } else if (msg instanceof RebootVmPubOnLocalMsg) {
             handle((RebootVmPubOnLocalMsg) msg);
@@ -1202,7 +1209,7 @@ public class ECSHost extends HostBase implements Host {
         });
     }
 
-    private void handle(final CreateVmOnLocalMsg msg) {
+    private void handle(final UpdatePubVmInstanceDBMsg msg) {
     	
     	
     	  thdf.chainSubmit(new ChainTask(msg) {
@@ -1213,7 +1220,7 @@ public class ECSHost extends HostBase implements Host {
 
             @Override
             public void run(final SyncTaskChain chain) {
-            	createVm(msg, msg, new NoErrorCompletion(chain) {
+            	updateVmDB(msg, msg, new NoErrorCompletion(chain) {
                     @Override
                     public void done() {
                         chain.next();
@@ -1232,6 +1239,37 @@ public class ECSHost extends HostBase implements Host {
             }
         });
     }
+    
+    private void handle(final CreateVmOnLocalMsg msg) {
+    	
+    	
+  	  thdf.chainSubmit(new ChainTask(msg) {
+          @Override
+          public String getSyncSignature() {
+              return id;
+          }
+
+          @Override
+          public void run(final SyncTaskChain chain) {
+          	createVm(msg, msg, new NoErrorCompletion(chain) {
+                  @Override
+                  public void done() {
+                      chain.next();
+                  }
+              });
+          }
+
+          @Override
+          public String getName() {
+              return String.format("start-vm-on-kvm-%s", self.getUuid());
+          }
+
+          @Override
+          protected int getSyncLevel() {
+              return getHostSyncLevel();
+          }
+      });
+  }
 
     @Transactional
     private L2NetworkInventory getL2NetworkTypeFromL3NetworkUuid(String l3NetworkUuid) {
@@ -1265,6 +1303,46 @@ public class ECSHost extends HostBase implements Host {
          sys_disk.put("category", "cloud_efficiency");
          cmd.setEx_system_disk(sys_disk);
           restf.asyncJsonPost(startVmPath, cmd, new JsonAsyncRESTCallback<StartVmPubResponse>(msg, completion) {
+            @Override
+            public void fail(ErrorCode err) {
+                StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();
+                reply.setError(err);
+                reply.setSuccess(false);
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public void success(StartVmPubResponse ret) {
+            	StartVmOnPubReply reply = new StartVmOnPubReply();
+                if (ret.isSuccess()) {
+                    String info = String.format("successfully start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s]", spec.getUuid(), spec.getName(),
+                            self.getUuid(), self.getManagementIp());
+                    logger.debug(info);
+                } else {
+                    String err = String.format("failed to start vm[uuid:%s name:%s] on kvm host[uuid:%s, ip:%s], because %s", spec.getUuid(), spec.getName(),
+                            self.getUuid(), self.getManagementIp(), ret.getError());
+                    reply.setError(errf.instantiateErrorCode(HostErrors.FAILED_TO_START_VM_ON_HYPERVISOR, err));
+                    logger.warn(err);
+                }
+                reply.setVmUuid(ret.getVmUuid());
+                bus.reply(msg, reply);
+                completion.done();
+            }
+
+            @Override
+            public Class<StartVmPubResponse> getReturnClass() {
+                return StartVmPubResponse.class;
+            }
+        });
+    }
+
+    
+    private void updateVmDB(final UpdatePubVmInstanceDBMsg spec, final NeedReplyMessage msg, final NoErrorCompletion completion) {
+        final GetPubVmCmd cmd = new GetPubVmCmd();
+         cmd.setAccess_key_id(spec.getAccesskeyID());
+         cmd.setAccess_key_secret(spec.getAccesskeyKEY());
+          restf.asyncJsonPost(getPubVmPath, cmd, new JsonAsyncRESTCallback<StartVmPubResponse>(msg, completion) {
             @Override
             public void fail(ErrorCode err) {
                 StartVmOnHypervisorReply reply = new StartVmOnHypervisorReply();

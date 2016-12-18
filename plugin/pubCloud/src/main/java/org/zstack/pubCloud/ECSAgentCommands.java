@@ -582,11 +582,8 @@ public class ECSAgentCommands {
     @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
     public static class StartVmCmd extends AgentCommand {
     	
-     
-     
 		private String hostManagementIp;
-        
-        private String name;
+         private String name;
         private String vmInstanceUuid;
         private String access_key_id;
         private String access_key_secret;
@@ -830,6 +827,50 @@ public class ECSAgentCommands {
         public void setProtocol(String protocol) {
                         this.protocol = protocol;
                 }
+    }
+    
+    
+    
+    public static class GetPubVmCmd extends AgentCommand {
+    	private String vmUuid;
+    	 private String access_key_id;
+         private String access_key_secret;
+         
+        public String getAccess_key_id() {
+			return access_key_id;
+		}
+
+		public void setAccess_key_id(String access_key_id) {
+			this.access_key_id = access_key_id;
+		}
+
+		public String getAccess_key_secret() {
+			return access_key_secret;
+		}
+
+		public void setAccess_key_secret(String access_key_secret) {
+			this.access_key_secret = access_key_secret;
+		}
+
+		public String getVmUuid() {
+            return vmUuid;
+        }
+
+        public void setVmUuid(String vmUuid) {
+            this.vmUuid = vmUuid;
+        }
+    }
+    
+    public static class GetPubVmResponse extends AgentCommand {
+    	private String vmUuid;
+
+        public String getVmUuid() {
+            return vmUuid;
+        }
+
+        public void setVmUuid(String vmUuid) {
+            this.vmUuid = vmUuid;
+        }
     }
     
     public static class StopVmCmd extends AgentCommand {

@@ -2130,24 +2130,22 @@ public class VmInstanceBase extends AbstractVmInstance {
             public void run(final FlowTrigger trigger, Map data) {
                 new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
 //                trigger.next();
-//                PubAccountVO vo = dbf.findByUuid(msg.getAccountUuid(), PubAccountVO.class);
-//            	
-//                UpdatePubVmInstanceDBMsg addlocalMsg = new UpdatePubVmInstanceDBMsg();
-//                bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
-//                bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
-//                    @Override
-//                    public void run(MessageReply reply) {
-//                        if (reply.isSuccess()) {
-//                        	StartVmOnPubReply rep = (StartVmOnPubReply)reply;
-//                        	VmECSInstanceEO updatedEo= new VmECSInstanceEO ();
-//                        	updatedEo.setState(VmInstanceState.Running.toString());
-//                        	dbf.updateAndRefresh(updatedEo);
-//                            trigger.next();
-//                        } else {
-//                            trigger.fail(reply.getError());
-//                        }
-//                    }
-//                });
+                UpdatePubVmInstanceDBMsg updateMsg = new UpdatePubVmInstanceDBMsg();
+                bus.makeTargetServiceIdByResourceUuid(updateMsg, HostConstant.SERVICE_ID, msg.getUuid());
+                bus.send(updateMsg, new CloudBusCallBack(trigger) {
+                    @Override
+                    public void run(MessageReply reply) {
+                        if (reply.isSuccess()) {
+                        	StartVmOnPubReply rep = (StartVmOnPubReply)reply;
+                        	VmECSInstanceEO updatedEo= new VmECSInstanceEO ();
+                        	updatedEo.setState(VmInstanceState.Running.toString());
+                        	dbf.updateAndRefresh(updatedEo);
+                            trigger.next();
+                        } else {
+                            trigger.fail(reply.getError());
+                        }
+                    }
+                });
                 
             }
         })
