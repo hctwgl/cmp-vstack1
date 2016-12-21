@@ -72,6 +72,8 @@ public interface DatabaseFacade {
     void eoCleanup(Class VOClazz);
 
     DataSource getDataSource();
+    
+    <T> List<T> listByColumName(Class entityClass, String name, String value);
 
     DataSource getExtraDataSource();
 

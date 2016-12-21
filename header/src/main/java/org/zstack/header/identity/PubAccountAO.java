@@ -16,7 +16,7 @@ public class PubAccountAO {
 	@Column
 	@Enumerated(EnumType.STRING)
 	private PubCloudType cloudType;
-	 @Column
+	@Column
 	    private String description;
     @Column
     private String username;

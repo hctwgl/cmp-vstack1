@@ -20,26 +20,16 @@ public class PubVmInstanceAO {
     private String pubAccountUuid;
     
     @Column
-    private String providerUuid;
-    
-    public String getProviderUuid() {
-		return providerUuid;
-	}
-
-	public void setProviderUuid(String providerUuid) {
-		this.providerUuid = providerUuid;
-	}
+    private String pubID;
 
 	@Column
     private String image;
- 
    
 	@Column
     private String cloudType;
     
     @Column
     private String cpuInfo;
-
 
     @Column
     private String memorySize;
@@ -66,6 +56,7 @@ public class PubVmInstanceAO {
         this.uuid = other.uuid;
         this.hostname = other.hostname;
         this.region = other.region;
+        this.pubID = other.pubID;
         this.pubAccountUuid = other.pubAccountUuid;
         this.description = other.description;
         this.image = other.image;
@@ -108,7 +99,6 @@ public class PubVmInstanceAO {
 		this.description = description;
 	}
 	 
-	 
 
 	public String getPubAccountUuid() {
 		return pubAccountUuid;
@@ -126,6 +116,13 @@ public class PubVmInstanceAO {
 		this.image = image;
 	}
 
+	public String getPubID() {
+		return pubID;
+	}
+
+	public void setPubID(String pubID) {
+		this.pubID = pubID;
+	}
 	 
 	public String getCloudType() {
 		return cloudType;
@@ -142,7 +139,6 @@ public class PubVmInstanceAO {
 	public void setCpuInfo(String cpuInfo) {
 		this.cpuInfo = cpuInfo;
 	}
-
 	 
 
 	public String getMemorySize() {

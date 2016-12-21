@@ -4,53 +4,62 @@ import org.zstack.header.core.ApiTimeout;
 import org.zstack.header.host.HostMessage;
 import org.zstack.header.message.NeedReplyMessage;
 
-@ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
+@ApiTimeout(apiClasses = { APICreateVmInstanceMsg.class })
 public class GetPubVmInstanceListMsg extends NeedReplyMessage implements HostMessage {
-    private VmPubInstanceSpec vmSpec;
-   
-    private String name;
-	 private String uuid;
-	    public String getUuid() {
+	private VmPubInstanceSpec vmSpec;
+
+	private String name;
+	private String uuid;
+
+	public String getUuid() {
 		return uuid;
 	}
-	   
+
+	private String cloudType;
+
+	public String getCloudType() {
+		return cloudType;
+	}
+
+	public void setCloudType(String cloudType) {
+		this.cloudType = cloudType;
+	}
+
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
 	}
 
-		private String accesskeyKEY;
-	    private String accesskeyID;
+	private String accesskeyKEY;
+	private String accesskeyID;
 
-	    public String getName() {
-			return name;
-		}
+	public String getName() {
+		return name;
+	}
 
-		public void setName(String name) {
-			this.name = name;
-		}
+	public void setName(String name) {
+		this.name = name;
+	}
 
-		public String getAccesskeyKEY() {
-			return accesskeyKEY;
-		}
+	public String getAccesskeyKEY() {
+		return accesskeyKEY;
+	}
 
-		public void setAccesskeyKEY(String accesskeyKEY) {
-			this.accesskeyKEY = accesskeyKEY;
-		}
+	public void setAccesskeyKEY(String accesskeyKEY) {
+		this.accesskeyKEY = accesskeyKEY;
+	}
 
-		public String getAccesskeyID() {
-			return accesskeyID;
-		}
+	public String getAccesskeyID() {
+		return accesskeyID;
+	}
 
-		public void setAccesskeyID(String accesskeyID) {
-			this.accesskeyID = accesskeyID;
-		}
-
-   
+	public void setAccesskeyID(String accesskeyID) {
+		this.accesskeyID = accesskeyID;
+	}
 
 	@Override
-    public String getHostUuid() {
-        return vmSpec.getUuid();
-    }
+	public String getHostUuid() {
+		return vmSpec.getUuid();
+	}
 
 	public VmPubInstanceSpec getVmSpec() {
 		return vmSpec;

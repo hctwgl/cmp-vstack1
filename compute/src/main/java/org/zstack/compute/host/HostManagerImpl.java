@@ -164,10 +164,12 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 	        host.handleMessage((Message) msg);
 	        return;
     	}
+    	 
     	if (msg instanceof GetPubVmInstanceListMsg) {
-    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		String cloudType =((GetPubVmInstanceListMsg) msg).getCloudType();
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(cloudType));
     		HostVO tmpvo = new HostVO();
-    		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getId());
+    		tmpvo.setUuid(((GetPubVmInstanceListMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
 	        return;

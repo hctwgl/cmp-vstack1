@@ -163,9 +163,12 @@
     <message>
         <name>org.zstack.header.vm.APIGetPubCloudTypesMsg</name>
     </message>
-      <message>
+    <message>
         <name>org.zstack.header.vm.APIQueryPubVmInstanceMsg</name>
         <serviceId>query</serviceId>
+    </message>
+    <message>
+        <name>org.zstack.header.vm.APIUpdatePubVmInstanceMsg</name>
     </message>
     
   <!--   

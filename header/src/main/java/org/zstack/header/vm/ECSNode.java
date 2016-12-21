@@ -2,61 +2,52 @@ package org.zstack.header.vm;
 
 import org.zstack.header.tag.AutoDeleteTag;
 import org.zstack.header.vo.EO;
+
+import java.util.List;
+
 import javax.persistence.*;
  
-public class ECSNode extends PubVmInstanceAO{
+public class ECSNode   {
 	
 	private String id;
 	private String name;
 	private String state;
-	private String public_ips;
-	private String private_ips;
+	private List<String> public_ips;
+	private List<String> private_ips;
 	private String driver;
-	private String size;
-	private String created_at;
-	private String image;
-	private String extra;
+	private String configuration;
+	private String node;
 	
+
+	
+	public String getNode() {
+		return node;
+	}
+	public void setNode(String node) {
+		this.node = node;
+	}
 	public String getDriver() {
 		return driver;
 	}
 	public void setDriver(String driver) {
 		this.driver = driver;
+	} 
+ 
+	public String getName() {
+		return name;
 	}
-	public String getSize() {
-		return size;
-	}
-	public void setSize(String size) {
-		this.size = size;
-	}
-	public String getCreated_at() {
-		return created_at;
-	}
-	public void setCreated_at(String created_at) {
-		this.created_at = created_at;
-	}
-	public String getImage() {
-		return image;
-	}
-	public void setImage(String image) {
-		this.image = image;
-	}
-	public String getExtra() {
-		return extra;
-	}
-	public void setExtra(String extra) {
-		this.extra = extra;
-	}
-	
-
+	 
 	public String getId() {
 		return id;
 	}
 	public void setId(String id) {
 		this.id = id;
 	}
-	public String getName() {
-		return name;
+	public String getConfiguration() {
+		return configuration;
+	}
+	public void setConfiguration(String configuration) {
+		this.configuration = configuration;
 	}
 	public void setName(String name) {
 		this.name = name;
@@ -67,17 +58,18 @@ public class ECSNode extends PubVmInstanceAO{
 	public void setState(String state) {
 		this.state = state;
 	}
-	public String getPublic_ips() {
+	public List<String> getPublic_ips() {
 		return public_ips;
 	}
-	public void setPublic_ips(String public_ips) {
+	public void setPublic_ips(List<String> public_ips) {
 		this.public_ips = public_ips;
 	}
-	public String getPrivate_ips() {
+	public List<String> getPrivate_ips() {
 		return private_ips;
 	}
-	public void setPrivate_ips(String private_ips) {
+	public void setPrivate_ips(List<String> private_ips) {
 		this.private_ips = private_ips;
 	}
+	 
 	
 }

@@ -860,18 +860,18 @@ public class ECSAgentCommands {
     
     public static class GetPubVmResponse extends AgentResponse {
 
-    	private List<ECSNode> vms;
+    	private List<ECSNode> nodes;
     	
     	public List<ECSNode> getVms() {
-    		return vms;
+    		return nodes;
     	}
 
-    	public void setVms(List<ECSNode> vms) {
-    		this.vms = vms;
+    	public void setVms(List<ECSNode> nodes) {
+    		this.nodes = nodes;
     	}
 
     	public GetPubVmResponse(){
-    		vms = new ArrayList<ECSNode>();
+    		nodes = new ArrayList<ECSNode>();
     	}
     }
     

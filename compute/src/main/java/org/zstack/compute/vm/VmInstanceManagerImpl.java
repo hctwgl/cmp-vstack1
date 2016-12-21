@@ -60,6 +60,7 @@ import org.zstack.header.message.APIMessage;
 import org.zstack.header.message.Message;
 import org.zstack.header.message.MessageReply;
 import org.zstack.header.network.l3.*;
+import org.zstack.header.query.APIQueryMessage;
 import org.zstack.header.search.SearchOp;
 import org.zstack.header.tag.SystemTagCreateMessageValidator;
 import org.zstack.header.tag.SystemTagVO;
@@ -176,9 +177,9 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     	if(msg.getVmInstanceUuid()==null){
     		return ;
     	}
-    	if(msg instanceof StartNewCreatedPubVmInstanceMsg) {
+    	if((msg instanceof StartNewCreatedPubVmInstanceMsg) ||(msg instanceof UpdatePubVmInstanceMsg) ) {
     		PubVmInstanceVO eo = new PubVmInstanceVO();
-    		eo.setUuid(((StartNewCreatedPubVmInstanceMsg) msg).getUuid());
+    		eo.setUuid((msg.getVmInstanceUuid()));
     		VmInstance vm = new VmInstanceBase(eo); 
             vm.handleMessage((Message) msg);
     	}else  {
@@ -214,9 +215,11 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
     private void handleApiMessage(APIMessage msg) {
         if (msg instanceof APICreateVmInstanceMsg) {
             handle((APICreateVmInstanceMsg) msg);
+        } else if (msg instanceof APIUpdatePubVmInstanceMsg) {
+            handle((APIUpdatePubVmInstanceMsg) msg);
         }else if (msg instanceof APIGetPubCloudTypesMsg) {
             handle((APIGetPubCloudTypesMsg) msg);
-        }else if (msg instanceof APICreatePublicVmInstanceMsg) {
+        } else if (msg instanceof APICreatePublicVmInstanceMsg) {
             handle((APICreatePublicVmInstanceMsg) msg);
         } else if (msg instanceof APIListVmInstanceMsg) {
             handle((APIListVmInstanceMsg) msg);
@@ -556,6 +559,28 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
             }
         });
     }
+    private void doUpdatePubVmInstance(final APIQueryMessage cmsg, ReturnValueCompletion<UpdatePubVmInstanceReply> completion) {
+    	 UpdatePubVmInstanceMsg smsg = new UpdatePubVmInstanceMsg();
+    	 smsg.setUuid(cmsg.getId());
+         bus.makeTargetServiceIdByResourceUuid(smsg, VmInstanceConstant.SERVICE_ID, Platform.getUuid());
+         bus.send(smsg, new CloudBusCallBack() {
+             @Override
+             public void run(MessageReply reply) {
+                 try {
+                	 UpdatePubVmInstanceReply cr = new UpdatePubVmInstanceReply();
+                     if (reply.isSuccess()) {
+                         completion.success(cr);
+                     } else {
+                         completion.fail(reply.getError());
+                     }
+                 } catch (Exception e) {
+                     bus.logExceptionWithMessageDump(cmsg, e);
+                     bus.replyErrorByMessageType(cmsg, e);
+                 }
+             }
+         });
+        
+    }
 
     
     private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg, ReturnValueCompletion<CreatePubVmInstanceReply> completion) {
@@ -707,6 +732,23 @@ public class VmInstanceManagerImpl extends AbstractService implements VmInstance
                 bus.publish(evt);
             }
         });
+    }
+    
+    private void handle(final APIUpdatePubVmInstanceMsg msg) {
+    	  doUpdatePubVmInstance(msg, new ReturnValueCompletion<UpdatePubVmInstanceReply>() {
+    		  APIUpdatePubVmInstanceReply reply = new APIUpdatePubVmInstanceReply();
+              @Override
+              public void success(UpdatePubVmInstanceReply returnValue) {
+            	  bus.reply(msg, reply);
+              }
+
+              @Override
+              public void fail(ErrorCode errorCode) {
+            	  reply.setSuccess(false);
+            	  bus.reply(msg, reply);
+              }
+          });
+    	
     }
 
     @Override

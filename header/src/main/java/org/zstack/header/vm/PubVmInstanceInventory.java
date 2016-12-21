@@ -14,7 +14,8 @@ public class PubVmInstanceInventory {
 	    private String hostname;
 	    private String description;
 	    private String pubAccountUuid;
-	    private String image;
+	    private String pubID;
+		private String image;
 	    private String cloudType;
 	    private String cpuInfo;
 	    private String memorySize;
@@ -31,6 +32,7 @@ public class PubVmInstanceInventory {
         inv.setHostname(vo.getHostname());
         inv.setDescription(vo.getDescription());
         inv.setPubAccountUuid(vo.getPubAccountUuid());
+        inv.setPubID(vo.getPubID());
         inv.setImage(vo.getImage());
         inv.setCloudType(vo.getCloudType());
         inv.setCpuInfo(vo.getCpuInfo());
@@ -50,7 +52,15 @@ public class PubVmInstanceInventory {
         }
         return lst;
     }
+    
+    
+    public String getPubID() {
+		return pubID;
+	}
 
+	public void setPubID(String pubID) {
+		this.pubID = pubID;
+	}
 	public String getUuid() {
 		return uuid;
 	}
