@@ -1,27 +1,23 @@
-<!--
- 根据本配置文件扩展云类型
-出现的类型则出现在账户和云类型里面
- -->
-<?xml version="1.0" encoding="GB2312"?>
+<?xml version="1.0" encoding="UTF-8"?>  
+<pubClouds>
     <pubCloud>
         <name>ECS</name>
         <!-- 配置模板根据云厂商提供的方式进行填写。如云厂商没有提供模板，则InstanceModel为空。若提供，则分别填上，然后在agent端进行匹配转换为云商的模板 -->
         <InstanceModels>
             <InstanceModel>
-                <CPU>1</CPU>
-                <Image>ecs.sds.linux</Image>
-                <Disk>1024</Disk>
+            	<uuid>11</uuid>    <!-- uuid请确保不同的配置模板不同ID -->
+                <cpuNum>1</cpuNum>
+                <image>ecs.sds.linux</image>
+                <diskSize>1024</diskSize>
             </InstanceModel>
+            
             <InstanceModel>
-                <CPU>2</CPU>
-                <Image>ecs.sds.linux</Image>
-                <Disk>2048</Disk>
+            <uuid>12</uuid>
+                <cpuNum>2</cpuNum>
+                <image>ecs.sds.linux</image>
+                <diskSize>2048</diskSize>
             </InstanceModel>
-            <InstanceModel>
-                <CPU>3</CPU>
-                <Image>ecs.sds.linux</Image>
-                <Disk>4096</Disk>
-            </InstanceModel>
+            
         </InstanceModels>
         <!-- 在前端，是所有身份信息的并集。此处定义此云厂商定义身份所需要的最小集，在java处理时，只把此项传到agent -->
         <AccountInfo>
@@ -33,13 +29,33 @@
      <name>EC2</name>
         <!-- 配置模板根据云厂商提供的方式进行填写。如云厂商没有提供模板，则InstanceModel为空。若提供，则分别填上，然后在agent端进行匹配转换为云商的模板 -->
         <InstanceModels>
+        	<InstanceModel>
+            	<uuid>21</uuid>    <!-- uuid请确保不同的配置模板不同ID -->
+                <cpuNum>211</cpuNum>
+                <image>ecs.sds.linux</image>
+                <diskSize>1024</diskSize>
+            </InstanceModel>
         </InstanceModels>
         <!-- 在前端，是所有身份信息的并集。此处定义此云厂商定义身份所需要的最小集，在java处理时，只把此项传到agent -->
         <AccountInfo>
            <value>token</value>
-           <value></value>
         </AccountInfo>
     </pubCloud>
+    
     <pubCloud>
+     	<name>Docker</name>
+        <!-- 配置模板根据云厂商提供的方式进行填写。如云厂商没有提供模板，则InstanceModel为空。若提供，则分别填上，然后在agent端进行匹配转换为云商的模板 -->
+        <InstanceModels>
+        <InstanceModel>
+            	<uuid>31</uuid>    <!-- uuid请确保不同的配置模板不同ID -->
+                <cpuNum>321</cpuNum>
+                <image>ecs.sds.linux</image>
+                <diskSize>1024</diskSize>
+            </InstanceModel>
+        </InstanceModels>
+        <!-- 在前端，是所有身份信息的并集。此处定义此云厂商定义身份所需要的最小集，在java处理时，只把此项传到agent -->
+        <AccountInfo>
+           <value>passwor</value>
+        </AccountInfo>
     </pubCloud>
-</xml>
+</pubClouds>

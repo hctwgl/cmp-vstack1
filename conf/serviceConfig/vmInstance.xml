@@ -73,6 +73,7 @@
         <name>org.zstack.header.vm.APIQueryVmNicMsg</name>
         <serviceId>query</serviceId>
     </message>
+    
     <message>
         <name>org.zstack.header.vm.APIAttachL3NetworkToVmMsg</name>
     </message>
@@ -170,14 +171,12 @@
     <message>
         <name>org.zstack.header.vm.APIUpdatePubVmInstanceMsg</name>
     </message>
-    
-  <!--   
-    
    
     <message>
-        <name>org.zstack.header.vm.APICreatePubVmInstanceMsg</name>
-        <serviceId>query</serviceId>
+        <name>org.zstack.header.vm.APIQueryPubVmInstanceOfferingMsg</name>
     </message>
+      <!--   
+    
     <message>
         <name>org.zstack.header.vm.APIDeletePubVmInstanceMsg</name>
         <serviceId>query</serviceId>

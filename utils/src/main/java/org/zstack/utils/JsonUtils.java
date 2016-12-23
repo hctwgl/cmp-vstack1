@@ -53,7 +53,7 @@ public class JsonUtils {
 			List<InstanceMode> instanceMDs = new ArrayList<InstanceMode>();
 			if(invernts.getLength()!=0){
 				for(int j = 0;j<invernts.getLength();j++){
-					Node temnode = invernts.item(i);
+					Node temnode = invernts.item(j);
 					Element temele = (Element) temnode;
 					InstanceMode temMode = new InstanceMode();
 					temMode.setCpuNum(temele.getElementsByTagName("cpuNum").item(0).getTextContent());
