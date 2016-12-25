@@ -88,9 +88,36 @@ public class APICreatePublicVmInstanceMsg extends APICreateMessage {
     private String accountUuid;
     
     private String description;
-    private String memorySize;
-    private String cpuInfo;
+    private String memory;
+    private String region;
+    public String getMemory() {
+		return memory;
+	}
+	public void setMemory(String memory) {
+		this.memory = memory;
+	}
+	public String getRegion() {
+		return region;
+	}
+	public void setRegion(String region) {
+		this.region = region;
+	}
+	public String getDiskSize() {
+		return diskSize;
+	}
+	public void setDiskSize(String diskSize) {
+		this.diskSize = diskSize;
+	}
+	public String getInstanceOfferUuid() {
+		return instanceOfferUuid;
+	}
+	public void setInstanceOfferUuid(String instanceOfferUuid) {
+		this.instanceOfferUuid = instanceOfferUuid;
+	}
+	private String cpuInfo;
     private String image;
+    private String diskSize;
+    private String instanceOfferUuid;
       
     
     public String getHostname() {
@@ -118,12 +145,7 @@ public class APICreatePublicVmInstanceMsg extends APICreateMessage {
 	public void setCloudType(String cloudType) {
 		this.cloudType = cloudType;
 	}
-	public String getMemorySize() {
-		return memorySize;
-	}
-	public void setMemorySize(String memorySize) {
-		this.memorySize = memorySize;
-	}
+	 
 	public String getCpuInfo() {
 		return cpuInfo;
 	}

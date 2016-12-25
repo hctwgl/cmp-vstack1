@@ -20,6 +20,15 @@ public class StartNewCreatedPubVmInstanceMsg extends NeedReplyMessage implements
 	private String memorySize;
 	private String otherInfo;
 	private String region;
+	private String instanceOfferringUuid;
+	public String getInstanceOfferringUuid() {
+		return instanceOfferringUuid;
+	}
+
+	public void setInstanceOfferringUuid(String instanceOfferringUuid) {
+		this.instanceOfferringUuid = instanceOfferringUuid;
+	}
+
 	private Timestamp createDate;
 	private Timestamp lastOpDate;
 	private String state;

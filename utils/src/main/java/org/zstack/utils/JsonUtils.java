@@ -20,6 +20,26 @@ import org.xml.sax.SAXException;
  */
 public class JsonUtils {
 
+	
+	
+	public static PubCloud getPubCloudConfByType(String type){
+		String filename="../webapps/zstack/WEB-INF/classes/pubCloudInfo.xml";
+		List<PubCloud> PubCloud = getPubCloudConf(filename);
+		PubCloud cloud = new PubCloud();
+		if(PubCloud.size()!=0){
+			for(PubCloud tmp : PubCloud){
+				if(tmp.getName().equals(type)){
+					cloud = tmp;
+					break;
+				}
+				
+			}
+		}
+		return cloud;
+	}
+	
+	
+	
 	public static List<PubCloud> getPubCloudConf(String fileName){
 		DocumentBuilder builder;
 		Document doc = null;
@@ -44,35 +64,50 @@ public class JsonUtils {
 			Element ele = (Element) node;
 			
 			PubCloud tmpCloud = new PubCloud();
-			tmpCloud.setName(ele.getElementsByTagName("name").item(0).getTextContent());
+			tmpCloud.setName(ele.getElementsByTagName("name").item(0).getTextContent());   
+			//TODO 判断为不同的云种类后，返回不同的对象模型（）。还是并集？
 			
 			NodeList invernts = ele.getElementsByTagName("InstanceModel");
-			
-			
-			
-			List<InstanceMode> instanceMDs = new ArrayList<InstanceMode>();
 			if(invernts.getLength()!=0){
-				for(int j = 0;j<invernts.getLength();j++){
-					Node temnode = invernts.item(j);
-					Element temele = (Element) temnode;
-					InstanceMode temMode = new InstanceMode();
-					temMode.setCpuNum(temele.getElementsByTagName("cpuNum").item(0).getTextContent());
-					temMode.setDiskSize(temele.getElementsByTagName("image").item(0).getTextContent() );
-					temMode.setImage(temele.getElementsByTagName("diskSize").item(0).getTextContent());
-					instanceMDs.add(temMode);
+				List<InstanceMode> instanceMDs = new ArrayList<InstanceMode>();
+				if(invernts.getLength()!=0){
+					for(int j = 0;j<invernts.getLength();j++){
+						Node temnode = invernts.item(j);
+						Element temele = (Element) temnode;
+						InstanceMode temMode = new InstanceMode();
+						temMode.setCpuNum(temele.getElementsByTagName("cpuNum").item(0).getTextContent());
+						temMode.setMemory(temele.getElementsByTagName("memory").item(0).getTextContent());
+						instanceMDs.add(temMode);
+					}
+					tmpCloud.setInstanceMD(instanceMDs);
 				}
-				tmpCloud.setInstanceMD(instanceMDs);
 			}
 			
-
-			NodeList accountInfos = ele.getElementsByTagName("value");
-			List<String> infos = new ArrayList<String>();
-			if(accountInfos.getLength()!=0){
-				for(int j = 0;j<accountInfos.getLength();j++){
-					infos.add( accountInfos.item(j).getTextContent());
+			
+			
+			NodeList images = ele.getElementsByTagName("image");
+			if(images.getLength()!=0){
+				List<String> imas = new ArrayList<String>();
+				if(images.getLength()!=0){
+					for(int j = 0;j<images.getLength();j++){
+						imas.add( images.item(j).getTextContent());
+					}
+					tmpCloud.setImages(imas);
 				}
-				tmpCloud.setAccountInfo(infos);
+
 			}
+			
+			NodeList accountInfos = ele.getElementsByTagName("accountInfo");
+			if(accountInfos.getLength()!=0){
+				List<String> infos = new ArrayList<String>();
+				if(accountInfos.getLength()!=0){
+					for(int j = 0;j<accountInfos.getLength();j++){
+						infos.add( accountInfos.item(j).getTextContent());
+					}
+					tmpCloud.setAccountInfo(infos);
+				}
+			}
+			
 			pubClouds.add(tmpCloud);	 
 		}
 		return pubClouds;

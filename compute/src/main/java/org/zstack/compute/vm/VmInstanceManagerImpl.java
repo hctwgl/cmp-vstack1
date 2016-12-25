@@ -264,25 +264,19 @@ public class VmInstanceManagerImpl extends AbstractService
 
 	private void handle(APIQueryPubVmInstanceOfferingMsg msg) {
 		APIQueryPubVmInstanceOfferingReply reply = new APIQueryPubVmInstanceOfferingReply();
-
-		List<PubCloud> res = new ArrayList<PubCloud>();
-		// res=JsonUtils.getPubCloudConf("conf/pubCloudInfo.xml");
-		// res.addAll(HypervisorType.getAllTypeNames());
-
-		List<InstanceMode> mode1s = new ArrayList<InstanceMode>();
-		InstanceMode modeE1 = new InstanceMode();
-		modeE1.setCpuNum("1");
-		modeE1.setDiskSize("1024M");
-		modeE1.setImage("Centos-7.2-64bit");
-		mode1s.add(modeE1);
-
-		InstanceMode modeE2 = new InstanceMode();
-		modeE2.setCpuNum("3");
-		modeE2.setDiskSize("4024M");
-		modeE2.setImage("Ubuntu-7.2-64bit");
-		mode1s.add(modeE2);
-		reply.setInstanceOffering(mode1s);
-
+		List<PubCloud> pubcloudTypes = JsonUtils.getPubCloudConf("../webapps/zstack/WEB-INF/classes/pubCloudInfo.xml");
+		PubCloud selectType = new PubCloud();
+		if (pubcloudTypes.size() != 0) {
+			for (PubCloud tem : pubcloudTypes){
+				if (tem.getName().equals(msg.getCloudType())){
+					selectType = tem;
+				}
+			}
+				 
+		}
+		
+		reply.setInstanceOffering(selectType.getInstanceMD());
+		reply.setImages(selectType.getImages());
 		bus.reply(msg, reply);
 	}
 
@@ -623,7 +617,7 @@ public class VmInstanceManagerImpl extends AbstractService
 
 	}
 
-	private void doCreatePublicVmInstance(final CreateECSInstanceMsg msg, final APICreateMessage cmsg,
+	private void doCreatePublicVmInstance(final CreatePubVMInstanceMsg msg, final APICreateMessage cmsg,
 			ReturnValueCompletion<CreatePubVmInstanceReply> completion) {
 
 		PubVmInstanceVO vo = new PubVmInstanceVO();
@@ -658,9 +652,11 @@ public class VmInstanceManagerImpl extends AbstractService
 		smsg.setPubAccountUuid(msg.getPubAccountUuid());
 		smsg.setCloudType(msg.getCloudType());
 		smsg.setCpuInfo(msg.getCpuInfo());
+		smsg.setInstanceOfferringUuid(msg.getInstanceOferringUUid());
 		smsg.setMemorySize(vo.getMemorySize());
 		smsg.setUuid(vo.getUuid());
 		smsg.setId(msg.getId());
+		smsg.setRegion(msg.getRegion());
 		bus.makeTargetServiceIdByResourceUuid(smsg, VmInstanceConstant.SERVICE_ID, vo.getUuid());
 		bus.send(smsg, new CloudBusCallBack() {
 			@Override
@@ -725,17 +721,21 @@ public class VmInstanceManagerImpl extends AbstractService
 		return cmsg;
 	}
 
-	private CreateECSInstanceMsg fromAPICreatePublicVmInstanceMsg(APICreatePublicVmInstanceMsg msg) {
-
-		CreateECSInstanceMsg cmsg = new CreateECSInstanceMsg();
-		cmsg.setAccountUuid(msg.getSession().getAccountUuid());
-		cmsg.setPubAccountUuid(msg.getAccountUuid());
-		cmsg.setCloudType(msg.getCloudType());
-		cmsg.setCpuInfo(msg.getCpuInfo());
-		cmsg.setDescription(msg.getDescription());
-		cmsg.setHostname(msg.getHostname());
-		cmsg.setMemorySize(msg.getMemorySize());
-		cmsg.setImage(msg.getImage());
+	private CreatePubVMInstanceMsg fromAPICreatePublicVmInstanceMsg(APICreatePublicVmInstanceMsg msg) {
+		//根据不同的云类型，进行拆解
+		CreatePubVMInstanceMsg cmsg = new CreatePubVMInstanceMsg();
+		if (msg.getCloudType().equals("ECS")){
+			cmsg.setAccountUuid(msg.getSession().getAccountUuid());   
+			cmsg.setPubAccountUuid(msg.getAccountUuid()); //所属用户
+			cmsg.setCloudType(msg.getCloudType()); //云厂商
+			cmsg.setDescription(msg.getDescription());
+			cmsg.setHostname(msg.getHostname());
+			cmsg.setImage(msg.getImage());
+			cmsg.setDiskSize(msg.getDiskSize());
+			cmsg.setRegion(msg.getRegion());
+			cmsg.setInstanceOferringUUid(msg.getInstanceOfferUuid());
+		}
+		
 		return cmsg;
 	}
 

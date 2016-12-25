@@ -9,7 +9,7 @@ import java.util.List;
  * Created by david on 8/4/16.
  */
 @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
-public class CreateECSInstanceMsg extends NeedReplyMessage     {
+public class CreatePubVMInstanceMsg extends NeedReplyMessage     {
     private String pubAccountUuid;
 	private String description;
     private String cloudType;
@@ -18,7 +18,34 @@ public class CreateECSInstanceMsg extends NeedReplyMessage     {
     private String cpuInfo;
     private String image;
     private String accountUuid;
+    private String diskSize;
+    private String region;
+    public String getRegion() {
+		return region;
+	}
+
+	public void setRegion(String region) {
+		this.region = region;
+	}
+
+	private String instanceOferringUUid;
 	 
+
+	public String getInstanceOferringUUid() {
+		return instanceOferringUUid;
+	}
+
+	public void setInstanceOferringUUid(String instanceOferringUUid) {
+		this.instanceOferringUUid = instanceOferringUUid;
+	}
+
+	public String getDiskSize() {
+		return diskSize;
+	}
+
+	public void setDiskSize(String diskSize) {
+		this.diskSize = diskSize;
+	}
 
 	public String getAccountUuid() {
 		return accountUuid;
@@ -82,9 +109,9 @@ public class CreateECSInstanceMsg extends NeedReplyMessage     {
 		this.image = image;
 	}
 
-	public static CreateECSInstanceMsg valueOf(final APICreatePublicVmInstanceMsg msg) {
+	public static CreatePubVMInstanceMsg valueOf(final APICreatePublicVmInstanceMsg msg) {
 		
-        CreateECSInstanceMsg cmsg = new CreateECSInstanceMsg();
+        CreatePubVMInstanceMsg cmsg = new CreatePubVMInstanceMsg();
         cmsg.setAccountUuid(msg.getSession().getAccountUuid());
         cmsg.setCloudType(msg.getCloudType());
         cmsg.setCpuInfo(msg.getCpuInfo());

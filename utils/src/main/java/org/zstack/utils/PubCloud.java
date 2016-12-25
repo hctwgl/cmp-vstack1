@@ -6,6 +6,13 @@ public class PubCloud{
 	private String name;
 	private List <InstanceMode> instanceMD;
 	private List <String> accountInfo;
+	private List <String> images;
+	public List<String> getImages() {
+		return images;
+	}
+	public void setImages(List<String> images) {
+		this.images = images;
+	}
 	public String getName() {
 		return name;
 	}

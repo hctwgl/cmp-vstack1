@@ -1,8 +1,22 @@
 package org.zstack.utils;
 
 public class InstanceMode {
+	private String uuid;
+	public String getUuid() {
+		return uuid;
+	}
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
 	private String cpuNum;
 	private String image;
+	private String memory;
+	public String getMemory() {
+		return memory;
+	}
+	public void setMemory(String memory) {
+		this.memory = memory;
+	}
 	private String diskSize;
 	public String getCpuNum() {
 		return cpuNum;

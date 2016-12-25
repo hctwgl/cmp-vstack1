@@ -16,7 +16,7 @@ public class ECSVmFactory implements VmPubInstanceFactory {
     }
 
 	@Override
-	public VmECSInstanceVO createVmInstance(VmECSInstanceVO vo, CreateECSInstanceMsg msg) {
+	public VmECSInstanceVO createVmInstance(VmECSInstanceVO vo, CreatePubVMInstanceMsg msg) {
 		// TODO Auto-generated method stub
 	        vo = dbf.persistAndRefresh(vo);
 	        return vo;
