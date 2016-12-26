@@ -4098,6 +4098,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 	}
 
 	private void destroyVm(APIDestroyVmPubInstanceMsg msg, final Completion completion) {
+		
 		FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
 		chain.setName(String.format("delete-vm-%s", msg.getUuid()));
 		chain.then(new NoRollbackFlow() {
@@ -4106,11 +4107,8 @@ public class VmInstanceBase extends AbstractVmInstance {
 			@Override
 			public void run(final FlowTrigger trigger, Map data) {
 				new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
-				
-				 
-				
 				DeleteVmPubOnLocalMsg deletelocalMsg = new DeleteVmPubOnLocalMsg();  //BUG
-				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubID", msg.getUuid());
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubID", msg.getVmInstanceUuid());
 				PubVmInstanceEO eo = eos.get(0);
 				deletelocalMsg.setId(msg.getUuid());
 				deletelocalMsg.setRegion(eo.getRegion());
@@ -4135,11 +4133,11 @@ public class VmInstanceBase extends AbstractVmInstance {
 			@Override
 			public void handle(Map data) {
 				logger.debug(String.format("successfully stop ECS VM  [name:%s]", msg.getUuid()));
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubID", msg.getVmInstanceUuid());
+				PubVmInstanceEO eo = eos.get(0);
 				eo.setState(VmInstanceState.Destroyed.toString());
-				eo.setDeleted("Y");
+				eo.setDeleted("");
 				dbf.updateAndRefresh(eo);
-
 				DestroyVmInstanceReply reply = new DestroyVmInstanceReply();
 				bus.reply(msg, reply);
 				completion.success();

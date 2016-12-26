@@ -184,7 +184,7 @@ public class VmInstanceManagerImpl extends AbstractService
 		if (msg.getVmInstanceUuid() == null) {
 			return;
 		}
-		if ((msg instanceof StartNewCreatedPubVmInstanceMsg) || (msg instanceof UpdatePubVmInstanceMsg)) {
+		if ((msg instanceof StartNewCreatedPubVmInstanceMsg) || (msg instanceof UpdatePubVmInstanceMsg)  || (msg instanceof APIDestroyVmPubInstanceMsg) ) {
 			PubVmInstanceVO eo = new PubVmInstanceVO();
 			eo.setUuid((msg.getVmInstanceUuid()));
 			VmInstance vm = new VmInstanceBase(eo);

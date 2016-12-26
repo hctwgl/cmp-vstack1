@@ -1325,7 +1325,7 @@ public class ECSHost extends HostBase implements Host {
 	public PubVmInstanceEO isContain(String pubID, List<PubVmInstanceEO> vms) {
 		for (PubVmInstanceEO eo : vms) {
 			if (eo.getPubID().equals(pubID)) {
-				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubAccountUuid", pubID);
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubID", pubID);
 				return eos.get(0);
 
 			}
