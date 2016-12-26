@@ -26,6 +26,7 @@ public class PubVmInstanceInventory {
 	    private Timestamp lastOpDate;
 	    
 	    
+	    
     public static PubVmInstanceInventory valueOf(PubVmInstanceVO vo) {
     	PubVmInstanceInventory inv = new PubVmInstanceInventory();
         inv.setUuid(vo.getUuid());

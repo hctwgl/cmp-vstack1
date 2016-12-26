@@ -2160,18 +2160,23 @@ public class VmInstanceBase extends AbstractVmInstance {
 				addlocalMsg.setUuid(msg.getUuid());
 				addlocalMsg.setAccesskeyID(vo.getAccesskeyID());
 				addlocalMsg.setAccesskeyKEY(vo.getAccesskeyKey());
+				
 				bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
 				bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
 					@Override
 					public void run(MessageReply reply) {
 						if (reply.isSuccess()) {
-
 							StartVmOnPubReply rep = (StartVmOnPubReply) reply;
 							PubVmInstanceEO updatedEo = new PubVmInstanceEO();
 							updatedEo.setHostname(msg.getHostname());
-							updatedEo.setPubAccountUuid(rep.getVmUuid());
+							updatedEo.setPubAccountUuid(msg.getPubAccountUuid());
+							updatedEo.setCloudType(msg.getCloudType());
 							updatedEo.setUuid(msg.getUuid());
 							updatedEo.setState(VmInstanceState.Running.toString());
+							updatedEo.setDescription(msg.getDescription());
+							updatedEo.setImage(msg.getImage());
+							updatedEo.setRegion(msg.getRegion());
+							updatedEo.setPubID(rep.getVmUuid());
 							dbf.updateAndRefresh(updatedEo);
 							trigger.next();
 						} else {
@@ -2213,13 +2218,13 @@ public class VmInstanceBase extends AbstractVmInstance {
 
 				PubVmInstanceVO vo = new PubVmInstanceVO();
 				vo.setHostname(msg.getHostname());
-				vo.setCloudType("ECS");
+				vo.setCloudType(msg.getCloudType());
 				vo.setCreateDate(msg.getCreateDate());
 				vo.setState(VmInstanceState.Running.toString());
 				vo.setUuid(msg.getUuid());
 				PubVmInstanceInventory inv = PubVmInstanceInventory.valueOf(vo);
 				StartNewCreatedPubVmInstanceReply reply = new StartNewCreatedPubVmInstanceReply();
-				reply.setVmInventory(inv);
+				reply.setInventory(inv);
 				bus.reply(msg, reply);
 				taskChain.next();
 			}
@@ -4101,14 +4106,19 @@ public class VmInstanceBase extends AbstractVmInstance {
 			@Override
 			public void run(final FlowTrigger trigger, Map data) {
 				new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
-				DeleteVmPubOnLocalMsg deletelocalMsg = new DeleteVmPubOnLocalMsg();
+				
+				 
+				
+				DeleteVmPubOnLocalMsg deletelocalMsg = new DeleteVmPubOnLocalMsg();  //BUG
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubID", msg.getUuid());
+				PubVmInstanceEO eo = eos.get(0);
 				deletelocalMsg.setId(msg.getUuid());
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
-				deletelocalMsg.setvMUuid(eo.getECSId());
-				deletelocalMsg.setAccess_key_id(eo.getAccesskeyID());
-				deletelocalMsg.setAccess_key_secret(eo.getAccesskeyKey());
-				deletelocalMsg.setRegion("cn-beijing");
-				deletelocalMsg.setForce("False");
+				deletelocalMsg.setRegion(eo.getRegion());
+				deletelocalMsg.setvMUuid(eo.getPubID());
+				PubAccountVO accountVo = dbf.findByUuid(eo.getPubAccountUuid(), PubAccountVO.class);
+				deletelocalMsg.setAccess_key_id(accountVo.getAccesskeyID());
+				deletelocalMsg.setAccess_key_secret(accountVo.getAccesskeyKey());
+				
 				bus.makeTargetServiceIdByResourceUuid(deletelocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
 				bus.send(deletelocalMsg, new CloudBusCallBack(trigger) {
 					@Override

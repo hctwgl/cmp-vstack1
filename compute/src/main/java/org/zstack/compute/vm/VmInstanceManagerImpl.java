@@ -665,7 +665,7 @@ public class VmInstanceManagerImpl extends AbstractService
 					CreatePubVmInstanceReply cr = new CreatePubVmInstanceReply();
 					if (reply.isSuccess()) {
 						StartNewCreatedPubVmInstanceReply r = (StartNewCreatedPubVmInstanceReply) reply;
-						cr.setInventory(r.getVmInventory());
+						cr.setInventory(r.getInventory());
 						completion.success(cr);
 					} else {
 						completion.fail(reply.getError());
