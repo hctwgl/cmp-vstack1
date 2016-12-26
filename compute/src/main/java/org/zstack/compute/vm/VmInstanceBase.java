@@ -2188,6 +2188,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 				new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
 				// trigger.next();
 				GetPubVmInstanceListMsg updateMsg = new GetPubVmInstanceListMsg();
+				updateMsg.setCloudType(msg.getCloudType());
 				bus.makeTargetServiceIdByResourceUuid(updateMsg, HostConstant.SERVICE_ID, msg.getUuid());
 				bus.send(updateMsg, new CloudBusCallBack(trigger) {
 					@Override

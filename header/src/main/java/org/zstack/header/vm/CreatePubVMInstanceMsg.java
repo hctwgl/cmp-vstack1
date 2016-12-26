@@ -117,8 +117,8 @@ public class CreatePubVMInstanceMsg extends NeedReplyMessage     {
         cmsg.setCpuInfo(msg.getCpuInfo());
         cmsg.setDescription(msg.getDescription());
         cmsg.setHostname(msg.getHostname());
-        cmsg.setMemorySize(msg.getMemorySize());
         cmsg.setImage(msg.getImage());
+        cmsg.setRegion(msg.getRegion());
         return cmsg;
     }
 }

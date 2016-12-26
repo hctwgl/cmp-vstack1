@@ -76,6 +76,7 @@ public class JsonUtils {
 						Element temele = (Element) temnode;
 						InstanceMode temMode = new InstanceMode();
 						temMode.setCpuNum(temele.getElementsByTagName("cpuNum").item(0).getTextContent());
+						temMode.setUuid(temele.getElementsByTagName("uuid").item(0).getTextContent());
 						temMode.setMemory(temele.getElementsByTagName("memory").item(0).getTextContent());
 						instanceMDs.add(temMode);
 					}
