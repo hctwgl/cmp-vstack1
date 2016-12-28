@@ -22,6 +22,28 @@ public class JsonUtils {
 
 	
 	
+	public static String getInstanceID(String cloudType,String cpuNum,String memory){
+	 String filename="../webapps/zstack/WEB-INF/classes/pubCloudInfo.xml";
+		List<PubCloud> PubCloud = getPubCloudConf(filename);
+		if(PubCloud.size()!=0){
+			for(PubCloud tmp : PubCloud){
+				if(tmp.getName().equals(cloudType)){
+					List<InstanceMode> tmpMD = tmp.getInstanceMD();
+					if(tmpMD.size()!=0){
+						for(InstanceMode mode : tmpMD){
+							if(mode.getCpuNum().equals(cpuNum) && mode.getMemory().equals(memory)){
+								return mode.getUuid();
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	
+	
 	public static PubCloud getPubCloudConfByType(String type){
 		String filename="../webapps/zstack/WEB-INF/classes/pubCloudInfo.xml";
 		List<PubCloud> PubCloud = getPubCloudConf(filename);

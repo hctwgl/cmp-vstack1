@@ -5,7 +5,32 @@ import org.zstack.header.message.NeedReplyMessage;
 
 public class StartVmPubOnLocalMsg extends NeedReplyMessage implements HostMessage {
 	 private VmInstanceInventory vmInventory;
-	    public String getAccess_key_id() {
+		private String type;
+	    private String vMUuid;
+	    private String access_key_id;
+	    private String access_key_secret;
+	    private String region;
+	    private String force;
+	    private String Image;
+	    private String instanceOfferingUuid;
+	    
+	    public String getInstanceOfferingUuid() {
+			return instanceOfferingUuid;
+		}
+
+		public void setInstanceOfferingUuid(String instanceOfferingUuid) {
+			this.instanceOfferingUuid = instanceOfferingUuid;
+		}
+
+		public String getImage() {
+			return Image;
+		}
+
+		public void setImage(String image) {
+			Image = image;
+		}
+
+		public String getAccess_key_id() {
 			return access_key_id;
 		}
 
@@ -36,18 +61,9 @@ public class StartVmPubOnLocalMsg extends NeedReplyMessage implements HostMessag
 		public void setForce(String force) {
 			this.force = force;
 		}
-		private String type;
-	    private String vMUuid;
-	    
-	    private String access_key_id;
-	    private String access_key_secret;
-	    private String region;
-	    private String force;
-
 	    public String getvMUuid() {
 			return vMUuid;
 		}
-
 		public void setvMUuid(String vMUuid) {
 			this.vMUuid = vMUuid;
 		}

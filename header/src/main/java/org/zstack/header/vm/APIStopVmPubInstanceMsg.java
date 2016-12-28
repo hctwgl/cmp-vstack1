@@ -44,7 +44,7 @@ public class APIStopVmPubInstanceMsg extends APIMessage implements VmInstanceMes
     /**
      * @desc vm uuid
      */
-    @APIParam(resourceType = VmInstanceVO.class, checkAccount = true, operationTarget = true)
+    @APIParam(resourceType = PubVmInstanceVO.class, checkAccount = true, operationTarget = true)
     private String uuid;
     @APIParam(required = false,validValues = {"grace","cold"})
     private String type = "grace";

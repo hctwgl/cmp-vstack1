@@ -157,7 +157,7 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 	        return;
     	}
     	if (msg instanceof CreateVmOnLocalMsg) {
-    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(((CreateVmOnLocalMsg) msg).getCloudType()));
     		HostVO tmpvo = new HostVO();
     		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);
@@ -183,7 +183,7 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 	        return;
     		
     	}if (msg instanceof StartVmPubOnLocalMsg) {
-    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(((StartVmPubOnLocalMsg) msg).getType()));
     		HostVO tmpvo = new HostVO();
     		tmpvo.setUuid(((StartVmPubOnLocalMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);

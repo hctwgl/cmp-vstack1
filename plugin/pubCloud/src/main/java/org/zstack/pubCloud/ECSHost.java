@@ -1144,7 +1144,6 @@ public class ECSHost extends HostBase implements Host {
 					err = errf.instantiateErrorCode(HostErrors.OPERATION_FAILURE_GC_ELIGIBLE, "unable to stop a vm",
 							err);
 				}
-
 				reply.setError(err);
 				// extEmitter.stopVmOnKvmFailed(KVMHostInventory.valueOf(getSelf()),
 				// vminv, err);
@@ -1257,14 +1256,14 @@ public class ECSHost extends HostBase implements Host {
 		cmd.setAccess_key_id(spec.getAccesskeyID());
 		cmd.setAccess_key_secret(spec.getAccesskeyKEY());
 		cmd.setName(spec.getName());
-		cmd.setRegion("cn-beijing");
-		cmd.setImage("ecs.image.ubuntu1404.64");
+		cmd.setRegion(spec.getRegion());
+		cmd.setImage(spec.getImage());
 		cmd.setAuth("P@$$w0rd");
 		cmd.setEx_security_group_id("sg-2ze56hvvjveewzm12jar");
 		cmd.setEx_internet_max_bandwidth_out(1);
 		cmd.setEx_internet_charge_type("PayByTraffic");
 		// cmd.setSize("ecs.t1.small");
-		cmd.setSize("ecs.n1.tiny");
+		cmd.setSize(spec.getInstanceOfferingUuid());
 		Map sys_disk = new HashMap();
 		sys_disk.put("category", "cloud_efficiency");
 		cmd.setEx_system_disk(sys_disk);
@@ -1397,15 +1396,15 @@ public class ECSHost extends HostBase implements Host {
 		final StartVmCmd cmd = new StartVmCmd();
 		cmd.setAccess_key_id(spec.getAccess_key_id());
 		cmd.setAccess_key_secret(spec.getAccess_key_secret());
-		cmd.setRegion("cn-beijing");
-		cmd.setImage("ecs.image.ubuntu1404.64");
+		cmd.setRegion(spec.getRegion());
+		cmd.setImage(spec.getImage());
 		cmd.setAuth("P@$$w0rd");
 		cmd.setEx_security_group_id("sg-2ze56hvvjveewzm12jar");
 		cmd.setEx_internet_max_bandwidth_out(1);
 		cmd.setEx_internet_charge_type("PayByTraffic");
 		cmd.setVmInstanceUuid(spec.getvMUuid());
 		// cmd.setSize("ecs.t1.small");
-		cmd.setSize("ecs.n1.tiny");
+		cmd.setSize(spec.getInstanceOfferingUuid());
 		Map sys_disk = new HashMap();
 		sys_disk.put("category", "cloud_efficiency");
 		cmd.setEx_system_disk(sys_disk);

@@ -46,29 +46,8 @@ public class APIStartVmPubInstanceMsg extends APIMessage implements VmInstanceMe
     /**
      * @desc vm uuid
      */
-    @APIParam(resourceType = VmInstanceVO.class, checkAccount = true, operationTarget = true)
+    @APIParam(resourceType = PubVmInstanceVO.class, checkAccount = true, operationTarget = true)
     private String uuid;
-
-    @APIParam(resourceType = ClusterVO.class, required = false)
-    private String clusterUuid;
-    @APIParam(resourceType = HostVO.class, required = false)
-    private String hostUuid;
-
-    public String getClusterUuid() {
-        return clusterUuid;
-    }
-
-    public void setClusterUuid(String clusterUuid) {
-        this.clusterUuid = clusterUuid;
-    }
-
-    public String getHostUuid() {
-        return hostUuid;
-    }
-
-    public void setHostUuid(String hostUuid) {
-        this.hostUuid = hostUuid;
-    }
 
     public String getUuid() {
         return uuid;

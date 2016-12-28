@@ -66,6 +66,7 @@ import org.zstack.header.volume.*;
 import org.zstack.identity.AccountManager;
 import org.zstack.utils.CollectionUtils;
 import org.zstack.utils.DebugUtils;
+import org.zstack.utils.JsonUtils;
 import org.zstack.utils.NetUtil;
 import org.zstack.utils.ObjectUtils;
 import org.zstack.utils.Utils;
@@ -2160,6 +2161,10 @@ public class VmInstanceBase extends AbstractVmInstance {
 				addlocalMsg.setUuid(msg.getUuid());
 				addlocalMsg.setAccesskeyID(vo.getAccesskeyID());
 				addlocalMsg.setAccesskeyKEY(vo.getAccesskeyKey());
+				addlocalMsg.setImage(msg.getImage());
+				addlocalMsg.setCloudType(msg.getCloudType());
+				addlocalMsg.setInstanceOfferingUuid(msg.getInstanceOfferringUuid());
+				addlocalMsg.setRegion(msg.getRegion());
 				
 				bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
 				bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
@@ -3799,8 +3804,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 		}).start();
 	}
 
-	protected void startVmPub(final APIStartVmPubInstanceMsg msg, final Completion completion) {
-		refreshVO();
+	private void startVmPub(final APIStartVmPubInstanceMsg msg, final Completion completion) {
 		FlowChain chain = FlowChainBuilder.newSimpleFlowChain();
 		chain.setName(String.format("start-vm-%s", msg.getUuid()));
 		chain.then(new NoRollbackFlow() {
@@ -3810,12 +3814,18 @@ public class VmInstanceBase extends AbstractVmInstance {
 			public void run(final FlowTrigger trigger, Map data) {
 				new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
 				StartVmPubOnLocalMsg startlocalMsg = new StartVmPubOnLocalMsg();
-				startlocalMsg.setId(msg.getUuid());
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
-				startlocalMsg.setvMUuid(eo.getECSId());
-				startlocalMsg.setAccess_key_id(eo.getAccesskeyID());
-				startlocalMsg.setAccess_key_secret(eo.getAccesskeyKey());
-				startlocalMsg.setRegion("cn-beijing");
+				startlocalMsg.setId(msg.getId());
+				List<PubVmInstanceVO> eos = dbf.listByColumName(PubVmInstanceVO.class, "uuid", msg.getVmInstanceUuid());
+				PubVmInstanceVO eo = eos.get(0);
+				startlocalMsg.setType(eo.getCloudType());
+				startlocalMsg.setInstanceOfferingUuid(JsonUtils.getInstanceID(eo.getCloudType(),eo.getCpuInfo(),eo.getMemorySize()));
+				
+				startlocalMsg.setvMUuid(eo.getPubID());
+				PubAccountVO accountVo = dbf.findByUuid(eo.getPubAccountUuid(), PubAccountVO.class);
+				startlocalMsg.setAccess_key_id(accountVo.getAccesskeyID());
+				startlocalMsg.setAccess_key_secret(accountVo.getAccesskeyKey());
+				startlocalMsg.setRegion(eo.getRegion());
+				startlocalMsg.setImage(eo.getImage());
 				startlocalMsg.setForce("False");
 				bus.makeTargetServiceIdByResourceUuid(startlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
 				bus.send(startlocalMsg, new CloudBusCallBack(trigger) {
@@ -3833,7 +3843,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 			@Override
 			public void handle(Map data) {
 				logger.debug(String.format("successfully stop ECS VM  [name:%s]", msg.getUuid()));
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+				PubVmInstanceEO eo = dbf.findByUuid(msg.getUuid(), PubVmInstanceEO.class);
 				eo.setState(VmInstanceState.Running.toString());
 				dbf.updateAndRefresh(eo);
 
@@ -3876,13 +3886,14 @@ public class VmInstanceBase extends AbstractVmInstance {
 		});
 	}
 
-	protected void startVm(final APIStartVmPubInstanceMsg msg, final SyncTaskChain taskChain) {
+	protected void startVmPubOnlocal(final APIStartVmPubInstanceMsg msg, final SyncTaskChain taskChain) {
+		
 		startVmPub(msg, new Completion(taskChain) {
 			@Override
 			public void success() {
-				VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
+//				VmInstanceInventory inv = VmInstanceInventory.valueOf(self);
 				APIStartVmInstanceEvent evt = new APIStartVmInstanceEvent(msg.getId());
-				evt.setInventory(inv);
+//				evt.setInventory(inv);
 				bus.publish(evt);
 				taskChain.next();
 			}
@@ -3951,7 +3962,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 
 			@Override
 			public void run(SyncTaskChain chain) {
-				startVm(msg, chain);
+				startVmPubOnlocal(msg, chain);
 			}
 		});
 	}
@@ -4108,7 +4119,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 			public void run(final FlowTrigger trigger, Map data) {
 				new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
 				DeleteVmPubOnLocalMsg deletelocalMsg = new DeleteVmPubOnLocalMsg();  //BUG
-				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubID", msg.getVmInstanceUuid());
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "uuid", msg.getVmInstanceUuid());
 				PubVmInstanceEO eo = eos.get(0);
 				deletelocalMsg.setId(msg.getUuid());
 				deletelocalMsg.setRegion(eo.getRegion());
@@ -4133,7 +4144,7 @@ public class VmInstanceBase extends AbstractVmInstance {
 			@Override
 			public void handle(Map data) {
 				logger.debug(String.format("successfully stop ECS VM  [name:%s]", msg.getUuid()));
-				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "pubID", msg.getVmInstanceUuid());
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "uuid", msg.getVmInstanceUuid());
 				PubVmInstanceEO eo = eos.get(0);
 				eo.setState(VmInstanceState.Destroyed.toString());
 				eo.setDeleted("");
@@ -4507,9 +4518,9 @@ public class VmInstanceBase extends AbstractVmInstance {
 		stopVmPub(msg, new Completion(taskChain) {
 			@Override
 			public void success() {
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+				PubVmInstanceVO eo = dbf.findByUuid(msg.getUuid(), PubVmInstanceVO.class);
 				VmInstanceVO vo = new VmInstanceVO();
-				vo.setName(eo.getName());
+				vo.setName(eo.getHostname());
 				vo.setCreateDate(eo.getCreateDate());
 				vo.setType("UserVm");
 				vo.setState(VmInstanceState.Stopped);
@@ -4541,16 +4552,20 @@ public class VmInstanceBase extends AbstractVmInstance {
 			@Override
 			public void run(final FlowTrigger trigger, Map data) {
 				new Log(msg.getUuid()).log(HostLogLabel.ADD_HOST_CONNECT);
-				// 填好需要的信息.Bug! 需要获取到ECSID
+				
+				
 				StopVmPubOnLocalMsg stoplocalMsg = new StopVmPubOnLocalMsg();
-				stoplocalMsg.setId(msg.getUuid());
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
-				stoplocalMsg.setvMUuid(eo.getECSId());
-				stoplocalMsg.setAccess_key_id(eo.getAccesskeyID());
-				stoplocalMsg.setAccess_key_secret(eo.getAccesskeyKey());
-				stoplocalMsg.setRegion("cn-beijing");
+				stoplocalMsg.setId(msg.getId());
+				List<PubVmInstanceVO> vos = dbf.listByColumName(PubVmInstanceVO.class, "uuid", msg.getVmInstanceUuid());
+				PubVmInstanceVO vo = vos.get(0);
+				
+				stoplocalMsg.setvMUuid(vo.getPubID());
+				PubAccountVO accountVo = dbf.findByUuid(vo.getPubAccountUuid(), PubAccountVO.class);
+				stoplocalMsg.setAccess_key_id(accountVo.getAccesskeyID());
+				stoplocalMsg.setAccess_key_secret(accountVo.getAccesskeyKey());
+				stoplocalMsg.setRegion(vo.getRegion());
 				stoplocalMsg.setForce("False");
-				bus.makeTargetServiceIdByResourceUuid(stoplocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
+				bus.makeTargetServiceIdByResourceUuid(stoplocalMsg, HostConstant.SERVICE_ID, msg.getId());
 				bus.send(stoplocalMsg, new CloudBusCallBack(trigger) {
 					@Override
 					public void run(MessageReply reply) {
@@ -4565,12 +4580,15 @@ public class VmInstanceBase extends AbstractVmInstance {
 		}).done(new FlowDoneHandler(msg) {
 			@Override
 			public void handle(Map data) {
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "uuid", msg.getVmInstanceUuid());
+				PubVmInstanceEO eo = eos.get(0);
+				
+				
 				logger.debug(String.format("successfully stop ECS VM  [name:%s]", msg.getUuid()));
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
 				eo.setState(VmInstanceState.Stopped.toString());
 				dbf.updateAndRefresh(eo);
 				PubVmInstanceVO vo = new PubVmInstanceVO();
-				vo.setHostname(eo.getName());
+				vo.setHostname(eo.getHostname());
 				vo.setCloudType("ECS");
 				vo.setState(VmInstanceState.Stopped.toString());
 				vo.setUuid(msg.getUuid());
@@ -4585,11 +4603,13 @@ public class VmInstanceBase extends AbstractVmInstance {
 			public void handle(ErrorCode errCode, Map data) {
 				// delete host totally through the database, so other tables
 				// refer to the host table will clean up themselves
-				VmECSInstanceEO eo = dbf.findByUuid(msg.getUuid(), VmECSInstanceEO.class);
+				List<PubVmInstanceEO> eos = dbf.listByColumName(PubVmInstanceEO.class, "uuid", msg.getVmInstanceUuid());
+				PubVmInstanceEO eo = eos.get(0);
+				
 				eo.setState(VmInstanceState.Stopped.toString());
 				dbf.updateAndRefresh(eo);
 				PubVmInstanceVO vo = new PubVmInstanceVO();
-				vo.setHostname(eo.getName());
+				vo.setHostname(eo.getHostname());
 				vo.setCloudType("ECS");
 				vo.setState(VmInstanceState.Stopped.toString());
 				vo.setUuid(msg.getUuid());
