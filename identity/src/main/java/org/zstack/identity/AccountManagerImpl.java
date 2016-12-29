@@ -532,7 +532,7 @@ public class AccountManagerImpl extends AbstractService implements AccountManage
         }
         vo.setUsername(msg.getUsername()); 
         vo.setDescription(msg.getDescription());
-        vo.setCloudType(PubCloudType.valueOf(msg.getCloudType()));
+        vo.setCloudType(msg.getCloudType());
         vo.setPassword(msg.getPassword());
         vo.setAccesskeyID(msg.getAccesskeyID());
         vo.setAccesskeyKey(msg.getAccesskeyKey());

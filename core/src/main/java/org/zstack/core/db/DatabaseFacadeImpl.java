@@ -862,6 +862,14 @@ public class DatabaseFacadeImpl implements DatabaseFacade, Component {
         q.executeUpdate();
        
 	}
+	
+
+	@Override
+	public <T> T findByColumName(Class entityClass, String name, String value) {
+		// TODO Auto-generated method stub
+       return (T) listByColumName(entityClass,name,value).get(0);
+	}
+	
 	@Override
 	@Transactional
 	public <T> List<T> listByColumName(Class entityClass, String name, String value) {

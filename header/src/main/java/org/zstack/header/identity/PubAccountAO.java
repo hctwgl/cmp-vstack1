@@ -14,8 +14,7 @@ public class PubAccountAO {
     @Column
     private String uuid;
 	@Column
-	@Enumerated(EnumType.STRING)
-	private PubCloudType cloudType;
+	private String cloudType;
 	@Column
 	    private String description;
     @Column
@@ -32,11 +31,11 @@ public class PubAccountAO {
     private Timestamp lastOpDate;
     
 	
-	public PubCloudType getCloudType() {
+	public String getCloudType() {
 		return cloudType;
 	}
 
-	public void setCloudType(PubCloudType cloudType) {
+	public void setCloudType(String cloudType) {
 		this.cloudType = cloudType;
 	}
 

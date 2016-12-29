@@ -44,6 +44,7 @@ import org.zstack.header.exception.CloudConfigureFailException;
 import org.zstack.header.exception.CloudRuntimeException;
 import org.zstack.header.host.HostCanonicalEvents;
 import org.zstack.header.host.HostCanonicalEvents.HostStatusChangedData;
+import org.zstack.header.host.HostEO;
 import org.zstack.header.host.HostInventory;
 import org.zstack.header.host.HostStatus;
 import org.zstack.header.identity.*;
@@ -69,6 +70,7 @@ import org.zstack.header.vm.*;
 import org.zstack.header.vm.VmInstanceConstant.VmOperation;
 import org.zstack.header.vm.VmInstanceDeletionPolicyManager.VmInstanceDeletionPolicy;
 import org.zstack.header.volume.*;
+import org.zstack.header.zone.APICreateZoneEvent;
 import org.zstack.header.zone.ZoneInventory;
 import org.zstack.header.zone.ZoneVO;
 import org.zstack.identity.AccountManager;
@@ -219,7 +221,7 @@ public class VmInstanceManagerImpl extends AbstractService
 			bus.dealWithUnknownMessage(msg);
 		}
 	}
-
+	
 	private void handleApiMessage(APIMessage msg) {
 		if (msg instanceof APICreateVmInstanceMsg) {
 			handle((APICreateVmInstanceMsg) msg);
@@ -231,7 +233,9 @@ public class VmInstanceManagerImpl extends AbstractService
 			handle((APIQueryPubVmInstanceOfferingMsg) msg);
 		} else if (msg instanceof APICreatePublicVmInstanceMsg) {
 			handle((APICreatePublicVmInstanceMsg) msg);
-		} else if (msg instanceof APIListVmInstanceMsg) {
+		} else if (msg instanceof APICreatePublicVmAgentMsg) {
+			handle((APICreatePublicVmAgentMsg) msg);
+		}  else if (msg instanceof APIListVmInstanceMsg) {
 			handle((APIListVmInstanceMsg) msg);
 		} else if (msg instanceof APISearchVmInstanceMsg) {
 			handle((APISearchVmInstanceMsg) msg);
@@ -739,6 +743,17 @@ public class VmInstanceManagerImpl extends AbstractService
 		return cmsg;
 	}
 
+	private void handle(final APICreatePublicVmAgentMsg msg) {
+		 PubAccountEO eo = new PubAccountEO();
+		 eo.setUuid(Platform.getUuid());
+		 eo.setUsername(msg.getUserName());
+		 eo.setPassword(msg.getPassword());
+		 eo.setCloudType("LOCAL");
+		 dbf.persist(eo);
+		 APICreatePubVmAgentEvent evt = new APICreatePubVmAgentEvent(msg.getId());
+		 bus.publish(evt);
+	}
+	
 	private void handle(final APICreatePublicVmInstanceMsg msg) {
 		doCreatePublicVmInstance(fromAPICreatePublicVmInstanceMsg(msg), msg,
 				new ReturnValueCompletion<CreatePubVmInstanceReply>() {

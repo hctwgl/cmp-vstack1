@@ -23,6 +23,7 @@ import org.zstack.header.core.workflow.NoRollbackFlow;
 import org.zstack.header.errorcode.ErrorCode;
 import org.zstack.header.exception.CloudRuntimeException;
 import org.zstack.header.host.HostInventory;
+import org.zstack.header.identity.PubAccountEO;
 import org.zstack.header.image.ImageConstant.ImageMediaType;
 import org.zstack.header.image.ImageInventory;
 import org.zstack.header.message.MessageReply;
@@ -59,8 +60,9 @@ public class VmDeployProxytFlow implements Flow {
         String srcPath = PathUtil.findFileOnClassPath(String.format("ansible/aliyun/%s","aliyunagent-1.6.tar.gz"), true).getAbsolutePath();
         String destPath = String.format("/var/lib/zstack/aliyun/package/%s", "aliyunagent-1.6.tar.gz");
         SshFileMd5Checker checker = new SshFileMd5Checker();
-        checker.setUsername("root");
-        checker.setPassword("onceas");
+        PubAccountEO eo = dbf.findByColumName(PubAccountEO.class, "cloudType", "LOCAL");
+        checker.setUsername(eo.getUsername());
+        checker.setPassword(eo.getPassword());
         checker.setSshPort(22);
         checker.setTargetIp("127.0.0.1");
         checker.addSrcDestPair(SshFileMd5Checker.ZSTACKLIB_SRC_PATH, String.format("/var/lib/zstack/pubCloud/package/%s", AnsibleGlobalProperty.ZSTACKLIB_PACKAGE_NAME));
@@ -69,10 +71,10 @@ public class VmDeployProxytFlow implements Flow {
         AnsibleRunner runner = new AnsibleRunner();
         runner.installChecker(checker);
         runner.setAgentPort(7072);
-        runner.setTargetIp("133.133.133.127");
+        runner.setTargetIp("127.0.0.1");
         runner.setPlayBookName("aliyun");
-        runner.setUsername("root");
-        runner.setPassword("onceas");
+        runner.setUsername(eo.getUsername());
+        runner.setPassword(eo.getPassword());
         runner.setSshPort(22);
        
         runner.putArgument("pkg_pubCloud", "aliyunagent-1.6.tar.gz");

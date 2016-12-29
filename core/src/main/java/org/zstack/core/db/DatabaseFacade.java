@@ -82,4 +82,7 @@ public interface DatabaseFacade {
     String getDbVersion();
 
     void installEntityLifeCycleCallback(Class entityClass, EntityEvent evt, EntityLifeCycleCallback cb);
+
+
+    <T>  T findByColumName(Class entityClass, String name, String value);
 }

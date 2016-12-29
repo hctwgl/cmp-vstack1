@@ -33,6 +33,7 @@ import org.zstack.header.errorcode.SysErrors;
 import org.zstack.header.exception.CloudRuntimeException;
 import org.zstack.header.host.*;
 import org.zstack.header.host.MigrateVmOnHypervisorMsg.StorageMigrationPolicy;
+import org.zstack.header.identity.PubAccountEO;
 import org.zstack.header.image.ImagePlatform;
 import org.zstack.header.message.APIMessage;
 import org.zstack.header.message.Message;
@@ -286,8 +287,9 @@ public class ECSHost extends HostBase implements Host {
 		Ssh ssh = new Ssh();
 		ssh.setHostname(self.getManagementIp());
 		ssh.setPort(22);
-		ssh.setUsername("root");
-		ssh.setPassword("onceas");
+		PubAccountEO eo = dbf.findByColumName(PubAccountEO.class, "cloudType", "LOCAL");
+		ssh.setUsername(eo.getUsername());
+		ssh.setPassword(eo.getPassword());
 		ssh.shell(script);
 		return ssh.runAndClose();
 	}
@@ -1702,10 +1704,11 @@ public class ECSHost extends HostBase implements Host {
 
 							@Override
 							public void run(FlowTrigger trigger, Map data) {
+								PubAccountEO eo = dbf.findByColumName(PubAccountEO.class, "cloudType", "LOCAL");
 								String checkList = PubCloudGlobalConfig.HOST_DNS_CHECK_LIST.value();
 								checkList = checkList.replaceAll(",", " ");
-								SshResult ret = new Ssh().setHostname("127.0.0.1").setUsername("root")
-										.setPassword("onceas").setPort(22)
+								SshResult ret = new Ssh().setHostname("127.0.0.1").setUsername(eo.getUsername())
+										.setPassword(eo.getPassword()).setPort(22)
 										.script("scripts/check-public-dns-name.sh", map(e("dnsCheckList", checkList)))
 										.runAndClose();
 								if (ret.isSshFailure()) {
@@ -1728,10 +1731,11 @@ public class ECSHost extends HostBase implements Host {
 
 						@Override
 						public void run(FlowTrigger trigger, Map data) {
+							
+							PubAccountEO eo = dbf.findByColumName(PubAccountEO.class, "cloudType", "LOCAL");
 							new Log(self.getUuid()).log(LocalHostLabel.ADD_HOST_CHECK_PING_MGMT_NODE);
-
-							SshResult ret2 = new Ssh().setHostname("127.0.0.1").setUsername("root")
-									.setPassword("onceas").setPort(22)
+							SshResult ret2 = new Ssh().setHostname("127.0.0.1").setUsername(eo.getUsername())
+									.setPassword(eo.getPassword()).setPort(22)
 									.command(String.format("curl --connect-timeout 10 %s", restf.getCallbackUrl()))
 									.runAndClose();
 
@@ -1763,9 +1767,11 @@ public class ECSHost extends HostBase implements Host {
 									.findFileOnClassPath(String.format("ansible/aliyun/%s", agentPackageName), true)
 									.getAbsolutePath();
 							String destPath = String.format("/var/lib/zstack/aliyun/package/%s", agentPackageName);
+							PubAccountEO eo = dbf.findByColumName(PubAccountEO.class, "cloudType", "LOCAL");
+							
 							SshFileMd5Checker checker = new SshFileMd5Checker();
-							checker.setUsername("root");
-							checker.setPassword("onceas");
+							checker.setUsername(eo.getUsername());
+							checker.setPassword(eo.getPassword());
 							checker.setSshPort(22);
 							checker.setTargetIp("127.0.0.1");
 							checker.addSrcDestPair(SshFileMd5Checker.ZSTACKLIB_SRC_PATH, String.format(
@@ -1777,8 +1783,8 @@ public class ECSHost extends HostBase implements Host {
 							runner.setAgentPort(PubCloudGlobalProperty.AGENT_PORT);
 							runner.setTargetIp("127.0.0.1");
 							runner.setPlayBookName(PubCloudConstant.ANSIBLE_PLAYBOOK_NAME);
-							runner.setUsername("root");
-							runner.setPassword("onceas");
+							runner.setUsername(eo.getUsername());
+							runner.setPassword(eo.getPassword());
 							runner.setSshPort(22);
 							if (info.isNewAdded()) {
 								runner.putArgument("init", "true");

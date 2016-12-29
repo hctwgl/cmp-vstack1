@@ -42,6 +42,7 @@ import org.zstack.header.errorcode.OperationFailureException;
 import org.zstack.header.errorcode.SysErrors;
 import org.zstack.header.exception.CloudRuntimeException;
 import org.zstack.header.host.*;
+import org.zstack.header.identity.PubAccountEO;
 import org.zstack.header.identity.PubAccountVO;
 import org.zstack.header.image.ImageConstant.ImageMediaType;
 import org.zstack.header.image.ImageEO;
@@ -2133,8 +2134,9 @@ public class VmInstanceBase extends AbstractVmInstance {
 					AddLocalHostMsg addlocalMsg = new AddLocalHostMsg();
 					addlocalMsg.setAccountUuid(msg.getUuid());
 					addlocalMsg.setManagementIp("127.0.0.1");
-					addlocalMsg.setUsername("root");
-					addlocalMsg.setPassword("onceas");
+					PubAccountEO eo = dbf.findByColumName(PubAccountEO.class, "cloudType", "LOCAL");
+					addlocalMsg.setUsername(eo.getUsername());
+					addlocalMsg.setPassword(eo.getPassword());
 					bus.makeTargetServiceIdByResourceUuid(addlocalMsg, HostConstant.SERVICE_ID, msg.getUuid());
 					bus.send(addlocalMsg, new CloudBusCallBack(trigger) {
 						@Override

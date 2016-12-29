@@ -10,7 +10,9 @@
     <message>
         <name>org.zstack.header.vm.APICreatePublicVmInstanceMsg</name>
     </message>
-    
+    <message>
+        <name>org.zstack.header.vm.APICreatePublicVmAgentMsg</name>
+    </message>
     <message>
         <name>org.zstack.header.vm.APIListVmInstanceMsg</name>
     </message>
