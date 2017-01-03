@@ -203,6 +203,17 @@ public class RESTFacadeImpl implements RESTFacade {
         String bodyStr = JSONObjectUtil.toJsonString(body);
         asyncJsonPost(url, bodyStr, callback, unit, timeout);
     }
+    
+    public void asyncJsonPostList(String url, Object body, AsyncRESTCallback callback, TimeUnit unit, long timeout) {
+        for (BeforeAsyncJsonPostInterceptor ic : interceptors) {
+            ic.beforeAsyncJsonPost(url, body, unit, timeout);
+        }
+
+        // for unit test finding invocation chain
+        MessageCommandRecorder.record(body.getClass());
+        String bodyStr = JSONObjectUtil.toJsonString(body);
+        asyncJsonPostList(url, bodyStr, callback, unit, timeout);
+    }
 
     @Override
     public void asyncJsonPost(final String url, final String body, final AsyncRESTCallback callback, final TimeUnit unit, final long timeout) {
@@ -275,8 +286,135 @@ public class RESTFacadeImpl implements RESTFacade {
 
                 if (callback instanceof JsonAsyncRESTCallback) {
                     JsonAsyncRESTCallback jcallback = (JsonAsyncRESTCallback)callback;
-                    Object obj = JSONObjectUtil.toObject(responseEntity.getBody(), jcallback.getReturnClass());
+                    Class ret = String.class;
+                    if(jcallback.getReturnClass().getSimpleName().equals("String")){
+                    	 jcallback.success(new String(responseEntity.getBody()));
+                    } else{
+                    	Object obj = JSONObjectUtil.toObject(responseEntity.getBody(), jcallback.getReturnClass());
+                        try {
+                            ErrorCode err = vf.validateErrorByErrorCode(obj);
+                            if (err != null) {
+                                logger.warn(String.format("error response that causes validation failure: %s", responseEntity.getBody()));
+                                jcallback.fail(err);
+                            } else {
+                                jcallback.success(obj);
+                            }
+                        } catch (Throwable t) {
+                            logger.warn(t.getMessage(), t);
+                            callback.fail(errf.throwableToInternalError(t));
+                        }
+                    }
+                    
+                } else {
+                    callback.success(responseEntity);
+                }
+            }
+        };
+
+        try {
+            wrappers.put(taskUuid, wrapper);
+            HttpHeaders requestHeaders = new HttpHeaders();
+            requestHeaders.setContentType(MediaType.APPLICATION_JSON);
+            requestHeaders.setContentLength(body.length());
+            requestHeaders.set(RESTConstant.TASK_UUID, taskUuid);
+            requestHeaders.set(RESTConstant.CALLBACK_URL, callbackUrl);
+            HttpEntity<String> req = new HttpEntity<String>(body, requestHeaders);
+            if (logger.isTraceEnabled()) {
+                logger.trace(String.format("json post[%s], %s", url, req.toString()));
+            }
+
+            ResponseEntity<String> rsp = new Retry<ResponseEntity<String>>() {
+                @Override
+                @RetryCondition(onExceptions = {IOException.class, RestClientException.class})
+                protected ResponseEntity<String> call() {
+                    return template.exchange(url, HttpMethod.POST, req, String.class);
+                }
+            }.run();
+
+            if (rsp.getStatusCode() != org.springframework.http.HttpStatus.OK) {
+                String err = String.format("http status: %s, response body:%s", rsp.getStatusCode().toString(), rsp.getBody());
+                logger.warn(err);
+                wrapper.fail(errf.instantiateErrorCode(SysErrors.HTTP_ERROR, err));
+            }
+        } catch (Throwable e) {
+            logger.warn(String.format("Unable to post to %s", url), e);
+            wrapper.fail(ExceptionDSL.isCausedBy(e, IOException.class) ? errf.instantiateErrorCode(SysErrors.IO_ERROR, e.getMessage()) : errf.throwableToInternalError(e));
+        }
+    }
+
+    
+    public void asyncJsonPostList(final String url, final String body, final AsyncRESTCallback callback, final TimeUnit unit, final long timeout) {
+        for (BeforeAsyncJsonPostInterceptor ic : interceptors) {
+            ic.beforeAsyncJsonPost(url, body, unit, timeout);
+        }
+
+        long stime = 0;
+        if (CoreGlobalProperty.PROFILER_HTTP_CALL) {
+            stime = System.currentTimeMillis();
+            HttpCallStatistic stat = statistics.get(url);
+            if (stat == null) {
+                stat = new HttpCallStatistic();
+                stat.setUrl(url);
+                statistics.put(url, stat);
+            }
+        }
+
+        final String taskUuid = Platform.getUuid();
+        final long finalStime = stime;
+        AsyncHttpWrapper wrapper = new AsyncHttpWrapper() {
+            AtomicBoolean called = new AtomicBoolean(false);
+
+            final AsyncHttpWrapper self = this;
+            TimeoutTaskReceipt timeoutTaskReceipt = thdf.submitTimeoutTask(new Runnable() {
+                @Override
+                public void run() {
+                    self.fail(errf.stringToTimeoutError(
+                            String.format("[Async Http Timeout] url: %s, timeout after %s[%s], command: %s",
+                                    url, timeout, unit.toString(), body)
+                    ));
+                }
+            }, unit, timeout);
+
+            private void cancelTimeout() {
+                timeoutTaskReceipt.cancel();
+            }
+
+            public void fail(ErrorCode err) {
+                if (!called.compareAndSet(false, true)) {
+                    return;
+                }
+
+                wrappers.remove(taskUuid);
+                if (!SysErrors.TIMEOUT.toString().equals(err.getCode())) {
+                    cancelTimeout();
+                }
+
+                callback.fail(err);
+            }
+
+            @Override
+            @AsyncThread
+            public void success(HttpEntity<String> responseEntity) {
+                if (!called.compareAndSet(false, true)) {
+                    return;
+                }
+
+                if (CoreGlobalProperty.PROFILER_HTTP_CALL) {
+                    HttpCallStatistic stat = statistics.get(url);
+                    stat.addStatistic(System.currentTimeMillis() - finalStime);
+                }
+
+                wrappers.remove(taskUuid);
+                cancelTimeout();
+
+                if (logger.isTraceEnabled()) {
+                    logger.trace(String.format("[http response(url: %s)] %s", url, responseEntity.getBody()));
+                }
+
+                if (callback instanceof JsonAsyncRESTCallback) {
+                    JsonAsyncRESTCallback jcallback = (JsonAsyncRESTCallback)callback;
                     try {
+                    	Object obj = JSONObjectUtil.toObject(responseEntity.getBody(), jcallback.getReturnClass());
                         ErrorCode err = vf.validateErrorByErrorCode(obj);
                         if (err != null) {
                             logger.warn(String.format("error response that causes validation failure: %s", responseEntity.getBody()));
@@ -325,10 +463,18 @@ public class RESTFacadeImpl implements RESTFacade {
         }
     }
 
+    
+    
+    
     @Override
     public void asyncJsonPost(String url, Object body, AsyncRESTCallback callback) {
         Long timeout = timeoutMgr.getTimeout(body.getClass());
         asyncJsonPost(url, body, callback, TimeUnit.MILLISECONDS, timeout == null ? 300000 : timeout);
+    }
+    
+    public void asyncJsonPostList(String url, Object body, AsyncRESTCallback callback) {
+        Long timeout = timeoutMgr.getTimeout(body.getClass());
+        asyncJsonPostList(url, body, callback, TimeUnit.MILLISECONDS, timeout == null ? 300000 : timeout);
     }
 
     @Override

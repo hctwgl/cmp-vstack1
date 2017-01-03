@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.zstack.header.identity.PubAccountAO;
+
 /**
  */
 @Entity

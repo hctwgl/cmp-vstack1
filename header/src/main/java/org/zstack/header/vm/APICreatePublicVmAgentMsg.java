@@ -71,94 +71,46 @@ import java.util.List;
  *
  * See :ref:`APICreateVmInstanceEvent`
  */
-@TagResourceType(VmInstanceVO.class)
 @Action(category = VmInstanceConstant.ACTION_CATEGORY)
-public class APICreatePublicVmInstanceMsg extends APICreateMessage {
+public class APICreatePublicVmAgentMsg extends APICreateMessage {
    
-    /**
+    public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	/**
      * @desc max length of 255 characters
      */
-    @APIParam(maxLength = 255)
-    private String hostname;
+    
     
     @APIParam( required = true)
-    private String cloudType;
+    private String ip;
     
     @APIParam(required = true)
-    private String accountUuid;
+    private String password;
     
-    private String description;
-    private String memory;
-    private String region;
-    public String getMemory() {
-		return memory;
-	}
-	public void setMemory(String memory) {
-		this.memory = memory;
-	}
-	public String getRegion() {
-		return region;
-	}
-	public void setRegion(String region) {
-		this.region = region;
-	}
-	public String getDiskSize() {
-		return diskSize;
-	}
-	public void setDiskSize(String diskSize) {
-		this.diskSize = diskSize;
-	}
-	public String getInstanceOfferUuid() {
-		return instanceOfferUuid;
-	}
-	public void setInstanceOfferUuid(String instanceOfferUuid) {
-		this.instanceOfferUuid = instanceOfferUuid;
-	}
-	private String cpuInfo;
-    private String image;
-    private String diskSize;
-    private String instanceOfferUuid;
+    private String userName;
       
-    
-    public String getHostname() {
-		return hostname;
-	}
-	public void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-	 
-	public String getAccountUuid() {
-		return accountUuid;
-	}
-	public void setAccountUuid(String accountUuid) {
-		this.accountUuid = accountUuid;
-	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public String getCloudType() {
-		return cloudType;
-	}
-	public void setCloudType(String cloudType) {
-		this.cloudType = cloudType;
-	}
-	 
-	public String getCpuInfo() {
-		return cpuInfo;
-	}
-	public void setCpuInfo(String cpuInfo) {
-		this.cpuInfo = cpuInfo;
-	}
-	public String getImage() {
-		return image;
-	}
-	public void setImage(String image) {
-		this.image = image;
-	}
-	
 
 	 
 }

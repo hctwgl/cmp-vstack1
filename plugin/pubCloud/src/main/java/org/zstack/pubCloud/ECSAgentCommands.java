@@ -7,6 +7,7 @@ import org.zstack.header.core.ApiTimeout;
 import org.zstack.header.core.validation.Validation;
 import org.zstack.header.storage.snapshot.APIDeleteVolumeSnapshotMsg;
 import org.zstack.header.vm.APICreateVmInstanceMsg;
+import org.zstack.header.vm.ECSNode;
 import org.zstack.header.vm.VmBootDevice;
 import org.zstack.header.volume.APICreateVolumeSnapshotMsg;
 import org.zstack.network.securitygroup.SecurityGroupRuleTO;
@@ -582,11 +583,8 @@ public class ECSAgentCommands {
     @ApiTimeout(apiClasses = {APICreateVmInstanceMsg.class})
     public static class StartVmCmd extends AgentCommand {
     	
-     
-     
 		private String hostManagementIp;
-        
-        private String name;
+         private String name;
         private String vmInstanceUuid;
         private String access_key_id;
         private String access_key_secret;
@@ -735,10 +733,6 @@ public class ECSAgentCommands {
      		public void setEx_client_token(String ex_client_token) {
      			this.ex_client_token = ex_client_token;
      		}
-        
-        
-               
-         
     }
     public static class StartVmPubResponse extends AgentResponse {
     	private String vmUuid;
@@ -830,6 +824,55 @@ public class ECSAgentCommands {
         public void setProtocol(String protocol) {
                         this.protocol = protocol;
                 }
+    }
+    
+    
+    
+    public static class GetPubVmCmd extends AgentCommand {
+    	private String vmUuid;
+    	 private String access_key_id;
+         private String access_key_secret;
+         
+        public String getAccess_key_id() {
+			return access_key_id;
+		}
+
+		public void setAccess_key_id(String access_key_id) {
+			this.access_key_id = access_key_id;
+		}
+
+		public String getAccess_key_secret() {
+			return access_key_secret;
+		}
+
+		public void setAccess_key_secret(String access_key_secret) {
+			this.access_key_secret = access_key_secret;
+		}
+
+		public String getVmUuid() {
+            return vmUuid;
+        }
+
+        public void setVmUuid(String vmUuid) {
+            this.vmUuid = vmUuid;
+        }
+    }
+    
+    public static class GetPubVmResponse extends AgentResponse {
+
+    	private List<ECSNode> nodes;
+    	
+    	public List<ECSNode> getVms() {
+    		return nodes;
+    	}
+
+    	public void setVms(List<ECSNode> nodes) {
+    		this.nodes = nodes;
+    	}
+
+    	public GetPubVmResponse(){
+    		nodes = new ArrayList<ECSNode>();
+    	}
     }
     
     public static class StopVmCmd extends AgentCommand {

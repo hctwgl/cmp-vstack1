@@ -99,25 +99,17 @@ import org.zstack.header.message.APIEvent;
 }
 }
  */
-public class APICreatePubVmInstanceEvent extends APIEvent {
+public class APICreatePubVmAgentEvent extends APIEvent {
     /**
      * @desc see :ref:`VmInstanceInventory`
      */
-	 private PubVmInstanceInventory inventory;
-    public APICreatePubVmInstanceEvent() {
+    public APICreatePubVmAgentEvent() {
         super(null);
     }
     
-    public APICreatePubVmInstanceEvent(String apiId) {
+    public APICreatePubVmAgentEvent(String apiId) {
         super(apiId);
     }
 
-    public PubVmInstanceInventory getInventory() {
-      
-		return inventory;
-    }
-
-    public void setInventory(PubVmInstanceInventory inventory) {
-        this.inventory = inventory;
-    }
+    
 }

@@ -11,25 +11,25 @@ public class PubVmInstanceAO {
     private String uuid;
     
     @Column
-    @Index(length = 128)
-    private String name;
+    private String hostname;
     
-    @Column
+	@Column
     private String description;
     
     @Column
-    private String accountUuid;
+    private String pubAccountUuid;
     
     @Column
+    private String pubID;
+
+	@Column
     private String image;
- 
    
 	@Column
     private String cloudType;
     
     @Column
     private String cpuInfo;
-
 
     @Column
     private String memorySize;
@@ -49,17 +49,15 @@ public class PubVmInstanceAO {
     @Column
     private String state;
     
-    
-     
-   
     public PubVmInstanceAO() {
     }
 
     public PubVmInstanceAO(PubVmInstanceAO other) {
         this.uuid = other.uuid;
-        this.name = other.name;
+        this.hostname = other.hostname;
         this.region = other.region;
-        this.accountUuid = other.accountUuid;
+        this.pubID = other.pubID;
+        this.pubAccountUuid = other.pubAccountUuid;
         this.description = other.description;
         this.image = other.image;
         this.cloudType = other.cloudType;
@@ -84,15 +82,15 @@ public class PubVmInstanceAO {
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
 	}
+	
+	
+	 public String getHostname() {
+			return hostname;
+		}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
+		public void setHostname(String hostname) {
+			this.hostname = hostname;
+		}
 	public String getDescription() {
 		return description;
 	}
@@ -101,12 +99,13 @@ public class PubVmInstanceAO {
 		this.description = description;
 	}
 	 
-	public String getAccountUuid() {
-		return accountUuid;
+
+	public String getPubAccountUuid() {
+		return pubAccountUuid;
 	}
 
-	public void setAccountUuid(String accountUuid) {
-		this.accountUuid = accountUuid;
+	public void setPubAccountUuid(String pubAccountUuid) {
+		this.pubAccountUuid = pubAccountUuid;
 	}
 
 	public String getImage() {
@@ -117,6 +116,13 @@ public class PubVmInstanceAO {
 		this.image = image;
 	}
 
+	public String getPubID() {
+		return pubID;
+	}
+
+	public void setPubID(String pubID) {
+		this.pubID = pubID;
+	}
 	 
 	public String getCloudType() {
 		return cloudType;
@@ -133,7 +139,6 @@ public class PubVmInstanceAO {
 	public void setCpuInfo(String cpuInfo) {
 		this.cpuInfo = cpuInfo;
 	}
-
 	 
 
 	public String getMemorySize() {

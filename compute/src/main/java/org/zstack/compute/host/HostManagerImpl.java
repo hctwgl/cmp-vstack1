@@ -41,6 +41,7 @@ import org.zstack.header.vm.DeleteVmPubOnLocalMsg;
 import org.zstack.header.vm.RebootVmPubOnLocalMsg;
 import org.zstack.header.vm.StartVmPubOnLocalMsg;
 import org.zstack.header.vm.StopVmPubOnLocalMsg;
+import org.zstack.header.vm.GetPubVmInstanceListMsg;
 import org.zstack.search.GetQuery;
 import org.zstack.search.SearchQuery;
 import org.zstack.tag.TagManager;
@@ -156,9 +157,19 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 	        return;
     	}
     	if (msg instanceof CreateVmOnLocalMsg) {
-    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(((CreateVmOnLocalMsg) msg).getCloudType()));
     		HostVO tmpvo = new HostVO();
     		tmpvo.setUuid(((CreateVmOnLocalMsg) msg).getId());
+    		Host host = factory.getHost(tmpvo);
+	        host.handleMessage((Message) msg);
+	        return;
+    	}
+    	 
+    	if (msg instanceof GetPubVmInstanceListMsg) {
+    		String cloudType =((GetPubVmInstanceListMsg) msg).getCloudType();
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(cloudType));
+    		HostVO tmpvo = new HostVO();
+    		tmpvo.setUuid(((GetPubVmInstanceListMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);
 	        host.handleMessage((Message) msg);
 	        return;
@@ -172,7 +183,7 @@ public class HostManagerImpl extends AbstractService implements HostManager, Man
 	        return;
     		
     	}if (msg instanceof StartVmPubOnLocalMsg) {
-    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf("ECS"));
+    		HypervisorFactory factory = this.getHypervisorFactory(HypervisorType.valueOf(((StartVmPubOnLocalMsg) msg).getType()));
     		HostVO tmpvo = new HostVO();
     		tmpvo.setUuid(((StartVmPubOnLocalMsg) msg).getId());
     		Host host = factory.getHost(tmpvo);

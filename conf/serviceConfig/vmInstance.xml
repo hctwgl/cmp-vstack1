@@ -10,7 +10,9 @@
     <message>
         <name>org.zstack.header.vm.APICreatePublicVmInstanceMsg</name>
     </message>
-    
+    <message>
+        <name>org.zstack.header.vm.APICreatePublicVmAgentMsg</name>
+    </message>
     <message>
         <name>org.zstack.header.vm.APIListVmInstanceMsg</name>
     </message>
@@ -73,6 +75,7 @@
         <name>org.zstack.header.vm.APIQueryVmNicMsg</name>
         <serviceId>query</serviceId>
     </message>
+    
     <message>
         <name>org.zstack.header.vm.APIAttachL3NetworkToVmMsg</name>
     </message>
@@ -163,27 +166,24 @@
     <message>
         <name>org.zstack.header.vm.APIGetPubCloudTypesMsg</name>
     </message>
-    
-  <!--   
-    
     <message>
         <name>org.zstack.header.vm.APIQueryPubVmInstanceMsg</name>
         <serviceId>query</serviceId>
     </message>
     <message>
-        <name>org.zstack.header.vm.APICreatePubVmInstanceMsg</name>
-        <serviceId>query</serviceId>
+        <name>org.zstack.header.vm.APIUpdatePubVmInstanceMsg</name>
     </message>
+   
+    <message>
+        <name>org.zstack.header.vm.APIQueryPubVmInstanceOfferingMsg</name>
+    </message>
+      <!--   
+    
     <message>
         <name>org.zstack.header.vm.APIDeletePubVmInstanceMsg</name>
         <serviceId>query</serviceId>
     </message> 
     
-    <message>
-        <name>org.zstack.header.vm.APIQueryPubVmInstanceMsg</name>
-        <serviceId>query</serviceId>
-    </message>
-    <message>
         <name>org.zstack.header.vm.APICreatePubVmInstanceMsg</name>
         <serviceId>query</serviceId>
     </message>

@@ -5,27 +5,17 @@ import org.zstack.header.host.HostMessage;
 import org.zstack.header.message.NeedReplyMessage;
 
 @ApiTimeout(apiClasses = { APICreateVmInstanceMsg.class })
-public class CreateVmOnLocalMsg extends NeedReplyMessage implements HostMessage {
+public class GetPubVmInstanceListMsg extends NeedReplyMessage implements HostMessage {
 	private VmPubInstanceSpec vmSpec;
 
 	private String name;
 	private String uuid;
 
-	private String accesskeyKEY;
-	private String accesskeyID;
-	private String image;
-	private String cloudType;
-	private String instanceOfferingUuid;
-	private String region;
-	
- 
-	public String getImage() {
-		return image;
+	public String getUuid() {
+		return uuid;
 	}
 
-	public void setImage(String image) {
-		this.image = image;
-	}
+	private String cloudType;
 
 	public String getCloudType() {
 		return cloudType;
@@ -35,21 +25,12 @@ public class CreateVmOnLocalMsg extends NeedReplyMessage implements HostMessage 
 		this.cloudType = cloudType;
 	}
 
-	public String getInstanceOfferingUuid() {
-		return instanceOfferingUuid;
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
 	}
 
-	public void setInstanceOfferingUuid(String instanceOfferingUuid) {
-		this.instanceOfferingUuid = instanceOfferingUuid;
-	}
-
-	public String getRegion() {
-		return region;
-	}
-
-	public void setRegion(String region) {
-		this.region = region;
-	}
+	private String accesskeyKEY;
+	private String accesskeyID;
 
 	public String getName() {
 		return name;
@@ -73,14 +54,6 @@ public class CreateVmOnLocalMsg extends NeedReplyMessage implements HostMessage 
 
 	public void setAccesskeyID(String accesskeyID) {
 		this.accesskeyID = accesskeyID;
-	}
-
-	public String getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
 	}
 
 	@Override

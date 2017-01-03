@@ -23,6 +23,7 @@ public interface PubCloudConstant {
     public static final String KVM_ATTACH_ISO_PATH = "/vm/iso/attach";
     public static final String KVM_DETACH_ISO_PATH = "/vm/iso/detach";
     public static final String KVM_START_VM_PATH = "/aliyun/vm/start";
+    public static final String KVM_GET_PUB_VM_PATH = "/aliyun/vm/getListPubVm";
     public static final String KVM_STOP_VM_PATH = "/aliyun/vm/stop";
     public static final String KVM_REBOOT_VM_PATH = "/aliyun/vm/reboot";
     public static final String KVM_DESTROY_VM_PATH = "/aliyun/vm/destroy";
