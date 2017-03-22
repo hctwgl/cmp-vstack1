@@ -1261,7 +1261,7 @@ public class ECSHost extends HostBase implements Host {
 		cmd.setRegion(spec.getRegion());
 		cmd.setImage(spec.getImage());
 		cmd.setAuth("P@$$w0rd");
-		cmd.setEx_security_group_id("sg-2ze56hvvjveewzm12jar");
+		cmd.setEx_security_group_id("sg-2ze6ujdztjgsp3idbfl2");
 		cmd.setEx_internet_max_bandwidth_out(1);
 		cmd.setEx_internet_charge_type("PayByTraffic");
 		// cmd.setSize("ecs.t1.small");
