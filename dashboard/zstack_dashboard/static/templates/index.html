@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html ng-app="root">
+<head>
+    <title>zstack-ui</title>
+    <link href="{{ url_for('static', filename='css/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/kendo/kendo.common.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/kendo/kendo.common-bootstrap.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/kendo/kendo.uniform.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/kendo/kendo.dataviz.min.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/kendo/kendo.dataviz.uniform.min.css') }}" rel="stylesheet" />
+    <!--
+    <link href="{{ url_for('static', filename='css/kendo/kendo.dataviz.bootstrap.min.css') }}" rel="stylesheet" />
+    -->
+    <link href="{{ url_for('static', filename='css/font-awesome/css/font-awesome.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/ng-tags-input.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/zstack1.css') }}" rel="stylesheet" />
+    <link rel="icon" href="{{ url_for('static', filename='images/zstack_text_icon_32x32.gif') }}" type="image/gif">
+    <link rel="shorcut icon" href="{{ url_for('static', filename='images/zstack_text_icon_32x32.png') }}">
+</head>
+
+
+{% raw %}
+<body ng-controller="MRoot.main" ng-cloak>
+
+<script type="text/javascript">
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE ");
+    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))
+        alert('vStack Dashboard might not work well in IE.\nPlease use Chrome or Firefox to use ZStack Dashboard.');
+</script>
+
+<div class="modal fade hiden">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{"index.Modal title" | translate}}</h4>
+      </div>
+      <div class="modal-body">
+        <p>One fine body&hellip;</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{"index.Close" | translate}}</button>
+        <button type="button" class="btn btn-primary">{{"index.Save changes" | translate}} </button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script id="successNotification" type="text/x-kendo-template">
+    <div class="z-success">
+        <h4><i class="fa fa-check-circle"></i>  SUCCESS</h4>
+        <p>#= msg #</p>
+        # if (data.link) { #
+        <a href="#: link #">See result</a>
+        #}#
+    </div>
+</script>
+
+<script id="errorNotification" type="text/x-kendo-template">
+    <div class="z-success">
+        <h4><i class="fa fa-check-circle"></i>  FAILURE</h4>
+        <p>#= msg #</p>
+        # if (data.link) { #
+        <a href="#: link #">See result</a>
+        #}#
+    </div>
+</script>
+
+<span kendo-notification="apiNotification" k-options="optionsNotification"></span>
+<div ng-include="'/static/templates/zone/templates.html'"></div>
+
+<div style="display: none">
+    <div kendo-window="winChangePassword" k-visible="false" k-options="optionsChangePassword">
+        <div>
+            <h4 class="z-win-h4">{{"index.CHANGE PASSWORD" | translate}}</h4>
+            <form class="form" id="formChangePassword">
+                <div class="form-group col-lg-18">
+                    <label for="name">{{"index.NEW PASSWORD" | translate}}</label>
+                    <input class="form-control" type="password" id="newPassword" placeholder="(Required) max length of 255 characters" ng-model="modelChangePassword.password" required data-message="new password is required">
+                </div>
+                <div class="form-group col-lg-18">
+                    <label for="name">{{"index.REPEAT PASSWORD" | translate}}</label>
+                    <input class="form-control" type="password" id="repeatPassword" placeholder="(Required) max length of 255 characters" ng-model="modelChangePassword.repeatPassword" required data-message="repeat password is required">
+                </div>
+                <div class="form-group col-lg-18">
+                    <button type="button" class="btn btn-default" ng-click="funcChangePasswordCancel(winChangePassword)">{{"index.Cancel" | translate}}</button>
+                    <button type="button" class="btn btn-primary" ng-disabled="!modelChangePassword.canChange()" ng-click="funcChangePasswordDone(winChangePassword)">{{"index.Change" | translate}}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<nav class="navbar navbar-default" role="navigation">
+    <div class="navbar-header" ng-controller="MNav.Controller">
+    <img  src="static/img/logo1.gif" width="107px" height="50px">
+        <a class="navbar-brand" href="#">
+            <span><img ng-show="funcIsProcessing()" src="static/img/ajax-loader.gif" width="17px" height="17px"> <span ng-show="funcIsProcessing()">{{ funcPendingRequestNum() }} requests in processing ...</span></span>
+        </a>
+    </div>
+
+    <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+            <li>
+                <a href="/#/apiDetails">
+                    {{"index.API Details" | translate}}
+                    <span class="badge badge-info">{{getApiDetailsNum()}}</span>
+                </a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+       		  <li class="dropdown" >
+                <a href class="dropdown-toggle" data-toggle="dropdown">
+                 <i class="fa fa-lg fa-language"></i>
+                   {{cloudTypeName}}
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+		        	<li class="floor-tab-li" ng-repeat="tab in tabs" ng-class="{tabActive:isActiveTab(tab.url)}"  ng-click="onClickTab(tab)" style="margin-left: 20px;">
+		            <a>{{tab.title}}</a>
+		        	</li>
+	   			 </ul>
+            </li>
+            
+            <li class="dropdown" >
+                <a href class="dropdown-toggle" data-toggle="dropdown">
+                 <i class="fa fa-lg fa-language"></i>
+                    {{"index.Language" | translate}}
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href ng-click="changeLanguage('English')">英文</a></li>
+                    <li><a href ng-click="changeLanguage('Chinese (Simplified)')">简体中文</a></li>
+                    <li><a href ng-click="changeLanguage('Chinese (Traditional)')">繁体中文</a></li>
+                </ul>
+            </li>
+            <li class="dropdown" ng-show="isLogin()"> 
+                <a href class="dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa fa-lg fa-user"></i>
+                    {{getAccountName()}}
+                    <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li><a href ng-click="changePassword(winChangePassword)">{{"index.Change Password" | translate}}</a></li>
+                    <li><a href ng-click="logout()">{{"index.Sign Out" | translate}}</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container-fluid col-sm-24" id="panel1"> 
+	 <div ng-include="currentTab"></div>
+</div>
+
+{% endraw %}
+
+<script src="{{ url_for('static', filename='js/jquery-1.9.1.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/angular.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/angular-route.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/angular-cookies.js') }}"></script>
+<script src="{{ url_for('static', filename='js/angular-translate.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/angular-translate-loader-static-files.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/angular-translate-storage-cookie.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/kendo.all.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sha512.js') }}"></script>
+<!--
+<script src="{{ url_for('static', filename='js/angular-kendo.js') }}"></script>
+-->
+<script src="{{ url_for('static', filename='js/ng-tags-input.js') }}"></script>
+<script src="{{ url_for('static', filename='app/app.js') }}"></script>
+</body>
+
+</html>
