@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="zstack-xenagent builder" basedir="../">
+    <property name="xenagent.bdir" location="${build.dir}/xenagent" />
+    <property name="xenagent.ansible.dir" location="${ansible.dir}/xen/" />
+
+    <target name="build-xenagent" >
+        <makeDir dir="${xenagent.bdir}" />
+
+        <checkProperty property="xenagent.source" />
+        <checkProperty property="xenagent.serviceFile" />
+        <checkFile file="${xenagent.source}" />
+        <checkFile file="${xenagent.source}/setup.py" />
+        <checkFile file="${xenagent.serviceFile}" />
+
+        <delete dir="${xenagent.source}/dist" />
+
+        <exec executable="python" dir="${xenagent.source}" failonerror="true">
+            <arg value="setup.py" />
+            <arg value="sdist" />
+        </exec>
+
+        <!--
+        <copy todir="${xenagent.bdir}">
+            <fileset file="${kvmagent.source}/dist/*.egg" />
+            <regexpmapper from="(.*).egg" to="zstack-kvmagent.egg"/>
+        </copy>
+        -->
+
+        <copy todir="${xenagent.bdir}/">
+            <fileset dir="${xenagent.source}/">
+                <exclude name="**/*~" />
+                <include name="dist/*.tar.gz" />
+                <include name="ansible/**/*" />
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="assemble-xenagent">
+        <makeDir dir="${xenagent.ansible.dir}" />
+
+        <copy todir="${xenagent.ansible.dir}">
+            <fileset dir="${xenagent.bdir}/ansible">
+                <include name="**/*" />
+            </fileset>
+            <fileset dir="${xenagent.bdir}/dist">
+                <include name="**/*" />
+            </fileset>
+        </copy>
+
+
+        <copy file="${xenagent.serviceFile}" todir="${xenagent.ansible.dir}" />
+    </target>
+</project>

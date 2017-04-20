@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="zstack-aliyunagent builder" basedir="../">
+    <property name="aliyunagent.bdir" location="${build.dir}/aliyunagent" />
+    <property name="aliyunagent.ansible.dir" location="${ansible.dir}/aliyun/" />
+
+    <target name="build-aliyunagent" >
+        <makeDir dir="${aliyunagent.bdir}" />
+
+        <checkProperty property="aliyunagent.source" />
+        <checkProperty property="aliyunagent.serviceFile" />
+        <checkFile file="${aliyunagent.source}" />
+        <checkFile file="${aliyunagent.source}/setup.py" />
+        <checkFile file="${aliyunagent.serviceFile}" />
+
+        <delete dir="${aliyunagent.source}/dist" />
+
+        <exec executable="python" dir="${aliyunagent.source}" failonerror="true">
+            <arg value="setup.py" />
+            <arg value="sdist" />
+        </exec>
+
+        <!--
+        <copy todir="${kvmagent.bdir}">
+        </copy>
+        -->
+
+        <copy todir="${aliyunagent.bdir}/">
+            <fileset dir="${aliyunagent.source}/">
+                <exclude name="**/*~" />
+                <include name="dist/*.tar.gz" />
+                <include name="ansible/**/*" />
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="assemble-aliyunagent">
+        <makeDir dir="${aliyunagent.ansible.dir}" />
+
+        <copy todir="${aliyunagent.ansible.dir}">
+            <fileset dir="${aliyunagent.bdir}/ansible">
+                <include name="**/*" />
+            </fileset>
+            <fileset dir="${aliyunagent.bdir}/dist">
+                <include name="**/*" />
+            </fileset>
+        </copy>
+
+
+        <copy file="${aliyunagent.serviceFile}" todir="${aliyunagent.ansible.dir}" />
+    </target>
+</project>
